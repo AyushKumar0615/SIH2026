@@ -60,7 +60,8 @@ export const AuthService = {
       email: user.email,
       role: user.role,
       state: user.state,
-      language: user.language
+      language: user.language,
+      avatar: user.avatar || null
     };
 
     if (typeof window !== 'undefined') {
@@ -84,7 +85,8 @@ export const AuthService = {
       password: payload.password,
       role: payload.role,
       state: payload.state,
-      language: payload.language
+      language: payload.language,
+      avatar: payload.avatar || null
     };
 
     const nextUsers = [...users, user];
@@ -96,7 +98,8 @@ export const AuthService = {
       email: user.email,
       role: user.role,
       state: user.state,
-      language: user.language
+      language: user.language,
+      avatar: user.avatar
     };
 
     if (typeof window !== 'undefined') {
@@ -104,6 +107,22 @@ export const AuthService = {
     }
 
     return { ok: true, session };
+  },
+
+  updateAvatar(userId, avatar) {
+    const users = readUsers();
+    const nextUsers = users.map((entry) => (entry.id === userId ? { ...entry, avatar } : entry));
+    writeUsers(nextUsers);
+
+    const current = this.getSession();
+    if (current && current.id === userId) {
+      const nextSession = { ...current, avatar };
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextSession));
+      }
+      return nextSession;
+    }
+    return current;
   },
 
   logout() {

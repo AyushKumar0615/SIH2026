@@ -1,125 +1,88 @@
 import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { MOCK_ROUTINE_SCHEDULE } from '../../data/mockData';
-import { Plus, Clock, Trash2 } from 'lucide-react';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { Plus, Clock, Trash2, X } from 'lucide-react';
 
-export default function RoutineManager() {
+export default function RoutineManager({ userName = 'Guest' }) {
   const [routines, setRoutines] = useState(MOCK_ROUTINE_SCHEDULE);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newTime, setNewTime] = useState('05:00 PM');
   const [newCategory, setNewCategory] = useState('Medication');
+  const containerRef = useScrollReveal();
 
   const handleAddRoutine = (e) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
-
-    const newEntry = {
-      id: `r_${Date.now()}`,
-      time: newTime,
-      title: newTitle,
-      category: newCategory,
+    setRoutines([...routines, {
+      id: `r_${Date.now()}`, time: newTime, title: newTitle, category: newCategory,
       icon: newCategory === 'Medication' ? '💊' : newCategory === 'Meals' ? '🍛' : '🔔',
-      completed: false,
-      voicePrompt: `Reminder for ${newTitle} at ${newTime}.`
-    };
-
-    setRoutines([...routines, newEntry]);
+      completed: false, voicePrompt: `Reminder for ${newTitle} at ${newTime}.`
+    }]);
     setNewTitle('');
     setShowAddForm(false);
   };
 
-  const handleDelete = (id) => {
-    setRoutines(routines.filter(r => r.id !== id));
-  };
+  const handleDelete = (id) => setRoutines(routines.filter((r) => r.id !== id));
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between gap-4">
+    <div ref={containerRef} className="space-y-8">
+      <div className="flex items-center justify-between gap-4 scroll-reveal">
         <div>
-          <h3 className="text-2xl font-black text-white">Daily Routine & Reminder Manager</h3>
-          <p className="text-sm text-slate-400 font-medium">Configure scheduled alerts and medication voice prompts for Kamala Devi</p>
+          <h3 className="font-display text-xl md:text-2xl font-medium">Routines & Reminders</h3>
+          <p className="pin mt-1">Configure scheduled alerts for {userName}</p>
         </div>
-
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="btn-primary text-sm py-2.5 px-5 flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" /> Add New Reminder
+        <button type="button" onClick={() => setShowAddForm(!showAddForm)} className="btn btn-ember shrink-0">
+          {showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />} {showAddForm ? 'Close' : 'Add Reminder'}
         </button>
       </div>
 
-      {showAddForm && (
-        <form onSubmit={handleAddRoutine} className="glass-card p-6 border-2 border-teal-500/40 space-y-4">
-          <h4 className="text-lg font-bold text-white">Configure New Reminder</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs font-bold text-slate-400 block mb-1">Reminder Title</label>
-              <input
-                type="text"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="e.g. Take Blood Pressure Tablet"
-                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium text-sm outline-none focus:border-teal-400"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-400 block mb-1">Time</label>
-              <input
-                type="text"
-                value={newTime}
-                onChange={(e) => setNewTime(e.target.value)}
-                placeholder="06:30 PM"
-                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium text-sm outline-none focus:border-teal-400"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-400 block mb-1">Category</label>
-              <select
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium text-sm outline-none focus:border-teal-400"
-              >
-                <option value="Medication">Medication 💊</option>
-                <option value="Meals">Meals 🍛</option>
-                <option value="Activity">Activity 🧠</option>
-                <option value="Family">Family Call 📞</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setShowAddForm(false)} className="btn-secondary py-2 px-4 text-xs">
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary py-2 px-6 text-xs font-extrabold">
-              Save Reminder
-            </button>
-          </div>
-        </form>
-      )}
-
-      <div className="space-y-3">
-        {routines.map((r) => (
-          <div
-            key={r.id}
-            className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4 hover:border-slate-700 transition-all"
+      <AnimatePresence>
+        {showAddForm && (
+          <motion.form
+            onSubmit={handleAddRoutine}
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
           >
-            <div className="flex items-center gap-4">
-              <span className="text-2xl p-2.5 rounded-xl bg-slate-950 border border-slate-800">{r.icon}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-6" style={{ borderTop: '1px solid var(--hairline)', borderBottom: '1px solid var(--hairline)' }}>
               <div>
-                <span className="text-xs font-bold text-amber-300 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" /> {r.time} • {r.category}
-                </span>
-                <h4 className="text-lg font-extrabold text-white">{r.title}</h4>
+                <label className="field-label">Title</label>
+                <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Blood Pressure Tablet" className="input" required />
+              </div>
+              <div>
+                <label className="field-label">Time</label>
+                <input type="text" value={newTime} onChange={(e) => setNewTime(e.target.value)} placeholder="06:30 PM" className="input" />
+              </div>
+              <div>
+                <label className="field-label">Category</label>
+                <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="select">
+                  <option value="Medication">Medication</option>
+                  <option value="Meals">Meals</option>
+                  <option value="Activity">Activity</option>
+                  <option value="Family">Family Call</option>
+                </select>
               </div>
             </div>
+            <div className="flex justify-end gap-3 pt-5">
+              <button type="button" onClick={() => setShowAddForm(false)} className="btn btn-quiet">Cancel</button>
+              <button type="submit" className="btn btn-ember">Save Reminder</button>
+            </div>
+          </motion.form>
+        )}
+      </AnimatePresence>
 
-            <button
-              onClick={() => handleDelete(r.id)}
-              className="p-2.5 rounded-xl bg-rose-950/40 text-rose-300 border border-rose-800/40 hover:bg-rose-900/50 transition-all"
-              title="Delete Reminder"
-            >
-              <Trash2 className="w-4 h-4" />
+      <div className="index-list scroll-reveal" data-reveal-delay="1">
+        {routines.map((r) => (
+          <div key={r.id} className="index-row !cursor-default">
+            <span className="index-icon">{r.icon}</span>
+            <span className="flex-1 min-w-0">
+              <span className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--ember)' }}><Clock className="w-3.5 h-3.5" /> {r.time} · {r.category}</span>
+              <span className="font-display text-lg font-medium block mt-0.5 truncate">{r.title}</span>
+            </span>
+            <button type="button" onClick={() => handleDelete(r.id)} className="p-2 rounded-full shrink-0" style={{ color: 'var(--alert)' }} title="Delete">
+              <Trash2 className="w-4.5 h-4.5" />
             </button>
           </div>
         ))}

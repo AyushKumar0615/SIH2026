@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import { pageTransition } from './components/common/pageTransition';
 import Header from './components/common/Header';
 import AuthPortal from './components/auth/AuthPortal';
 import ElderlyHome from './components/elderly/ElderlyHome';
@@ -51,7 +53,11 @@ export default function App() {
   };
 
   if (!session) {
-    return <AuthPortal onAuthenticated={handleAuthenticated} />;
+    return (
+      <MotionConfig reducedMotion="user">
+        <AuthPortal onAuthenticated={handleAuthenticated} />
+      </MotionConfig>
+    );
   }
 
   const handleExecuteDemoStep = (stepObj) => {
@@ -87,7 +93,8 @@ export default function App() {
   };
 
   return (
-    <div className={`app-container ${fontSize === 'lg' ? 'font-scale-lg' : fontSize === 'xl' ? 'font-scale-xl' : ''}`}>
+    <MotionConfig reducedMotion="user">
+    <div className={`app-shell ${fontSize === 'lg' ? 'font-scale-lg' : fontSize === 'xl' ? 'font-scale-xl' : ''}`}>
       <Header
         currentMode={currentMode}
         setCurrentMode={(mode) => {
@@ -107,36 +114,53 @@ export default function App() {
         setFontSize={setFontSize}
         session={session}
         onLogout={handleLogout}
+        onSessionUpdate={setSession}
       />
 
       <main className="flex-1 pb-24">
-        {currentMode === 'elderly' && (
-          <>
-            {currentSubView === 'home' && (
-              <ElderlyHome currentLang={currentLang} currentState={currentState} />
-            )}
-            {currentSubView === 'games' && (
+        <AnimatePresence mode="wait">
+          {currentMode === 'elderly' && currentSubView === 'home' && (
+            <motion.div key="elderly-home" {...pageTransition}>
+              <ElderlyHome currentLang={currentLang} currentState={currentState} session={session} />
+            </motion.div>
+          )}
+          {currentMode === 'elderly' && currentSubView === 'games' && (
+            <motion.div key="elderly-games" {...pageTransition}>
               <GameShell stateName={currentState} onBack={() => setCurrentSubView('home')} />
-            )}
-            {currentSubView === 'memories' && (
+            </motion.div>
+          )}
+          {currentMode === 'elderly' && currentSubView === 'memories' && (
+            <motion.div key="elderly-memories" {...pageTransition}>
               <MemoryJournalView onBack={() => setCurrentSubView('home')} onOpenVoiceAssistant={() => setIsVoiceModalOpen(true)} />
-            )}
-            {currentSubView === 'reminders' && (
+            </motion.div>
+          )}
+          {currentMode === 'elderly' && currentSubView === 'reminders' && (
+            <motion.div key="elderly-reminders" {...pageTransition}>
               <RemindersView onBack={() => setCurrentSubView('home')} />
-            )}
-            {currentSubView === 'story' && (
+            </motion.div>
+          )}
+          {currentMode === 'elderly' && currentSubView === 'story' && (
+            <motion.div key="elderly-story" {...pageTransition}>
               <StoryModeView onBack={() => setCurrentSubView('home')} />
-            )}
-          </>
-        )}
+            </motion.div>
+          )}
 
-        {currentMode === 'caregiver' && <CaregiverDashboard />}
-        {currentMode === 'admin' && <AdminPortal />}
-        {currentMode === 'demo' && (
-          <div className="space-y-4">
-            <ElderlyHome currentLang={currentLang} currentState={currentState} />
-          </div>
-        )}
+          {currentMode === 'caregiver' && (
+            <motion.div key="caregiver" {...pageTransition}>
+              <CaregiverDashboard session={session} />
+            </motion.div>
+          )}
+          {currentMode === 'admin' && (
+            <motion.div key="admin" {...pageTransition}>
+              <AdminPortal />
+            </motion.div>
+          )}
+          {currentMode === 'demo' && (
+            <motion.div key="demo" className="space-y-4" {...pageTransition}>
+              <ElderlyHome currentLang={currentLang} currentState={currentState} session={session} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       <VoiceAssistantModal
@@ -155,5 +179,6 @@ export default function App() {
         onExecuteStep={handleExecuteDemoStep}
       />
     </div>
+    </MotionConfig>
   );
 }

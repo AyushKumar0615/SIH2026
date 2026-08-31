@@ -1,135 +1,175 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion';
 import { MOCK_FAMILY_MEMORIES } from '../../data/mockData';
-import { Volume2, ArrowLeft, Heart, BookOpen } from 'lucide-react';
+import { Volume2, ArrowLeft, Heart, Check } from 'lucide-react';
 import { AudioService } from '../../services/audioService';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
+import Magnetic from '../common/Magnetic';
+import Waveform from '../common/Waveform';
 
 export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeMemory, setActiveMemory] = useState(MOCK_FAMILY_MEMORIES[0]);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [justFinished, setJustFinished] = useState(false);
+  const containerRef = useScrollReveal();
+  const fallbackTimerRef = useRef(null);
+
+  const imgTiltX = useMotionValue(0);
+  const imgTiltY = useMotionValue(0);
+  const imgTiltXSpring = useSpring(imgTiltX, { stiffness: 80, damping: 18, mass: 0.6 });
+  const imgTiltYSpring = useSpring(imgTiltY, { stiffness: 80, damping: 18, mass: 0.6 });
 
   const categories = ['All', 'Family', 'Festivals', 'Places'];
-
-  const filteredMemories = selectedCategory === 'All'
-    ? MOCK_FAMILY_MEMORIES
-    : MOCK_FAMILY_MEMORIES.filter(m => m.category === selectedCategory);
+  const filteredMemories = selectedCategory === 'All' ? MOCK_FAMILY_MEMORIES : MOCK_FAMILY_MEMORIES.filter((m) => m.category === selectedCategory);
 
   const handleNarrate = (mem) => {
+    if (fallbackTimerRef.current) {
+      window.clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+
     setActiveMemory(mem);
     setIsPlayingAudio(true);
-    const narrationText = `${mem.name}, ${mem.relation}. ${mem.description} ${mem.voiceNote}`;
-    AudioService.speak(narrationText, 'en', () => setIsPlayingAudio(false));
+    setJustFinished(false);
+
+    const text = `${mem.name}, ${mem.relation}. ${mem.description} ${mem.voiceNote}`;
+    // Speech-synthesis "onend" is notoriously unreliable across browsers/tabs —
+    // fall back to a duration estimate so the button can never get stuck.
+    const estimatedMs = Math.min(20000, Math.max(3000, text.split(' ').length * 380));
+
+    const finish = () => {
+      if (fallbackTimerRef.current) {
+        window.clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = null;
+      }
+      setIsPlayingAudio(false);
+      setJustFinished(true);
+      window.setTimeout(() => setJustFinished(false), 1400);
+    };
+
+    fallbackTimerRef.current = window.setTimeout(finish, estimatedMs);
+    AudioService.speak(text, 'en', finish);
+  };
+
+  const handleImageMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    imgTiltX.set(((e.clientX - rect.left) / rect.width - 0.5) * 14);
+    imgTiltY.set(((e.clientY - rect.top) / rect.height - 0.5) * 14);
+  };
+
+  const handleImageLeave = () => {
+    imgTiltX.set(0);
+    imgTiltY.set(0);
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 animate-fade-in">
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <button onClick={onBack} className="btn-secondary text-base py-2.5 px-4">
-          <ArrowLeft className="w-5 h-5" /> Back to Dashboard
-        </button>
-        <div className="text-right">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-white flex items-center justify-end gap-2">
-            <BookOpen className="w-8 h-8 text-teal-400" /> Digital Memory Journal
-          </h2>
-          <p className="text-sm text-slate-400 font-medium">Preserving your cherished family moments</p>
-        </div>
+    <div ref={containerRef} className="page max-w-5xl">
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <button type="button" onClick={onBack} className="btn btn-quiet !px-0"><ArrowLeft className="w-4 h-4" /> Back</button>
+        <h2 className="font-display text-2xl font-medium">Memory Journal</h2>
       </div>
 
-      <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
+      <div className="flex items-center gap-6 mb-8 overflow-x-auto scrollbar-none" style={{ borderBottom: '1px solid var(--hairline)' }}>
         {categories.map((cat) => (
           <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all ${
-              selectedCategory === cat
-                ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/30'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
+            type="button" key={cat} onClick={() => setSelectedCategory(cat)}
+            className={`tab-link ${selectedCategory === cat ? 'is-active' : ''}`}
           >
-            {cat === 'All' ? '🌟 All Memories' : cat}
+            {cat}
+            {selectedCategory === cat && (
+              <motion.span layoutId="memory-tab-underline" className="absolute left-0 right-0 -bottom-px h-[2px]" style={{ background: 'var(--ember)' }} transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }} />
+            )}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {activeMemory && (
-          <div className="lg:col-span-7 glass-card p-6 border-2 border-teal-500/40 relative">
-            <div className="relative h-72 md:h-96 rounded-2xl overflow-hidden mb-6 border border-slate-700">
-              <img
-                src={activeMemory.photoUrl}
-                alt={activeMemory.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-6">
-                <span className="badge badge-teal w-fit mb-2">{activeMemory.category}</span>
-                <h3 className="text-3xl font-extrabold text-white">{activeMemory.name}</h3>
-                <p className="text-lg font-bold text-amber-300">{activeMemory.relation}</p>
+          <div className="lg:col-span-7 scroll-reveal">
+            <div
+              className="relative rounded-[var(--radius-lg)] overflow-hidden h-72 sm:h-[27rem]"
+              onMouseMove={handleImageMove}
+              onMouseLeave={handleImageLeave}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeMemory.id}
+                  className="absolute inset-0"
+                  initial={{ opacity: 0, scale: 1.03 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <motion.img
+                    src={activeMemory.photoUrl}
+                    alt={activeMemory.name}
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: '50% 28%', x: imgTiltXSpring, y: imgTiltYSpring, scale: 1.06 }}
+                  />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, transparent 45%, rgba(11,10,8,0.94) 100%)' }} />
+              <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-7">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-soft)' }}>{activeMemory.category}</span>
+                <h3 className="font-display text-3xl sm:text-[2.15rem] font-medium mt-1.5 leading-tight">{activeMemory.name}</h3>
+                <p className="text-sm font-medium mt-1" style={{ color: 'var(--jade)' }}>{activeMemory.relation}</p>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <button
-                onClick={() => handleNarrate(activeMemory)}
-                className="btn-primary text-base py-3 px-6 w-full flex items-center justify-center gap-3 shadow-lg"
-              >
-                <Volume2 className={`w-6 h-6 ${isPlayingAudio ? 'animate-bounce text-amber-300' : ''}`} />
-                {isPlayingAudio ? 'Narrating Memory...' : 'Listen to Voice Memory'}
-              </button>
+            <div className="mt-5 space-y-6">
+              <Magnetic strength={0.12} className="block">
+                <button type="button" onClick={() => handleNarrate(activeMemory)} className="btn btn-ember w-full">
+                  <AnimatePresence mode="wait" initial={false}>
+                    {justFinished ? (
+                      <motion.span key="done" className="inline-flex items-center gap-2" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.16 }}>
+                        <Check className="w-4.5 h-4.5" /> Played
+                      </motion.span>
+                    ) : isPlayingAudio ? (
+                      <motion.span key="playing" className="inline-flex items-center gap-2.5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
+                        <Waveform active barWidth={2.5} height={16} />
+                        Narrating…
+                      </motion.span>
+                    ) : (
+                      <motion.span key="idle" className="inline-flex items-center gap-2.5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
+                        <Volume2 className="w-4.5 h-4.5" /> Listen to voice memory
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </Magnetic>
 
-              <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl">
-                <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Memory Story:</h4>
-                <p className="text-slate-200 text-base md:text-lg leading-relaxed font-medium">
-                  {activeMemory.description}
+              <p className="text-base leading-relaxed max-w-prose" style={{ color: 'var(--ink-soft)' }}>{activeMemory.description}</p>
+
+              <div className="notice-strip is-ember flex items-start gap-3">
+                <Heart className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--ember)' }} />
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
+                  <span className="font-semibold" style={{ color: 'var(--ink)' }}>Special moment —</span> {activeMemory.favoriteMemory}
                 </p>
-              </div>
-
-              <div className="bg-amber-950/30 border border-amber-500/40 p-4 rounded-2xl text-amber-200 font-semibold text-sm flex items-start gap-3">
-                <Heart className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-amber-300">Special Moment:</strong>
-                  {activeMemory.favoriteMemory}
-                </div>
               </div>
             </div>
           </div>
         )}
 
-        <div className="lg:col-span-5 space-y-4">
-          <h3 className="text-lg font-bold text-slate-300 flex items-center justify-between">
-            <span>Memories ({filteredMemories.length})</span>
-            <button onClick={onOpenVoiceAssistant} className="text-xs font-bold text-teal-400 hover:underline">
-              Ask Voice Assistant "Who is this?"
-            </button>
-          </h3>
+        <div className="lg:col-span-5 scroll-reveal" data-reveal-delay="1">
+          <div className="flex items-center justify-between mb-2">
+            <span className="pin">{filteredMemories.length} memories</span>
+            <button type="button" onClick={onOpenVoiceAssistant} className="text-xs font-semibold" style={{ color: 'var(--jade)' }}>Ask "Who is this?" →</button>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 max-h-[650px] overflow-y-auto pr-1">
+          <div className="index-list max-h-[560px] overflow-y-auto scrollbar-none">
             {filteredMemories.map((mem) => (
-              <div
-                key={mem.id}
-                onClick={() => {
-                  setActiveMemory(mem);
-                  handleNarrate(mem);
-                }}
-                className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center gap-4 ${
-                  activeMemory?.id === mem.id
-                    ? 'bg-teal-950/60 border-teal-400 ring-2 ring-teal-500/30'
-                    : 'bg-slate-800/80 border-slate-700 hover:bg-slate-800'
-                }`}
+              <button
+                type="button" key={mem.id} onClick={() => handleNarrate(mem)} className="index-row"
+                style={activeMemory?.id === mem.id ? { color: 'var(--ember)' } : undefined}
               >
-                <img
-                  src={mem.photoUrl}
-                  alt={mem.name}
-                  className="w-20 h-20 rounded-xl object-cover border border-slate-600 flex-shrink-0"
-                />
-                <div className="flex-1">
-                  <h4 className="text-lg font-extrabold text-white">{mem.name}</h4>
-                  <p className="text-xs font-bold text-teal-400">{mem.relation}</p>
-                  <p className="text-xs text-slate-400 line-clamp-1 mt-1">{mem.description}</p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-300">
-                  <Volume2 className="w-5 h-5" />
-                </div>
-              </div>
+                <img src={mem.photoUrl} alt={mem.name} className="w-14 h-14 rounded-full object-cover shrink-0" style={{ objectPosition: '50% 28%' }} />
+                <span className="flex-1 min-w-0">
+                  <span className="font-display text-lg font-medium block truncate">{mem.name}</span>
+                  <span className="text-xs block truncate" style={{ color: 'var(--ink-faint)' }}>{mem.relation}</span>
+                </span>
+                <Volume2 className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-faint)' }} />
+              </button>
             ))}
           </div>
         </div>

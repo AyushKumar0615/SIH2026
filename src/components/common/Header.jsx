@@ -1,19 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Brain,
+  Feather,
   HeartPulse,
   LayoutDashboard,
   Shield,
+  Sparkles,
   Contrast,
   TextCursorInput,
   LogOut,
-  Menu,
   X,
-  Languages,
-  MapPinned,
-  PanelTop
+  ArrowUpRight
 } from 'lucide-react';
 import { CULTURAL_CATALOG } from '../../data/regionalContent';
+import Magnetic from './Magnetic';
+import UserAvatar from './UserAvatar';
+import AvatarPicker from './AvatarPicker';
+import { AuthService } from '../../services/authService';
+
+const MODES = [
+  { id: 'elderly', label: 'Elder', icon: HeartPulse, description: 'Daily activities, memories, voice companion' },
+  { id: 'caregiver', label: 'Caregiver', icon: LayoutDashboard, description: 'Cognitive trends, insights, routines' },
+  { id: 'admin', label: 'Admin', icon: Shield, description: 'Regional coverage & audit trail' },
+  { id: 'demo', label: 'Demo', icon: Sparkles, description: 'Guided walkthrough for judges' }
+];
 
 export default function Header({
   currentMode,
@@ -27,248 +37,220 @@ export default function Header({
   fontSize,
   setFontSize,
   session,
-  onLogout
+  onLogout,
+  onSessionUpdate
 }) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
+  const activeMode = MODES.find((m) => m.id === currentMode) || MODES[0];
+  const ActiveIcon = activeMode.icon;
 
-  const modes = [
-    { id: 'elderly', label: 'Elder', icon: HeartPulse },
-    { id: 'caregiver', label: 'Caregiver', icon: LayoutDashboard },
-    { id: 'admin', label: 'Admin', icon: Shield },
-    { id: 'demo', label: 'Demo', icon: Brain }
-  ];
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') setIsOpen(false); };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
-  const activeMode = modes.find((mode) => mode.id === currentMode) || modes[0];
-  const ActiveModeIcon = activeMode.icon;
-
-  const handleModeChange = (modeId) => {
-    setCurrentMode(modeId);
-    setIsMenuOpen(false);
+  const handleSelectMode = (id) => {
+    setCurrentMode(id);
+    setIsOpen(false);
   };
 
-  const ControlCluster = ({ mobile = false }) => (
-    <div className={`flex ${mobile ? 'flex-col gap-4' : 'items-center gap-3'}`}>
-      <div className={`glass-card ${mobile ? 'p-4' : 'px-3 py-2'} border-0 shadow-none bg-slate-900/70`}>
-        <div className={`flex ${mobile ? 'flex-col gap-3' : 'items-center gap-3'}`}>
-          <div className={`${mobile ? 'space-y-2' : 'flex items-center gap-2'}`}>
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-              <Languages className="w-3.5 h-3.5" />
-              <span>Language</span>
-            </div>
-            <select
-              value={currentLang}
-              onChange={(e) => setCurrentLang(e.target.value)}
-              className="min-h-11 rounded-2xl bg-slate-950 border border-slate-700 px-3 text-sm font-bold text-white"
-              aria-label="Language"
-            >
-              <option value="as">Assamese profile</option>
-              <option value="en">English</option>
-              <option value="hi">Hindi</option>
-            </select>
-          </div>
-
-          <div className={`${mobile ? 'space-y-2' : 'flex items-center gap-2'}`}>
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-              <MapPinned className="w-3.5 h-3.5" />
-              <span>Region</span>
-            </div>
-            <select
-              value={currentState}
-              onChange={(e) => setCurrentState(e.target.value)}
-              className="min-h-11 rounded-2xl bg-slate-950 border border-slate-700 px-3 text-sm font-bold text-white"
-              aria-label="NER state"
-            >
-              {Object.values(CULTURAL_CATALOG).map((state) => (
-                <option key={state.id} value={state.name}>{state.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className={`glass-card ${mobile ? 'p-4' : 'px-3 py-2'} border-0 shadow-none bg-slate-900/70`}>
-        <div className={`flex ${mobile ? 'flex-col gap-3' : 'items-center gap-2'}`}>
-          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-            <PanelTop className="w-3.5 h-3.5" />
-            <span>Accessibility</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setHighContrast(!highContrast)}
-              className={`min-h-11 rounded-2xl px-3 text-sm font-bold inline-flex items-center gap-2 border ${
-                highContrast
-                  ? 'bg-teal-500 text-slate-950 border-teal-400'
-                  : 'bg-slate-950 text-slate-200 border-slate-700'
-              }`}
-              title="Toggle high contrast"
-              aria-pressed={highContrast}
-            >
-              <Contrast className="w-4 h-4" />
-              <span>{highContrast ? 'High contrast on' : 'Contrast'}</span>
-            </button>
-
-            <button
-              onClick={() => setFontSize(fontSize === 'normal' ? 'lg' : fontSize === 'lg' ? 'xl' : 'normal')}
-              className="min-h-11 rounded-2xl px-3 text-sm font-bold inline-flex items-center gap-2 bg-slate-950 border border-slate-700 text-slate-200"
-              title="Increase text size"
-            >
-              <TextCursorInput className="w-4 h-4" />
-              <span>{fontSize === 'normal' ? 'Text size' : fontSize === 'lg' ? 'Large text' : 'Extra large'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {session ? (
-        <div className={`glass-card ${mobile ? 'p-4' : 'px-3 py-2'} border-0 shadow-none bg-slate-900/70`}>
-          <div className={`flex ${mobile ? 'items-start justify-between' : 'items-center gap-3'}`}>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Signed in</p>
-              <p className="text-sm font-extrabold text-white">{session.fullName}</p>
-              <p className="text-xs font-semibold capitalize text-slate-300">{session.role} workspace</p>
-            </div>
-
-            <button
-              onClick={onLogout}
-              className="min-h-11 rounded-2xl bg-slate-950 border border-slate-700 px-4 text-sm font-extrabold text-white inline-flex items-center gap-2"
-              title="Log out"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/88 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 py-3 md:py-4 space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex items-center gap-3">
-            <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-teal-500/16 border border-teal-500/20 grid place-items-center shadow-sm">
-              <Brain className="w-6 h-6 text-teal-300" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg md:text-xl font-black text-white font-display truncate">SmritiSetu NER</h1>
-              <p className="hidden md:block text-xs text-slate-400 font-medium truncate">
-                Cognitive care workspace for elders, caregivers and administrators
-              </p>
-              <div className="md:hidden flex items-center gap-2 mt-0.5">
-                <span className="text-xs font-semibold text-slate-400">Workspace</span>
-                <span className={`badge ${currentMode === 'demo' ? 'badge-amber' : 'badge-teal'} text-[11px]`}>
-                  <ActiveModeIcon className="w-3 h-3" />
-                  {activeMode.label}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="hidden lg:flex items-center justify-center flex-1 px-6">
-            <nav
-              className="inline-flex items-center gap-1 rounded-2xl border border-slate-800 bg-slate-900/78 p-1.5 shadow-sm"
-              aria-label="Workspace navigation"
-            >
-              {modes.map((mode) => {
-                const Icon = mode.icon;
-                const isActive = currentMode === mode.id;
-                const isDemo = mode.id === 'demo';
-                return (
-                  <button
-                    key={mode.id}
-                    onClick={() => handleModeChange(mode.id)}
-                    className={`min-h-11 rounded-xl px-4 text-sm font-extrabold inline-flex items-center gap-2 transition-colors ${
-                      isActive
-                        ? isDemo
-                          ? 'bg-amber-500/90 text-slate-950'
-                          : 'bg-teal-500 text-slate-950'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {mode.label}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="hidden xl:flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/74 px-3 py-2">
-              <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Signed in</span>
-              <div className="w-px h-5 bg-slate-800" />
-              <span className="text-sm font-semibold text-white">{session?.fullName}</span>
-              <span className={`badge ${currentMode === 'demo' ? 'badge-amber' : 'badge-teal'} text-[11px]`}>
-                {activeMode.label}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen((open) => !open)}
-              className="lg:hidden min-h-11 min-w-11 rounded-2xl border border-slate-700 bg-slate-900 px-3 text-white inline-flex items-center justify-center"
-              aria-expanded={isMenuOpen}
-              aria-label={isMenuOpen ? 'Close header menu' : 'Open header menu'}
-            >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-
-        <div className="hidden lg:flex items-center justify-between gap-4">
-          <div className="min-w-0 flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Current workspace</span>
-            <span className={`badge ${currentMode === 'demo' ? 'badge-amber' : 'badge-teal'} text-[11px]`}>
-              <ActiveModeIcon className="w-3 h-3" />
-              {activeMode.label}
+    <>
+      <div className="float-bar">
+        <Magnetic strength={0.25}>
+          <button type="button" className="mark-btn" onClick={() => handleSelectMode('elderly')}>
+            <span className="mark-glyph"><Feather className="w-4 h-4" /></span>
+            <span className="hidden sm:flex items-center h-10 px-4 rounded-full leading-none" style={{ background: 'rgba(19, 17, 16, 0.35)', border: '1px solid var(--hairline-strong)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+              <span className="font-display font-semibold text-base">Smriti<em className="italic" style={{ color: 'var(--ember)' }}>Setu</em></span>
             </span>
-          </div>
+          </button>
+        </Magnetic>
 
-          <ControlCluster />
-        </div>
+        <Magnetic strength={0.3}>
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className={`trigger-btn ${isOpen ? '' : 'trigger-btn-hint'}`}
+            aria-haspopup="dialog"
+            aria-expanded={isOpen}
+            aria-label={`Open workspace menu — currently ${activeMode.label}`}
+          >
+            <ActiveIcon className="w-4.5 h-4.5" />
+          </button>
+        </Magnetic>
+      </div>
 
-        {isMenuOpen ? (
-          <div className="lg:hidden glass-card p-4 space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Workspaces</p>
-                <span className={`badge ${currentMode === 'demo' ? 'badge-amber' : 'badge-teal'} text-[11px]`}>
-                  <ActiveModeIcon className="w-3 h-3" />
-                  {activeMode.label}
-                </span>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="overlay-scrim"
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.div
+              className="rail-pad content-col py-8 md:py-14"
+              initial={{ opacity: 0, scale: 0.96, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, scale: 0.97, filter: 'blur(4px)' }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="flex items-center justify-between mb-10 md:mb-16">
+                <span className="eyebrow">Workspace</span>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="trigger-btn"
+                  aria-label="Close menu"
+                >
+                  <X className="w-4.5 h-4.5" />
+                </button>
               </div>
 
-              <nav className="grid grid-cols-2 gap-2" aria-label="Workspace navigation">
-                {modes.map((mode) => {
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {MODES.map((mode) => {
                   const Icon = mode.icon;
                   const isActive = currentMode === mode.id;
-                  const isDemo = mode.id === 'demo';
                   return (
                     <button
                       key={mode.id}
-                      onClick={() => handleModeChange(mode.id)}
-                      className={`min-h-12 rounded-2xl px-4 text-sm font-extrabold inline-flex items-center gap-2 justify-center ${
-                        isActive
-                          ? isDemo
-                            ? 'bg-amber-500/90 text-slate-950'
-                            : 'bg-teal-500 text-slate-950'
-                          : 'bg-slate-900 text-slate-200 border border-slate-800'
-                      }`}
+                      type="button"
+                      onClick={() => handleSelectMode(mode.id)}
+                      className={`workspace-row ${isActive ? 'is-active' : ''}`}
                     >
-                      <Icon className="w-4 h-4" />
-                      {mode.label}
+                      <span className="flex items-center gap-4 md:gap-6 min-w-0">
+                        <Icon className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
+                        <span className="min-w-0">
+                          <span className="font-display font-semibold text-2xl md:text-4xl block leading-tight">{mode.label}</span>
+                          <span className="text-xs md:text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{mode.description}</span>
+                        </span>
+                      </span>
+                      <ArrowUpRight className="w-5 h-5 shrink-0" />
                     </button>
                   );
                 })}
-              </nav>
-            </div>
+              </motion.div>
 
-            <ControlCluster mobile />
-          </div>
-        ) : null}
-      </div>
-    </header>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-10 md:mt-14 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8"
+              >
+                <div>
+                  <label className="field-label">Language</label>
+                  <select value={currentLang} onChange={(e) => setCurrentLang(e.target.value)} className="select">
+                    <option value="as">Assamese</option>
+                    <option value="en">English</option>
+                    <option value="hi">Hindi</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="field-label">Region</label>
+                  <select value={currentState} onChange={(e) => setCurrentState(e.target.value)} className="select">
+                    {Object.values(CULTURAL_CATALOG).map((state) => (
+                      <option key={state.id} value={state.name}>{state.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="field-label">Contrast</label>
+                  <button
+                    type="button"
+                    onClick={() => setHighContrast(!highContrast)}
+                    className="flex items-center gap-2 text-sm font-semibold pt-2"
+                    style={{ color: highContrast ? 'var(--ember)' : 'var(--ink)' }}
+                    aria-pressed={highContrast}
+                  >
+                    <Contrast className="w-4 h-4" /> {highContrast ? 'On' : 'Off'}
+                  </button>
+                </div>
+                <div>
+                  <label className="field-label">Text Size</label>
+                  <button
+                    type="button"
+                    onClick={() => setFontSize(fontSize === 'normal' ? 'lg' : fontSize === 'lg' ? 'xl' : 'normal')}
+                    className="flex items-center gap-2 text-sm font-semibold pt-2"
+                  >
+                    <TextCursorInput className="w-4 h-4" /> {fontSize === 'normal' ? 'Normal' : fontSize === 'lg' ? 'Large' : 'Extra Large'}
+                  </button>
+                </div>
+              </motion.div>
+
+              {session && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="mt-10 md:mt-14 pt-6 hairline-top"
+                  style={{ borderTop: '1px solid var(--hairline)' }}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setAvatarEditorOpen((v) => !v)}
+                      className="flex items-center gap-3 min-w-0 text-left"
+                      aria-expanded={avatarEditorOpen}
+                      aria-label="Change profile picture"
+                    >
+                      <UserAvatar
+                        avatar={session.avatar}
+                        fullName={session.fullName}
+                        className="w-9 h-9 rounded-full overflow-hidden shrink-0 object-cover"
+                        iconClassName="w-4 h-4"
+                      />
+                      <span className="min-w-0">
+                        <span className="text-sm font-semibold block truncate">{session.fullName}</span>
+                        <span className="text-xs block truncate capitalize" style={{ color: 'var(--ink-faint)' }}>{session.role} · Change photo</span>
+                      </span>
+                    </button>
+                    <button type="button" onClick={onLogout} className="btn btn-quiet shrink-0">
+                      <LogOut className="w-4 h-4" /> Logout
+                    </button>
+                  </div>
+
+                  <AnimatePresence>
+                    {avatarEditorOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pt-6">
+                          <AvatarPicker
+                            value={session.avatar}
+                            fullName={session.fullName}
+                            onChange={(avatar) => {
+                              const nextSession = AuthService.updateAvatar(session.id, avatar);
+                              onSessionUpdate?.(nextSession);
+                              setAvatarEditorOpen(false);
+                            }}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

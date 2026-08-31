@@ -1,32 +1,41 @@
 import React, { useState } from 'react';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
 import { MOCK_ROUTINE_SCHEDULE } from '../../data/mockData';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 export default function RemindersView({ onBack }) {
   const [items, setItems] = useState(MOCK_ROUTINE_SCHEDULE);
+  const containerRef = useScrollReveal();
+
+  const toggleItem = (id) => setItems((prev) => prev.map((r) => (r.id === id ? { ...r, completed: !r.completed } : r)));
+  const completedCount = items.filter((i) => i.completed).length;
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-5 animate-fade-in">
-      <button onClick={onBack} className="btn-secondary px-4 py-2"><ArrowLeft className="w-5 h-5" /> Back</button>
-      <div className="glass-card p-6 border-2 border-amber-500/40">
-        <span className="badge badge-amber">Simple routine assistant</span>
-        <h2 className="text-4xl font-black text-white mt-2">My reminders</h2>
-        <p className="text-slate-300 font-medium mt-2">Large, calm prompts for medicines, meals, calls and safe activities.</p>
+    <div ref={containerRef} className="page max-w-2xl">
+      <button type="button" onClick={onBack} className="btn btn-quiet !flex !px-0 mb-8"><ArrowLeft className="w-4 h-4" /> Back</button>
+
+      <div className="flex items-end justify-between gap-4 mb-2">
+        <div>
+          <span className="eyebrow">Daily Schedule</span>
+          <h2 className="font-display text-3xl md:text-4xl font-medium mt-3">My Reminders</h2>
+        </div>
+        <span className="figure-value shrink-0" style={{ color: 'var(--jade)' }}>{completedCount}/{items.length}</span>
       </div>
-      <div className="space-y-4">
+
+      <div className="progress-track my-6"><div className="progress-fill" style={{ width: `${(completedCount / items.length) * 100}%` }} /></div>
+
+      <div className="index-list">
         {items.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setItems(items.map((r) => r.id === item.id ? { ...r, completed: !r.completed } : r))}
-            className="w-full text-left elderly-card p-5 border-2 border-slate-700"
-          >
-            <div className="elderly-card-icon text-4xl">{item.icon}</div>
-            <div className="flex-1">
-              <p className="text-amber-300 font-black text-lg">{item.time}</p>
-              <h3 className="text-2xl font-black text-white">{item.title}</h3>
-              <p className="text-slate-300">{item.voicePrompt}</p>
-            </div>
-            <CheckCircle2 className={`w-9 h-9 ${item.completed ? 'text-teal-300' : 'text-slate-600'}`} />
+          <button type="button" key={item.id} onClick={() => toggleItem(item.id)} className="index-row" style={item.completed ? { opacity: 0.5 } : undefined}>
+            <span className="index-icon">{item.icon}</span>
+            <span className="flex-1 min-w-0 text-left">
+              <span className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--ember)' }}>
+                <Clock className="w-3.5 h-3.5" /> {item.time}
+              </span>
+              <span className={`font-display text-xl font-medium block mt-0.5 ${item.completed ? 'line-through' : ''}`}>{item.title}</span>
+              <span className="text-sm block mt-0.5 truncate" style={{ color: 'var(--ink-faint)' }}>{item.voicePrompt}</span>
+            </span>
+            <CheckCircle2 className="w-7 h-7 shrink-0" style={{ color: item.completed ? 'var(--jade)' : 'var(--hairline-strong)' }} />
           </button>
         ))}
       </div>

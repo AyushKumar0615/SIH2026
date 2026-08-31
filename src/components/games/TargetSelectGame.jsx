@@ -16,34 +16,32 @@ export default function TargetSelectGame({ onFinishGame, onBack }) {
     const correct = selected.filter((idx) => items[idx] === 'Tea leaf').length;
     const mistakes = selected.length - correct + (targets - correct);
     onFinishGame({
-      gameName: 'NER Craft Focus',
-      domain: 'Attention',
-      difficulty: 'Medium',
+      gameName: 'NER Craft Focus', domain: 'Attention', difficulty: 'Medium',
       accuracy: Math.max(0, Math.round(((items.length - mistakes) / items.length) * 100)),
-      responseTimeSec: Math.max(5, Math.round((Date.now() - start) / 1000)),
-      mistakes
+      responseTimeSec: Math.max(5, Math.round((Date.now() - start) / 1000)), mistakes
     });
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-5 animate-fade-in">
-      <button onClick={onBack} className="btn-secondary px-4 py-2"><ArrowLeft className="w-5 h-5" /> Game Library</button>
-      <div className="glass-card p-6 border-2 border-teal-500/40">
-        <span className="badge badge-teal">Attention domain</span>
-        <h2 className="text-3xl font-black text-white mt-2">Find every Tea leaf</h2>
-      </div>
+    <div className="page max-w-2xl">
+      <button type="button" onClick={onBack} className="btn btn-quiet !flex !px-0 mb-8"><ArrowLeft className="w-4 h-4" /> Game Library</button>
+
+      <span className="eyebrow">Attention Domain</span>
+      <h2 className="font-display text-3xl font-medium mt-2 mb-8">Find Every "Tea Leaf"</h2>
+
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {items.map((item, idx) => (
           <button
-            key={`${item}-${idx}`}
-            onClick={() => toggle(idx)}
-            className={`game-tile rounded-2xl border-2 p-3 text-lg font-black ${selected.includes(idx) ? 'bg-amber-400 text-slate-950 border-amber-100' : 'bg-slate-900 border-slate-700 text-slate-200'}`}
+            type="button" key={`${item}-${idx}`} onClick={() => toggle(idx)}
+            className="game-tile p-3 text-sm font-medium flex items-center justify-center"
+            style={selected.includes(idx) ? { background: 'var(--ember)', color: '#1a0f08', borderColor: 'var(--ember)' } : {}}
           >
             {item}
           </button>
         ))}
       </div>
-      <button onClick={finish} className="btn-primary px-7 py-4 text-lg">Finish focus task</button>
+
+      <button type="button" onClick={finish} className="btn btn-ember w-full mt-8">Finish Focus Task</button>
     </div>
   );
 }

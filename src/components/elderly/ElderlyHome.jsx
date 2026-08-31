@@ -1,20 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { AnimatePresence, motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
+import { pageTransition } from '../common/pageTransition';
 import { MOCK_ELDERLY_USER, MOCK_ROUTINE_SCHEDULE } from '../../data/mockData';
+import UserAvatar, { isPhotoAvatar } from '../common/UserAvatar';
 import { LocalizationService } from '../../services/localizationService';
 import { AudioService } from '../../services/audioService';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 import GameShell from './GameShell';
 import MemoryJournalView from './MemoryJournalView';
 import RemindersView from './RemindersView';
 import StoryModeView from './StoryModeView';
 import VoiceAssistantModal from './VoiceAssistantModal';
-import { Mic, Sparkles, Volume2, Clock, CheckCircle2, Home, Brain, BookOpen, Bell } from 'lucide-react';
+import VoiceOrb from './VoiceOrb';
+import Magnetic from '../common/Magnetic';
+import { Volume2, ArrowUpRight, PhoneCall, Home, Brain, BookOpen, Bell } from 'lucide-react';
 
-export default function ElderlyHome({ currentLang, currentState }) {
+const RING_CIRCUMFERENCE = 2 * Math.PI * 20;
+
+export default function ElderlyHome({ currentLang, currentState, session }) {
+  const userName = session?.fullName || 'Guest';
   const [activeSubView, setActiveSubView] = useState('home');
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const containerRef = useScrollReveal();
+  const spotlightRef = useRef(null);
+  const heroRef = useRef(null);
+
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const portraitY = useTransform(scrollYProgress, [0, 1], [0, 60]);
+  const portraitOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.4]);
+  const nextTaskOpacity = useTransform(scrollYProgress, [0.55, 1], [1, 0.82]);
+  const nextTaskY = useTransform(scrollYProgress, [0.55, 1], [0, 10]);
+
+  const tiltX = useMotionValue(0);
+  const tiltY = useMotionValue(0);
+  const tiltXSpring = useSpring(tiltX, { stiffness: 60, damping: 16, mass: 0.6 });
+  const tiltYSpring = useSpring(tiltY, { stiffness: 60, damping: 16, mass: 0.6 });
 
   const culturalProfile = LocalizationService.getCulturalProfile(currentState);
   const nextTask = MOCK_ROUTINE_SCHEDULE.find((item) => !item.completed) || MOCK_ROUTINE_SCHEDULE[0];
+  const completedCount = MOCK_ROUTINE_SCHEDULE.filter((i) => i.completed).length;
+  const todayFraction = completedCount / MOCK_ROUTINE_SCHEDULE.length;
 
   const getGreetingTime = () => {
     const hour = new Date().getHours();
@@ -24,186 +50,242 @@ export default function ElderlyHome({ currentLang, currentState }) {
   };
 
   const handleSpeakGreeting = () => {
-    const greetingMsg = `${getGreetingTime()} ${MOCK_ELDERLY_USER.name}! ${culturalProfile.greeting}. Tap any card below to play games or view family memories.`;
-    AudioService.speak(greetingMsg, 'en');
+    const greetingMsg = `${getGreetingTime()} ${userName}! ${culturalProfile.greeting}. Tap any activity below to play games or view family memories.`;
+    setIsSpeaking(true);
+    // "onend" is unreliable across browsers/tabs — a duration-based fallback
+    // guarantees the orb never gets stuck in the speaking state.
+    const estimatedMs = Math.min(20000, Math.max(3000, greetingMsg.split(' ').length * 380));
+    const fallback = window.setTimeout(() => setIsSpeaking(false), estimatedMs);
+    AudioService.speak(greetingMsg, 'en', () => {
+      window.clearTimeout(fallback);
+      setIsSpeaking(false);
+    });
   };
 
+  const handleSpotlight = (e) => {
+    if (!spotlightRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    spotlightRef.current.style.setProperty('--mx', `${((e.clientX - rect.left) / rect.width) * 100}%`);
+    spotlightRef.current.style.setProperty('--my', `${((e.clientY - rect.top) / rect.height) * 100}%`);
+
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    tiltX.set(((e.clientX - cx) / rect.width) * 14);
+    tiltY.set(((e.clientY - cy) / rect.height) * 14);
+  };
+
+  const handleHeroLeave = () => {
+    tiltX.set(0);
+    tiltY.set(0);
+  };
+
+  let content;
+
   if (activeSubView === 'games') {
-    return <GameShell stateName={currentState} onBack={() => setActiveSubView('home')} />;
-  }
-  if (activeSubView === 'memories') {
-    return <MemoryJournalView onBack={() => setActiveSubView('home')} onOpenVoiceAssistant={() => setIsAssistantOpen(true)} />;
-  }
-  if (activeSubView === 'reminders') {
-    return <RemindersView onBack={() => setActiveSubView('home')} />;
-  }
-  if (activeSubView === 'story') {
-    return <StoryModeView onBack={() => setActiveSubView('home')} />;
-  }
+    content = <GameShell stateName={currentState} onBack={() => setActiveSubView('home')} />;
+  } else if (activeSubView === 'memories') {
+    content = <MemoryJournalView onBack={() => setActiveSubView('home')} onOpenVoiceAssistant={() => setIsAssistantOpen(true)} />;
+  } else if (activeSubView === 'reminders') {
+    content = <RemindersView onBack={() => setActiveSubView('home')} />;
+  } else if (activeSubView === 'story') {
+    content = <StoryModeView onBack={() => setActiveSubView('home')} />;
+  } else {
+    content = (
+    <div ref={containerRef}>
+      {/* ── HERO — identity + voice as one interactive object ────────── */}
+      <section ref={heroRef} className="stage overflow-hidden" onMouseMove={handleSpotlight} onMouseLeave={handleHeroLeave}>
+        <div ref={spotlightRef} className="spotlight" />
 
-  return (
-    <div className="elder-home animate-fade-in">
-      <section className="glass-card elder-identity-card">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5 min-w-0">
-            <img
-              src={MOCK_ELDERLY_USER.avatarUrl}
-              alt={MOCK_ELDERLY_USER.name}
-              className="elder-identity-photo"
-            />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="badge badge-amber">{culturalProfile.greeting}</span>
-                <span className="badge badge-teal">{currentState}</span>
+        <div className="rail-pad content-col relative z-10 pt-24 pb-5 md:pt-32 md:pb-10">
+          <div className="grid lg:grid-cols-[1.15fr_0.7fr] gap-8 lg:gap-12 items-center">
+            <div className="scroll-reveal">
+              <span className="eyebrow">{culturalProfile.greeting} · {currentState}</span>
+              <h1
+                className="font-display font-medium leading-[0.94] text-[clamp(2.6rem,7vw,5.6rem)] mt-5"
+                style={{ letterSpacing: '-0.02em' }}
+              >
+                {getGreetingTime()}
+                <br />
+                <em className="italic" style={{ color: 'var(--ember)' }}>{userName}</em>
+              </h1>
+              <div className="flex flex-wrap items-center gap-5 mt-6">
+                <p className="pin">
+                  Caregiver <strong style={{ color: 'var(--ink)' }}>{MOCK_ELDERLY_USER.caregiverName}</strong> · {MOCK_ELDERLY_USER.location}
+                </p>
+                <button type="button" onClick={handleSpeakGreeting} className="btn btn-quiet !px-0">
+                  <Volume2 className={`w-4 h-4 ${isSpeaking ? 'animate-soft-pulse' : ''}`} /> {isSpeaking ? 'Speaking…' : 'Listen to greeting'}
+                </button>
               </div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white leading-tight">
-                {getGreetingTime()} {MOCK_ELDERLY_USER.name}
-              </h2>
-              <p className="supporting-text text-lg font-medium mt-2">
-                Caregiver: <strong className="text-amber-200">{MOCK_ELDERLY_USER.caregiverName}</strong>
-                <span className="meta-text"> · {MOCK_ELDERLY_USER.location}</span>
+            </div>
+
+            {/* Identity + voice — one merged, tactile object */}
+            <div className="justify-self-center lg:justify-self-end reveal-scale scroll-reveal" data-reveal-delay="1">
+              <motion.div style={{ x: tiltXSpring, y: tiltYSpring }} className="relative w-48 h-48 md:w-60 md:h-60">
+                <div
+                  className="absolute -inset-4 rounded-full"
+                  style={{ background: 'conic-gradient(from 220deg, var(--ember), transparent 40%, var(--jade), transparent 80%)', opacity: 0.35, filter: 'blur(2px)' }}
+                />
+                <motion.div style={{ y: portraitY, opacity: portraitOpacity }} className={`${isPhotoAvatar(session?.avatar) ? 'duotone' : ''} relative w-full h-full rounded-full overflow-hidden avatar-ring`}>
+                  <UserAvatar avatar={session?.avatar} fullName={userName} className="w-full h-full object-cover" iconClassName="w-1/3 h-1/3" />
+                </motion.div>
+
+                <div className="absolute -bottom-3 -right-3 md:-bottom-4 md:-right-4">
+                  <Magnetic strength={0.3}>
+                    <VoiceOrb speaking={isSpeaking} onActivate={() => setIsAssistantOpen(true)} />
+                  </Magnetic>
+                </div>
+              </motion.div>
+              <p className="text-center text-xs font-medium mt-3" style={{ color: 'var(--ink-faint)' }}>
+                Tap to ask — "Who is Ananya?"
               </p>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={handleSpeakGreeting}
-            className="btn-secondary py-3 px-5 text-lg"
-          >
-            <Volume2 className="w-6 h-6 text-teal-300" /> Speak Greeting
-          </button>
         </div>
+
+        {/* Connective tissue into the next section */}
+        <motion.div style={{ opacity: nextTaskOpacity, y: nextTaskY }} className="rail-pad content-col pt-1 pb-9 relative z-10 reveal-left scroll-reveal" data-reveal-delay="2">
+          <div className="notice-strip is-jade flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <span className="text-xs font-semibold" style={{ color: 'var(--jade)' }}>NEXT · {nextTask.time}</span>
+              <span className="font-display text-lg md:text-xl font-medium truncate">{nextTask.title}</span>
+            </div>
+            <button type="button" onClick={() => setActiveSubView('reminders')} className="btn btn-quiet shrink-0 !px-0" style={{ color: 'var(--jade)' }}>
+              Mark complete <ArrowUpRight className="w-4 h-4" />
+            </button>
+          </div>
+        </motion.div>
       </section>
 
-      <button
-        type="button"
-        onClick={() => setIsAssistantOpen(true)}
-        className="elder-voice-card"
-      >
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="elder-voice-icon">
-            <Mic className="w-9 h-9" />
-          </div>
-          <div className="min-w-0">
-            <span className="badge badge-amber mb-2">Voice assistant</span>
-            <h3 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">Ask anything</h3>
-            <p className="supporting-text text-lg mt-1">Try: “Who is Ananya?”</p>
-          </div>
+      <div className="rail-pad content-col"><div className="fade-divider" /></div>
+
+      {/* ── ACTIVITIES — featured object + interactive index ─────────── */}
+      <section className="rail-pad content-col py-14 md:py-20 section-ambient">
+        <div className="flex items-end justify-between mb-6 scroll-reveal">
+          <h2 className="font-display text-2xl md:text-3xl font-medium">Daily Activities</h2>
+          <span className="text-xs font-medium hidden sm:block" style={{ color: 'var(--ink-faint)' }}>{completedCount}/{MOCK_ROUTINE_SCHEDULE.length} done today</span>
         </div>
 
-        <span className="btn-primary btn-gold py-3 px-7 text-xl pointer-events-none">
-          <Sparkles className="w-6 h-6" /> Talk Now
-        </span>
-      </button>
-
-      <section className="glass-card elder-next-task">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-          <div className="flex items-start gap-4 min-w-0">
-            <div className="elderly-card-icon text-3xl bg-teal-500/15 text-teal-200">{nextTask.icon}</div>
-            <div className="min-w-0">
-              <p className="badge badge-teal mb-2">Today’s next task</p>
-              <p className="meta-text text-lg font-bold flex items-center gap-2">
-                <Clock className="w-5 h-5 text-teal-300" /> {nextTask.time}
-              </p>
-              <h3 className="text-2xl md:text-3xl font-extrabold text-white mt-1 leading-tight">{nextTask.title}</h3>
-              <p className="supporting-text text-lg mt-2">{nextTask.voicePrompt}</p>
+        <button
+          type="button"
+          onClick={() => setActiveSubView('games')}
+          className="group relative w-full rounded-[var(--radius-lg)] overflow-hidden text-left reveal-scale scroll-reveal transition-[transform,box-shadow] duration-300 hover:-translate-y-1"
+          data-reveal-delay="1"
+          style={{ minHeight: '18rem', boxShadow: 'var(--shadow-sm)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
+        >
+          <div
+            className="absolute inset-0 transition-transform duration-700 group-hover:scale-105"
+            style={{
+              background:
+                'radial-gradient(60rem 30rem at 85% 20%, rgba(226,112,58,0.35), transparent 55%), radial-gradient(50rem 40rem at 10% 100%, rgba(79,174,142,0.28), transparent 55%), var(--canvas-raised)'
+            }}
+          />
+          <div className="relative h-full flex flex-col justify-between p-7 md:p-10" style={{ minHeight: '18rem' }}>
+            <div className="flex items-start justify-between gap-4">
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-faint)' }}>Cognitive Exercise</span>
+              <svg width="44" height="44" viewBox="0 0 44 44" className="shrink-0 -rotate-90">
+                <circle cx="22" cy="22" r="20" fill="none" stroke="var(--hairline-strong)" strokeWidth="3" />
+                <circle
+                  cx="22" cy="22" r="20" fill="none" stroke="var(--ember)" strokeWidth="3" strokeLinecap="round"
+                  strokeDasharray={RING_CIRCUMFERENCE} strokeDashoffset={RING_CIRCUMFERENCE * (1 - todayFraction)}
+                />
+              </svg>
+            </div>
+            <div className="flex items-end justify-between gap-6">
+              <h3 className="font-display font-medium text-[clamp(2rem,5vw,3.6rem)] leading-[0.95]">
+                {LocalizationService.getText('playAGame', currentLang)}
+              </h3>
+              <Magnetic strength={0.35}>
+                <span className="trigger-btn shrink-0" style={{ background: 'var(--ember)', borderColor: 'var(--ember)', color: '#1a0f08' }}>
+                  <ArrowUpRight className="w-5 h-5" />
+                </span>
+              </Magnetic>
             </div>
           </div>
+        </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveSubView('reminders')}
-            className="btn-primary py-3 px-6 text-lg shrink-0"
-          >
-            <CheckCircle2 className="w-6 h-6" /> Complete reminder
-          </button>
-        </div>
-      </section>
-
-      <div>
-        <h3 className="section-title text-2xl mb-4">Your activities</h3>
-        <div className="elder-activity-grid">
-          <button type="button" onClick={() => setActiveSubView('games')} className="elderly-card">
-            <div className="elderly-card-icon text-teal-200 bg-teal-500/15 text-3xl">🧠</div>
-            <div className="elderly-card-content">
-              <h3 className="elderly-card-title">{LocalizationService.getText('playAGame', currentLang)}</h3>
-              <p className="elderly-card-subtitle">Bihu Pairs, Face Match & Focus</p>
-            </div>
+        <div className="index-list mt-4 scroll-reveal" data-reveal-delay="2">
+          <button type="button" onClick={() => setActiveSubView('memories')} className="index-row">
+            <span className="index-num">01</span>
+            <span className="index-icon">📝</span>
+            <span className="flex-1 min-w-0">
+              <span className="font-display text-xl md:text-2xl font-medium block">{LocalizationService.getText('myMemories', currentLang)}</span>
+              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>Family photos, Ananya's stories & audio notes</span>
+            </span>
+            <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
 
-          <button type="button" onClick={() => setActiveSubView('memories')} className="elderly-card">
-            <div className="elderly-card-icon text-amber-200 bg-amber-500/15 text-3xl">📝</div>
-            <div className="elderly-card-content">
-              <h3 className="elderly-card-title">{LocalizationService.getText('myMemories', currentLang)}</h3>
-              <p className="elderly-card-subtitle">Family photos, Ananya & story</p>
-            </div>
+          <button type="button" onClick={() => setActiveSubView('reminders')} className="index-row">
+            <span className="index-num">02</span>
+            <span className="index-icon">🔔</span>
+            <span className="flex-1 min-w-0">
+              <span className="font-display text-xl md:text-2xl font-medium block">{LocalizationService.getText('myReminders', currentLang)}</span>
+              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>Medication & tea time schedule</span>
+            </span>
+            <span className="hidden sm:flex items-center gap-2 shrink-0" style={{ color: 'var(--ink-faint)' }}>
+              <svg width="26" height="26" viewBox="0 0 26 26" className="-rotate-90">
+                <circle cx="13" cy="13" r="11" fill="none" stroke="var(--hairline-strong)" strokeWidth="2.5" />
+                <circle
+                  cx="13" cy="13" r="11" fill="none" stroke="var(--jade)" strokeWidth="2.5" strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 11} strokeDashoffset={2 * Math.PI * 11 * (1 - todayFraction)}
+                />
+              </svg>
+              <span className="text-xs font-semibold">{completedCount}/{MOCK_ROUTINE_SCHEDULE.length}</span>
+            </span>
+            <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
 
-          <button type="button" onClick={() => setActiveSubView('reminders')} className="elderly-card">
-            <div className="elderly-card-icon text-rose-200 bg-rose-500/15 text-3xl">🔔</div>
-            <div className="elderly-card-content">
-              <h3 className="elderly-card-title">{LocalizationService.getText('myReminders', currentLang)}</h3>
-              <p className="elderly-card-subtitle">Medication & Assam tea time</p>
-            </div>
-          </button>
-
-          <button type="button" onClick={() => setActiveSubView('story')} className="elderly-card">
-            <div className="elderly-card-icon text-indigo-200 bg-indigo-500/15 text-3xl">📖</div>
-            <div className="elderly-card-content">
-              <h3 className="elderly-card-title">AI Story Mode</h3>
-              <p className="elderly-card-subtitle">Narrated family slideshow</p>
-            </div>
-          </button>
-
-          <button type="button" onClick={() => setIsAssistantOpen(true)} className="elderly-card">
-            <div className="elderly-card-icon text-sky-200 bg-sky-500/15 text-3xl">👨‍👩‍👧</div>
-            <div className="elderly-card-content">
-              <h3 className="elderly-card-title">{LocalizationService.getText('myFamily', currentLang)}</h3>
-              <p className="elderly-card-subtitle">Ananya, Priya & Rahul</p>
-            </div>
+          <button type="button" onClick={() => setActiveSubView('story')} className="index-row">
+            <span className="index-num">03</span>
+            <span className="index-icon">📖</span>
+            <span className="flex-1 min-w-0">
+              <span className="font-display text-xl md:text-2xl font-medium block">AI Story Mode</span>
+              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>Narrated regional slideshow</span>
+            </span>
+            <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
 
           <button
             type="button"
             onClick={() => {
               AudioService.speak('Connecting emergency call to Priya Devi.', 'en');
-              alert('📞 Call Initiated to Primary Caregiver: Priya Devi (+91 98640 12345)');
+              alert('Call Initiated to Primary Caregiver: Priya Devi (+91 98640 12345)');
             }}
-            className="elderly-card elderly-card-caregiver"
+            className="index-row"
           >
-            <div className="elderly-card-icon text-red-300 bg-red-500/15 text-3xl">🚨</div>
-            <div className="elderly-card-content">
-              <h3 className="elderly-card-title">Call Caregiver</h3>
-              <p className="elderly-card-subtitle">Tap for instant assistance</p>
-            </div>
+            <span className="index-num">04</span>
+            <span className="index-icon" style={{ background: 'var(--alert-soft)', color: 'var(--alert)' }}><PhoneCall className="w-4.5 h-4.5" /></span>
+            <span className="flex-1 min-w-0">
+              <span className="font-display text-xl md:text-2xl font-medium block" style={{ color: 'var(--alert)' }}>Call Caregiver</span>
+              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>Tap for instant phone call</span>
+            </span>
+            <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
         </div>
-      </div>
+      </section>
 
-      <nav className="elder-shortcut-nav" aria-label="Elder shortcuts">
-        <button type="button" className="btn-secondary" aria-current="page">
-          <Home className="w-5 h-5" /> Home
-        </button>
-        <button type="button" className="btn-secondary" onClick={() => setActiveSubView('games')}>
-          <Brain className="w-5 h-5" /> Games
-        </button>
-        <button type="button" className="btn-secondary" onClick={() => setActiveSubView('memories')}>
-          <BookOpen className="w-5 h-5" /> Memories
-        </button>
-        <button type="button" className="btn-secondary" onClick={() => setActiveSubView('reminders')}>
-          <Bell className="w-5 h-5" /> Reminders
-        </button>
+      <nav className="rail-pad content-col pb-20 grid grid-cols-2 sm:flex sm:items-center gap-x-8 gap-y-4 scroll-reveal" aria-label="Elder shortcuts" style={{ borderTop: '1px solid var(--hairline)', paddingTop: '2rem' }}>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink)' }} aria-current="page"><Home className="w-4 h-4" /> Home</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('games')}><Brain className="w-4 h-4" /> Games</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('memories')}><BookOpen className="w-4 h-4" /> Memories</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('reminders')}><Bell className="w-4 h-4" /> Reminders</button>
       </nav>
 
       <VoiceAssistantModal
         isOpen={isAssistantOpen}
         onClose={() => setIsAssistantOpen(false)}
-        onOpenGame={() => {
-          setIsAssistantOpen(false);
-          setActiveSubView('games');
-        }}
+        onOpenGame={() => { setIsAssistantOpen(false); setActiveSubView('games'); }}
       />
     </div>
+    );
+  }
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div key={activeSubView} {...pageTransition}>
+        {content}
+      </motion.div>
+    </AnimatePresence>
   );
 }

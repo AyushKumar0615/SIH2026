@@ -121,7 +121,7 @@ export const MOCK_FAMILY_MEMORIES = [
 ];
 
 export const MOCK_ROUTINE_SCHEDULE = [
-  { id: 'r1', time: '08:00 AM', title: 'Breakfast & Morning Tea', category: 'Meals', icon: '🍵', completed: true, voicePrompt: 'Good morning Kamala! It is time for breakfast and hot Assam tea.' },
+  { id: 'r1', time: '08:00 AM', title: 'Breakfast & Morning Tea', category: 'Meals', icon: '🍵', completed: true, voicePrompt: 'Good morning! It is time for breakfast and hot Assam tea.' },
   { id: 'r2', time: '09:00 AM', title: 'Morning Blood Pressure Medicine', category: 'Medication', icon: '💊', completed: true, voicePrompt: 'Time to take 1 tablet of Telmisartan with water.' },
   { id: 'r3', time: '10:30 AM', title: '🧠 Play Bihu Cognitive Game', category: 'Activity', icon: '🧠', completed: false, voicePrompt: 'Time to keep your brain active! Play a quick memory game.' },
   { id: 'r4', time: '01:00 PM', title: 'Lunch & Fresh Fruit', category: 'Meals', icon: '🍛', completed: false, voicePrompt: 'Time for healthy lunch with fish curry and rice.' },
@@ -144,7 +144,7 @@ export const MOCK_CAREGIVER_ALERTS = [
     timestamp: '2026-08-27 10:15 AM',
     severity: 'INFO',
     title: 'Morning Routine Completed',
-    summary: 'Kamala completed breakfast & morning medicine on time.',
+    summary: 'Morning routine completed — breakfast & medicine on time.',
     explainableReason: 'Caregiver Priya verified completion within 15 minutes of scheduled time.'
   },
   {

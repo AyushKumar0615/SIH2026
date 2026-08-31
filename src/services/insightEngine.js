@@ -1,5 +1,5 @@
 export const InsightEngine = {
-  generateCaregiverReport() {
+  generateCaregiverReport(elderlyName = 'the user') {
     return {
       keyTrends: [
         {
@@ -7,7 +7,7 @@ export const InsightEngine = {
           status: 'Stable',
           changePercent: '+3%',
           badgeColor: 'green',
-          explainableReason: 'Recall accuracy remained within Kamala Devi personal 30-day band across three sessions.',
+          explainableReason: `Recall accuracy remained within ${elderlyName}'s personal 30-day band across three sessions.`,
           recommendation: 'Keep Bihu pair game at medium difficulty for two more days.'
         },
         {
