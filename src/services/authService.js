@@ -1,133 +1,89 @@
-const USERS_KEY = 'smritisetu_users';
-const SESSION_KEY = 'smritisetu_session';
-const removedDemoEmails = ['kamala@smritisetu.app', 'priya@smritisetu.app', 'admin@smritisetu.app'];
+import { supabase } from './supabaseClient';
 
-function sanitizeUsers(users) {
-  if (!Array.isArray(users)) return [];
-  return users.filter(
-    (user) => user && !String(user.id || '').startsWith('seed_') && !removedDemoEmails.includes(String(user.email || '').toLowerCase())
-  );
+function toSession(user, profile) {
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: profile?.full_name || '',
+    role: profile?.role || 'caregiver',
+    state: profile?.state || '',
+    language: profile?.language || 'as',
+    avatar: profile?.avatar || null
+  };
 }
 
-function readUsers() {
-  if (typeof window === 'undefined') return [];
-  const raw = window.localStorage.getItem(USERS_KEY);
-  if (!raw) {
-    window.localStorage.setItem(USERS_KEY, JSON.stringify([]));
-    return [];
-  }
-  try {
-    const users = sanitizeUsers(JSON.parse(raw));
-    window.localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    return users;
-  } catch {
-    window.localStorage.setItem(USERS_KEY, JSON.stringify([]));
-    return [];
-  }
-}
-
-function writeUsers(users) {
-  if (typeof window !== 'undefined') {
-    window.localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  }
+async function fetchProfile(userId) {
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  if (error) return null;
+  return data;
 }
 
 export const AuthService = {
-  getSession() {
-    if (typeof window === 'undefined') return null;
-    const raw = window.localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
+  async getSession() {
+    const { data } = await supabase.auth.getSession();
+    const user = data?.session?.user;
+    if (!user) return null;
+    const profile = await fetchProfile(user.id);
+    return toSession(user, profile);
   },
 
-  login({ email, password }) {
-    const users = readUsers();
-    const user = users.find(
-      (entry) => entry.email.toLowerCase() === email.toLowerCase().trim() && entry.password === password
-    );
-
-    if (!user) {
+  async login({ email, password }) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) {
       return { ok: false, error: 'Invalid email or password.' };
     }
-
-    const session = {
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      state: user.state,
-      language: user.language,
-      avatar: user.avatar || null
-    };
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    }
-
-    return { ok: true, session };
+    const profile = await fetchProfile(data.user.id);
+    return { ok: true, session: toSession(data.user, profile) };
   },
 
-  register(payload) {
-    const users = readUsers();
-    const exists = users.some((entry) => entry.email.toLowerCase() === payload.email.toLowerCase().trim());
-    if (exists) {
-      return { ok: false, error: 'An account with this email already exists.' };
+  async register(payload) {
+    const { data, error } = await supabase.auth.signUp({
+      email: payload.email.trim(),
+      password: payload.password
+    });
+
+    if (error) {
+      return { ok: false, error: error.message.includes('already registered') ? 'An account with this email already exists.' : error.message };
     }
 
-    const user = {
-      id: `usr_${Date.now()}`,
-      fullName: payload.fullName.trim(),
-      email: payload.email.trim(),
-      password: payload.password,
+    const user = data.user;
+    if (!user) {
+      return { ok: false, error: 'Registration failed. Please try again.' };
+    }
+
+    const profileRow = {
+      id: user.id,
+      full_name: payload.fullName.trim(),
       role: payload.role,
       state: payload.state,
       language: payload.language,
       avatar: payload.avatar || null
     };
-
-    const nextUsers = [...users, user];
-    writeUsers(nextUsers);
-
-    const session = {
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      state: user.state,
-      language: user.language,
-      avatar: user.avatar
-    };
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    const { error: profileError } = await supabase.from('profiles').insert(profileRow);
+    if (profileError) {
+      return { ok: false, error: profileError.message };
     }
 
-    return { ok: true, session };
-  },
-
-  updateAvatar(userId, avatar) {
-    const users = readUsers();
-    const nextUsers = users.map((entry) => (entry.id === userId ? { ...entry, avatar } : entry));
-    writeUsers(nextUsers);
-
-    const current = this.getSession();
-    if (current && current.id === userId) {
-      const nextSession = { ...current, avatar };
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextSession));
-      }
-      return nextSession;
+    if (!data.session) {
+      return { ok: false, error: 'Account created. Please check your email to confirm, then sign in.' };
     }
-    return current;
+
+    return { ok: true, session: toSession(user, profileRow) };
   },
 
-  logout() {
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(SESSION_KEY);
-    }
+  async updateAvatar(userId, avatar) {
+    const { error } = await supabase.from('profiles').update({ avatar }).eq('id', userId);
+    if (error) return this.getSession();
+
+    const { data } = await supabase.auth.getUser();
+    const user = data?.user;
+    if (!user || user.id !== userId) return this.getSession();
+    const profile = await fetchProfile(userId);
+    return toSession(user, profile);
   },
+
+  async logout() {
+    await supabase.auth.signOut();
+  }
 };

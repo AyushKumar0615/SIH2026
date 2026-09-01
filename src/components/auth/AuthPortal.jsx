@@ -16,18 +16,25 @@ export default function AuthPortal({ onAuthenticated }) {
   const [loginForm, setLoginForm] = useState(initialLogin);
   const [registerForm, setRegisterForm] = useState(initialRegister);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submitLogin = (e) => {
+  const submitLogin = async (e) => {
     e.preventDefault();
-    const result = AuthService.login(loginForm);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    const result = await AuthService.login(loginForm);
+    setIsSubmitting(false);
     if (!result.ok) { setError(result.error); return; }
     setError('');
     onAuthenticated(result.session);
   };
 
-  const submitRegister = (e) => {
+  const submitRegister = async (e) => {
     e.preventDefault();
-    const result = AuthService.register(registerForm);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    const result = await AuthService.register(registerForm);
+    setIsSubmitting(false);
     if (!result.ok) { setError(result.error); return; }
     setError('');
     onAuthenticated(result.session);
@@ -109,7 +116,7 @@ export default function AuthPortal({ onAuthenticated }) {
                     <input type="password" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} className="input" placeholder="••••••••" required />
                   </div>
                   <Magnetic strength={0.15} className="block">
-                    <button type="submit" className="btn btn-ember w-full mt-2">
+                    <button type="submit" disabled={isSubmitting} className="btn btn-ember w-full mt-2">
                       <LockKeyhole className="w-4 h-4" /> {t('enterWorkspace')}
                     </button>
                   </Magnetic>
@@ -171,7 +178,7 @@ export default function AuthPortal({ onAuthenticated }) {
                     />
                   </div>
                   <Magnetic strength={0.15} className="block">
-                    <button type="submit" className="btn btn-ember w-full mt-2">
+                    <button type="submit" disabled={isSubmitting} className="btn btn-ember w-full mt-2">
                       <UserPlus className="w-4 h-4" /> {t('createAccount')}
                     </button>
                   </Magnetic>

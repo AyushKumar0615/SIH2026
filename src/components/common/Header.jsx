@@ -237,8 +237,8 @@ export default function Header({
                           <AvatarPicker
                             value={session.avatar}
                             fullName={session.fullName}
-                            onChange={(avatar) => {
-                              const nextSession = AuthService.updateAvatar(session.id, avatar);
+                            onChange={async (avatar) => {
+                              const nextSession = await AuthService.updateAvatar(session.id, avatar);
                               onSessionUpdate?.(nextSession);
                               setAvatarEditorOpen(false);
                             }}

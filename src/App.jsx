@@ -17,17 +17,33 @@ import { AuthService } from './services/authService';
 import { LanguageProvider } from './hooks/useTranslation';
 
 export default function App() {
-  const [session, setSession] = useState(() => AuthService.getSession());
-  const [currentMode, setCurrentMode] = useState(session?.role || 'elderly');
+  const [session, setSession] = useState(null);
+  const [isRestoringSession, setIsRestoringSession] = useState(true);
+  const [currentMode, setCurrentMode] = useState('elderly');
   const [currentSubView, setCurrentSubView] = useState('home');
-  const [currentLang, setCurrentLang] = useState(session?.language || 'as');
-  const [currentState, setCurrentState] = useState(session?.state || NER_STATES.ASSAM);
-  
+  const [currentLang, setCurrentLang] = useState('as');
+  const [currentState, setCurrentState] = useState(NER_STATES.ASSAM);
+
   const [highContrast, setHighContrast] = useState(false);
   const [fontSize, setFontSize] = useState('normal');
 
   const [demoStep, setDemoStep] = useState(1);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    AuthService.getSession().then((restoredSession) => {
+      if (cancelled) return;
+      if (restoredSession) {
+        setSession(restoredSession);
+        setCurrentMode(restoredSession.role || 'elderly');
+        setCurrentLang(restoredSession.language || 'as');
+        setCurrentState(restoredSession.state || NER_STATES.ASSAM);
+      }
+      setIsRestoringSession(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (highContrast) {
@@ -45,13 +61,17 @@ export default function App() {
     setCurrentSubView('home');
   };
 
-  const handleLogout = () => {
-    AuthService.logout();
+  const handleLogout = async () => {
+    await AuthService.logout();
     setSession(null);
     setCurrentMode('elderly');
     setCurrentSubView('home');
     setIsVoiceModalOpen(false);
   };
+
+  if (isRestoringSession) {
+    return <MotionConfig reducedMotion="user"><div className="app-shell" /></MotionConfig>;
+  }
 
   if (!session) {
     return (
