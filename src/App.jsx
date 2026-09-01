@@ -14,6 +14,7 @@ import StoryModeView from './components/elderly/StoryModeView';
 import VoiceAssistantModal from './components/elderly/VoiceAssistantModal';
 import { NER_STATES } from './data/regionalContent';
 import { AuthService } from './services/authService';
+import { LanguageProvider } from './hooks/useTranslation';
 
 export default function App() {
   const [session, setSession] = useState(() => AuthService.getSession());
@@ -55,7 +56,9 @@ export default function App() {
   if (!session) {
     return (
       <MotionConfig reducedMotion="user">
-        <AuthPortal onAuthenticated={handleAuthenticated} />
+        <LanguageProvider lang="en">
+          <AuthPortal onAuthenticated={handleAuthenticated} />
+        </LanguageProvider>
       </MotionConfig>
     );
   }
@@ -94,6 +97,7 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
+    <LanguageProvider lang={currentLang}>
     <div className={`app-shell ${fontSize === 'lg' ? 'font-scale-lg' : fontSize === 'xl' ? 'font-scale-xl' : ''}`}>
       <Header
         currentMode={currentMode}
@@ -179,6 +183,7 @@ export default function App() {
         onExecuteStep={handleExecuteDemoStep}
       />
     </div>
+    </LanguageProvider>
     </MotionConfig>
   );
 }

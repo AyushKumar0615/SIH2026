@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, Upload, ImagePlus, RotateCcw, Check, X } from 'lucide-react';
 import UserAvatar, { AVATAR_PRESETS } from './UserAvatar';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const MAX_DIM = 320;
 
@@ -15,12 +16,13 @@ function resizeToDataUrl(source, sw, sh) {
 }
 
 const TABS = [
-  { id: 'avatar', label: 'Avatar', icon: ImagePlus },
-  { id: 'camera', label: 'Take Photo', icon: Camera },
-  { id: 'upload', label: 'Upload Photo', icon: Upload }
+  { id: 'avatar', labelKey: 'avatarTab', icon: ImagePlus },
+  { id: 'camera', labelKey: 'takePhotoTab', icon: Camera },
+  { id: 'upload', labelKey: 'uploadPhotoTab', icon: Upload }
 ];
 
 export default function AvatarPicker({ value, fullName, onChange }) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState('avatar');
   const [stream, setStream] = useState(null);
   const [capturedPreview, setCapturedPreview] = useState(null);
@@ -49,14 +51,14 @@ export default function AvatarPicker({ value, fullName, onChange }) {
     setCameraError('');
     setCapturedPreview(null);
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError('Camera is not available on this device or browser.');
+      setCameraError(t('cameraNotAvailable'));
       return;
     }
     try {
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       setStream(s);
     } catch (err) {
-      setCameraError('Camera permission was not granted. You can allow it in your browser settings, or use Upload Photo instead.');
+      setCameraError(t('cameraPermissionDenied'));
     }
   };
 
@@ -99,18 +101,18 @@ export default function AvatarPicker({ value, fullName, onChange }) {
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4 min-w-0">
         <UserAvatar avatar={value} fullName={fullName} className="w-16 h-16 rounded-full object-cover shrink-0 overflow-hidden" />
         <div className="flex flex-wrap gap-2 flex-1 min-w-[180px]">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
+          {TABS.map((tabItem) => {
+            const Icon = tabItem.icon;
+            const active = tab === tabItem.id;
             return (
               <button
-                key={t.id}
+                key={tabItem.id}
                 type="button"
-                onClick={() => { setTab(t.id); setCameraError(''); if (t.id !== 'camera') stopCamera(); }}
+                onClick={() => { setTab(tabItem.id); setCameraError(''); if (tabItem.id !== 'camera') stopCamera(); }}
                 className="btn whitespace-normal text-center !min-h-11 !px-3 text-xs sm:text-[13px] flex-1 min-w-[100px]"
                 style={active ? { background: 'var(--ember)', color: '#1a0f08' } : { background: 'transparent', border: '1px solid var(--hairline-strong)', color: 'var(--ink-soft)' }}
               >
-                <Icon className="w-4 h-4 shrink-0" /> {t.label}
+                <Icon className="w-4 h-4 shrink-0" /> {t(tabItem.labelKey)}
               </button>
             );
           })}
@@ -118,7 +120,7 @@ export default function AvatarPicker({ value, fullName, onChange }) {
       </div>
 
       {tab === 'avatar' && (
-        <div className="grid grid-cols-6 gap-3" role="group" aria-label="Choose an avatar">
+        <div className="grid grid-cols-6 gap-3" role="group" aria-label={t('chooseAvatarAria')}>
           {AVATAR_PRESETS.map((preset) => (
             <button
               key={preset.id}
@@ -145,23 +147,23 @@ export default function AvatarPicker({ value, fullName, onChange }) {
             <div className="space-y-3">
               <img src={capturedPreview} alt="Captured preview" className="w-full max-w-xs mx-auto rounded-[var(--radius-md)] object-cover" style={{ aspectRatio: '1' }} />
               <div className="flex flex-wrap gap-3">
-                <button type="button" onClick={handleRetake} className="btn btn-line whitespace-normal flex-1 min-w-[120px]"><RotateCcw className="w-4 h-4" /> Retake</button>
-                <button type="button" onClick={handleConfirmCaptured} className="btn btn-ember whitespace-normal flex-1 min-w-[120px]"><Check className="w-4 h-4" /> Use Photo</button>
+                <button type="button" onClick={handleRetake} className="btn btn-line whitespace-normal flex-1 min-w-[120px]"><RotateCcw className="w-4 h-4" /> {t('retakeLabel')}</button>
+                <button type="button" onClick={handleConfirmCaptured} className="btn btn-ember whitespace-normal flex-1 min-w-[120px]"><Check className="w-4 h-4" /> {t('usePhotoLabel')}</button>
               </div>
             </div>
           ) : stream ? (
             <div className="space-y-3">
               <video ref={videoRef} autoPlay playsInline muted className="w-full max-w-xs mx-auto rounded-[var(--radius-md)] object-cover" style={{ aspectRatio: '1' }} />
               <div className="flex flex-wrap gap-3">
-                <button type="button" onClick={stopCamera} className="btn btn-line whitespace-normal flex-1 min-w-[120px]"><X className="w-4 h-4" /> Cancel</button>
-                <button type="button" onClick={handleCapture} className="btn btn-ember whitespace-normal flex-1 min-w-[120px]"><Camera className="w-4 h-4" /> Capture</button>
+                <button type="button" onClick={stopCamera} className="btn btn-line whitespace-normal flex-1 min-w-[120px]"><X className="w-4 h-4" /> {t('cancel')}</button>
+                <button type="button" onClick={handleCapture} className="btn btn-ember whitespace-normal flex-1 min-w-[120px]"><Camera className="w-4 h-4" /> {t('captureLabel')}</button>
               </div>
             </div>
           ) : (
             <div className="space-y-3">
               {cameraError && <p className="text-sm" style={{ color: 'var(--alert)' }}>{cameraError}</p>}
               <button type="button" onClick={handleStartCamera} className="btn btn-line whitespace-normal w-full">
-                <Camera className="w-4 h-4" /> Start Camera
+                <Camera className="w-4 h-4" /> {t('startCamera')}
               </button>
             </div>
           )}
@@ -170,9 +172,9 @@ export default function AvatarPicker({ value, fullName, onChange }) {
 
       {tab === 'upload' && (
         <div>
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" aria-label="Upload a profile photo" />
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" aria-label={t('uploadProfilePhotoAria')} />
           <button type="button" onClick={() => fileInputRef.current?.click()} className="btn btn-line whitespace-normal text-center w-full">
-            <Upload className="w-4 h-4 shrink-0" /> Choose Photo From Device
+            <Upload className="w-4 h-4 shrink-0" /> {t('choosePhotoFromDevice')}
           </button>
         </div>
       )}

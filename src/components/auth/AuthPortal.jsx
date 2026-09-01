@@ -5,11 +5,13 @@ import { NER_STATES } from '../../data/regionalContent';
 import { AuthService } from '../../services/authService';
 import Magnetic from '../common/Magnetic';
 import AvatarPicker from '../common/AvatarPicker';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const initialLogin = { email: '', password: '' };
 const initialRegister = { fullName: '', email: '', password: '', role: 'caregiver', state: NER_STATES.ASSAM, language: 'en', avatar: null };
 
 export default function AuthPortal({ onAuthenticated }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('login');
   const [loginForm, setLoginForm] = useState(initialLogin);
   const [registerForm, setRegisterForm] = useState(initialRegister);
@@ -75,7 +77,7 @@ export default function AuthPortal({ onAuthenticated }) {
                   onClick={() => { setActiveTab(tab); setError(''); }}
                   className={`tab-link capitalize ${activeTab === tab ? 'is-active' : ''}`}
                 >
-                  {tab === 'login' ? 'Sign In' : 'Register'}
+                  {tab === 'login' ? t('signIn') : t('register')}
                   {activeTab === tab && (
                     <motion.span layoutId="auth-tab-underline" className="absolute left-0 right-0 -bottom-px h-[2px]" style={{ background: 'var(--ember)' }} transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }} />
                   )}
@@ -99,16 +101,16 @@ export default function AuthPortal({ onAuthenticated }) {
                   className="space-y-5"
                 >
                   <div>
-                    <label className="field-label">Email</label>
+                    <label className="field-label">{t('emailLabel')}</label>
                     <input type="email" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} className="input" placeholder="name@example.com" required />
                   </div>
                   <div>
-                    <label className="field-label">Password</label>
+                    <label className="field-label">{t('passwordLabel')}</label>
                     <input type="password" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} className="input" placeholder="••••••••" required />
                   </div>
                   <Magnetic strength={0.15} className="block">
                     <button type="submit" className="btn btn-ember w-full mt-2">
-                      <LockKeyhole className="w-4 h-4" /> Enter Workspace
+                      <LockKeyhole className="w-4 h-4" /> {t('enterWorkspace')}
                     </button>
                   </Magnetic>
                 </motion.form>
@@ -123,36 +125,36 @@ export default function AuthPortal({ onAuthenticated }) {
                   className="space-y-5"
                 >
                   <div>
-                    <label className="field-label">Full Name</label>
+                    <label className="field-label">{t('fullNameLabel')}</label>
                     <input type="text" value={registerForm.fullName} onChange={(e) => setRegisterForm({ ...registerForm, fullName: e.target.value })} className="input" placeholder="Kamala Devi" required />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="field-label">Email</label>
+                      <label className="field-label">{t('emailLabel')}</label>
                       <input type="email" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} className="input" placeholder="you@mail.com" required />
                     </div>
                     <div>
-                      <label className="field-label">Password</label>
+                      <label className="field-label">{t('passwordLabel')}</label>
                       <input type="password" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} className="input" placeholder="Min. 6 chars" required minLength={6} />
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="field-label">Role</label>
+                      <label className="field-label">{t('roleLabel')}</label>
                       <select value={registerForm.role} onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })} className="select">
-                        <option value="elderly">Elder</option>
-                        <option value="caregiver">Caregiver</option>
-                        <option value="admin">Admin</option>
+                        <option value="elderly">{t('modeElderlyLabel')}</option>
+                        <option value="caregiver">{t('modeCaregiverLabel')}</option>
+                        <option value="admin">{t('modeAdminLabel')}</option>
                       </select>
                     </div>
                     <div>
-                      <label className="field-label">State</label>
+                      <label className="field-label">{t('stateLabel')}</label>
                       <select value={registerForm.state} onChange={(e) => setRegisterForm({ ...registerForm, state: e.target.value })} className="select">
                         {Object.values(NER_STATES).map((state) => (<option key={state} value={state}>{state}</option>))}
                       </select>
                     </div>
                     <div>
-                      <label className="field-label">Language</label>
+                      <label className="field-label">{t('languageLabel')}</label>
                       <select value={registerForm.language} onChange={(e) => setRegisterForm({ ...registerForm, language: e.target.value })} className="select">
                         <option value="as">Assamese</option>
                         <option value="en">English</option>
@@ -161,7 +163,7 @@ export default function AuthPortal({ onAuthenticated }) {
                     </div>
                   </div>
                   <div>
-                    <label className="field-label">Profile Picture</label>
+                    <label className="field-label">{t('profilePictureLabel')}</label>
                     <AvatarPicker
                       value={registerForm.avatar}
                       fullName={registerForm.fullName}
@@ -170,7 +172,7 @@ export default function AuthPortal({ onAuthenticated }) {
                   </div>
                   <Magnetic strength={0.15} className="block">
                     <button type="submit" className="btn btn-ember w-full mt-2">
-                      <UserPlus className="w-4 h-4" /> Create Account
+                      <UserPlus className="w-4 h-4" /> {t('createAccount')}
                     </button>
                   </Magnetic>
                 </motion.form>
@@ -183,7 +185,7 @@ export default function AuthPortal({ onAuthenticated }) {
               className="mt-6 text-sm font-medium inline-flex items-center gap-1"
               style={{ color: 'var(--ink-faint)' }}
             >
-              {activeTab === 'login' ? 'Need an account? Register' : 'Already registered? Sign in'}
+              {activeTab === 'login' ? t('needAccountRegister') : t('alreadyRegisteredSignIn')}
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </motion.div>

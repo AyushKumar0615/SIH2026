@@ -9,9 +9,11 @@ import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { ArrowLeft, Award, RotateCcw, ArrowUpRight, Sparkles } from 'lucide-react';
 import Magnetic from '../common/Magnetic';
 import { pageTransition } from '../common/pageTransition';
+import { useTranslation } from '../../hooks/useTranslation';
 import confetti from 'canvas-confetti';
 
 export default function GameShell({ stateName = 'Assam', onBack }) {
+  const { t } = useTranslation();
   const [activeGameKey, setActiveGameKey] = useState(null);
   const [completedSession, setCompletedSession] = useState(null);
   const [recommendation, setRecommendation] = useState(null);
@@ -44,22 +46,22 @@ export default function GameShell({ stateName = 'Assam', onBack }) {
             <Award className="w-8 h-8" />
           </div>
           <div>
-            <span className="eyebrow eyebrow-jade justify-center">Session Complete</span>
+            <span className="eyebrow eyebrow-jade justify-center">{t('sessionComplete')}</span>
             <h2 className="font-display text-3xl sm:text-4xl font-medium mt-2">{completedSession.gameName}</h2>
-            <p className="text-sm mt-1" style={{ color: 'rgba(23,20,15,0.55)' }}>Cognitive Domain: {completedSession.domain}</p>
+            <p className="text-sm mt-1" style={{ color: 'rgba(23,20,15,0.55)' }}>{t('cognitiveDomain')}: {completedSession.domain}</p>
           </div>
 
           <div className="grid grid-cols-3 gap-6 max-w-md mx-auto" style={{ borderTop: '1px solid var(--paper-line)', borderBottom: '1px solid var(--paper-line)', padding: '1.5rem 0' }}>
             <div>
-              <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>Accuracy</span>
+              <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('accuracyLabel')}</span>
               <span className="figure-value" style={{ color: 'var(--jade-deep)' }}>{completedSession.accuracy}%</span>
             </div>
             <div>
-              <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>Time</span>
+              <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('timeLabel')}</span>
               <span className="figure-value" style={{ color: 'var(--ember-deep)' }}>{completedSession.responseTimeSec}s</span>
             </div>
             <div>
-              <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>Score</span>
+              <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('scoreLabel')}</span>
               <span className="figure-value" style={{ color: 'var(--paper-ink)' }}>{completedSession.score}</span>
             </div>
           </div>
@@ -68,16 +70,16 @@ export default function GameShell({ stateName = 'Assam', onBack }) {
             <div className="text-left flex items-start gap-3" style={{ color: 'var(--paper-ink)' }}>
               <Sparkles className="w-4.5 h-4.5 shrink-0 mt-0.5" style={{ color: 'var(--ember-deep)' }} />
               <p className="text-sm leading-relaxed">
-                <strong>Next difficulty: {recommendation.newLevel}.</strong> {recommendation.reason}
+                <strong>{t('nextDifficulty')}: {recommendation.newLevel}.</strong> {recommendation.reason}
               </p>
             </div>
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
             <button type="button" onClick={() => { setCompletedSession(null); setActiveGameKey(null); }} className="btn btn-line" style={{ color: 'var(--paper-ink)', borderColor: 'var(--paper-line)' }}>
-              <RotateCcw className="w-4 h-4" /> Another Game
+              <RotateCcw className="w-4 h-4" /> {t('anotherGame')}
             </button>
-            <button type="button" onClick={onBack} className="btn btn-on-light">Return Home</button>
+            <button type="button" onClick={onBack} className="btn btn-on-light">{t('returnHome')}</button>
           </div>
         </div>
       </div>
@@ -95,10 +97,10 @@ export default function GameShell({ stateName = 'Assam', onBack }) {
     <div ref={containerRef} className="page">
       <div className="flex items-start justify-between gap-4 mb-10">
         <div>
-          <span className="eyebrow">Cognitive Exercises</span>
-          <h2 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98]">Game Library</h2>
+          <span className="eyebrow">{t('cognitiveExercises')}</span>
+          <h2 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98]">{t('gameLibrary')}</h2>
         </div>
-        <button type="button" onClick={onBack} className="btn btn-quiet shrink-0"><ArrowLeft className="w-4 h-4" /> Back</button>
+        <button type="button" onClick={onBack} className="btn btn-quiet shrink-0"><ArrowLeft className="w-4 h-4" /> {t('back')}</button>
       </div>
 
       <div className="index-list scroll-reveal">

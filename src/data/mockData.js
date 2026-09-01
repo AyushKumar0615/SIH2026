@@ -130,6 +130,19 @@ export const MOCK_ROUTINE_SCHEDULE = [
   { id: 'r7', time: '08:30 PM', title: 'Dinner & Evening Medicine', category: 'Medication', icon: '💊', completed: false, voicePrompt: 'Dinner time and evening multivitamin.' }
 ];
 
+// Maps fixed demo routine ids to their translation keys in localizationService.
+// User-created routines (added via RoutineManager) have no entry here and fall
+// back to their literal title/voicePrompt, since that text is user-entered.
+export const ROUTINE_TRANSLATION_KEYS = {
+  r1: { titleKey: 'routine1Title', voiceKey: 'routine1Voice' },
+  r2: { titleKey: 'routine2Title', voiceKey: 'routine2Voice' },
+  r3: { titleKey: 'routine3Title', voiceKey: 'routine3Voice', emojiPrefix: '🧠 ' },
+  r4: { titleKey: 'routine4Title', voiceKey: 'routine4Voice' },
+  r5: { titleKey: 'routine5Title', voiceKey: 'routine5Voice' },
+  r6: { titleKey: 'routine6Title', voiceKey: 'routine6Voice', emojiPrefix: '📞 ' },
+  r7: { titleKey: 'routine7Title', voiceKey: 'routine7Voice' }
+};
+
 export const MOCK_GAME_SESSIONS = [
   { id: 'gs_1', date: '2026-08-27', time: '09:45 AM', gameName: 'Bihu Memory Pairs', domain: 'Memory', score: 95, accuracy: 92, responseTimeSec: 36, difficulty: 'Medium', mistakes: 1, adaptiveRecommendation: 'Maintain Medium difficulty' },
   { id: 'gs_2', date: '2026-08-26', time: '04:15 PM', gameName: 'Face & Relation Match', domain: 'Memory', score: 100, accuracy: 100, responseTimeSec: 28, difficulty: 'Medium', mistakes: 0, adaptiveRecommendation: 'Try Advanced level next' },
@@ -164,6 +177,13 @@ export const MOCK_CAREGIVER_ALERTS = [
     explainableReason: 'User correctly identified relationship and names in 28 seconds without hints.'
   }
 ];
+
+// Maps fixed demo alert ids to their translation keys in localizationService.
+export const ALERT_TRANSLATION_KEYS = {
+  alt_1: { titleKey: 'alert1Title', summaryKey: 'alert1Summary', reasonKey: 'alert1Reason' },
+  alt_2: { titleKey: 'alert2Title', summaryKey: 'alert2Summary', reasonKey: 'alert2Reason' },
+  alt_3: { titleKey: 'alert3Title', summaryKey: 'alert3Summary', reasonKey: 'alert3Reason' }
+};
 
 export const MOCK_IMPACT_METRICS = {
   totalUsersSupported: 1420,

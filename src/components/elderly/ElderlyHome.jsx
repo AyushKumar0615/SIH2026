@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { AnimatePresence, motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { pageTransition } from '../common/pageTransition';
-import { MOCK_ELDERLY_USER, MOCK_ROUTINE_SCHEDULE } from '../../data/mockData';
+import { MOCK_ELDERLY_USER, MOCK_ROUTINE_SCHEDULE, ROUTINE_TRANSLATION_KEYS } from '../../data/mockData';
 import UserAvatar, { isPhotoAvatar } from '../common/UserAvatar';
 import { LocalizationService } from '../../services/localizationService';
+import { useTranslation } from '../../hooks/useTranslation';
 import { AudioService } from '../../services/audioService';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import GameShell from './GameShell';
@@ -18,7 +19,8 @@ import { Volume2, ArrowUpRight, PhoneCall, Home, Brain, BookOpen, Bell } from 'l
 const RING_CIRCUMFERENCE = 2 * Math.PI * 20;
 
 export default function ElderlyHome({ currentLang, currentState, session }) {
-  const userName = session?.fullName || 'Guest';
+  const { t } = useTranslation();
+  const userName = session?.fullName || t('guestLabel');
   const [activeSubView, setActiveSubView] = useState('home');
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -39,6 +41,8 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
 
   const culturalProfile = LocalizationService.getCulturalProfile(currentState);
   const nextTask = MOCK_ROUTINE_SCHEDULE.find((item) => !item.completed) || MOCK_ROUTINE_SCHEDULE[0];
+  const nextTaskKeys = ROUTINE_TRANSLATION_KEYS[nextTask.id];
+  const nextTaskTitle = nextTaskKeys ? `${nextTaskKeys.emojiPrefix || ''}${t(nextTaskKeys.titleKey)}` : nextTask.title;
   const completedCount = MOCK_ROUTINE_SCHEDULE.filter((i) => i.completed).length;
   const todayFraction = completedCount / MOCK_ROUTINE_SCHEDULE.length;
 
@@ -110,10 +114,10 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
               </h1>
               <div className="flex flex-wrap items-center gap-5 mt-6">
                 <p className="pin">
-                  Caregiver <strong style={{ color: 'var(--ink)' }}>{MOCK_ELDERLY_USER.caregiverName}</strong> · {MOCK_ELDERLY_USER.location}
+                  {t('modeCaregiverLabel')} <strong style={{ color: 'var(--ink)' }}>{MOCK_ELDERLY_USER.caregiverName}</strong> · {MOCK_ELDERLY_USER.location}
                 </p>
                 <button type="button" onClick={handleSpeakGreeting} className="btn btn-quiet !px-0">
-                  <Volume2 className={`w-4 h-4 ${isSpeaking ? 'animate-soft-pulse' : ''}`} /> {isSpeaking ? 'Speaking…' : 'Listen to greeting'}
+                  <Volume2 className={`w-4 h-4 ${isSpeaking ? 'animate-soft-pulse' : ''}`} /> {isSpeaking ? t('speakingEllipsis') : t('listenToGreeting')}
                 </button>
               </div>
             </div>
@@ -136,7 +140,7 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
                 </div>
               </motion.div>
               <p className="text-center text-xs font-medium mt-3" style={{ color: 'var(--ink-faint)' }}>
-                Tap to ask — "Who is Ananya?"
+                {t('tapToAsk')}
               </p>
             </div>
           </div>
@@ -146,11 +150,11 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
         <motion.div style={{ opacity: nextTaskOpacity, y: nextTaskY }} className="rail-pad content-col pt-1 pb-9 relative z-10 reveal-left scroll-reveal" data-reveal-delay="2">
           <div className="notice-strip is-jade flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
-              <span className="text-xs font-semibold" style={{ color: 'var(--jade)' }}>NEXT · {nextTask.time}</span>
-              <span className="font-display text-lg md:text-xl font-medium truncate">{nextTask.title}</span>
+              <span className="text-xs font-semibold" style={{ color: 'var(--jade)', textTransform: 'uppercase' }}>{t('nextLabel')} · {nextTask.time}</span>
+              <span className="font-display text-lg md:text-xl font-medium truncate">{nextTaskTitle}</span>
             </div>
             <button type="button" onClick={() => setActiveSubView('reminders')} className="btn btn-quiet shrink-0 !px-0" style={{ color: 'var(--jade)' }}>
-              Mark complete <ArrowUpRight className="w-4 h-4" />
+              {t('markComplete')} <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
         </motion.div>
@@ -161,8 +165,8 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
       {/* ── ACTIVITIES — featured object + interactive index ─────────── */}
       <section className="rail-pad content-col py-14 md:py-20 section-ambient">
         <div className="flex items-end justify-between mb-6 scroll-reveal">
-          <h2 className="font-display text-2xl md:text-3xl font-medium">Daily Activities</h2>
-          <span className="text-xs font-medium hidden sm:block" style={{ color: 'var(--ink-faint)' }}>{completedCount}/{MOCK_ROUTINE_SCHEDULE.length} done today</span>
+          <h2 className="font-display text-2xl md:text-3xl font-medium">{t('dailyActivities')}</h2>
+          <span className="text-xs font-medium hidden sm:block" style={{ color: 'var(--ink-faint)' }}>{completedCount}/{MOCK_ROUTINE_SCHEDULE.length} {t('doneTodaySuffix')}</span>
         </div>
 
         <button
@@ -183,7 +187,7 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
           />
           <div className="relative h-full flex flex-col justify-between p-7 md:p-10" style={{ minHeight: '18rem' }}>
             <div className="flex items-start justify-between gap-4">
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-faint)' }}>Cognitive Exercise</span>
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-faint)' }}>{t('cognitiveExercise')}</span>
               <svg width="44" height="44" viewBox="0 0 44 44" className="shrink-0 -rotate-90">
                 <circle cx="22" cy="22" r="20" fill="none" stroke="var(--hairline-strong)" strokeWidth="3" />
                 <circle
@@ -211,7 +215,7 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
             <span className="index-icon">📝</span>
             <span className="flex-1 min-w-0">
               <span className="font-display text-xl md:text-2xl font-medium block">{LocalizationService.getText('myMemories', currentLang)}</span>
-              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>Family photos, Ananya's stories & audio notes</span>
+              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('memoriesDesc')}</span>
             </span>
             <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
@@ -221,7 +225,7 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
             <span className="index-icon">🔔</span>
             <span className="flex-1 min-w-0">
               <span className="font-display text-xl md:text-2xl font-medium block">{LocalizationService.getText('myReminders', currentLang)}</span>
-              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>Medication & tea time schedule</span>
+              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('remindersDesc')}</span>
             </span>
             <span className="hidden sm:flex items-center gap-2 shrink-0" style={{ color: 'var(--ink-faint)' }}>
               <svg width="26" height="26" viewBox="0 0 26 26" className="-rotate-90">
@@ -240,8 +244,8 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
             <span className="index-num">03</span>
             <span className="index-icon">📖</span>
             <span className="flex-1 min-w-0">
-              <span className="font-display text-xl md:text-2xl font-medium block">AI Story Mode</span>
-              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>Narrated regional slideshow</span>
+              <span className="font-display text-xl md:text-2xl font-medium block">{t('aiStoryMode')}</span>
+              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('storyModeDesc')}</span>
             </span>
             <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
@@ -257,19 +261,19 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
             <span className="index-num">04</span>
             <span className="index-icon" style={{ background: 'var(--alert-soft)', color: 'var(--alert)' }}><PhoneCall className="w-4.5 h-4.5" /></span>
             <span className="flex-1 min-w-0">
-              <span className="font-display text-xl md:text-2xl font-medium block" style={{ color: 'var(--alert)' }}>Call Caregiver</span>
-              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>Tap for instant phone call</span>
+              <span className="font-display text-xl md:text-2xl font-medium block" style={{ color: 'var(--alert)' }}>{t('callCaregiver')}</span>
+              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('callCaregiverDesc')}</span>
             </span>
             <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
         </div>
       </section>
 
-      <nav className="rail-pad content-col pb-20 grid grid-cols-2 sm:flex sm:items-center gap-x-8 gap-y-4 scroll-reveal" aria-label="Elder shortcuts" style={{ borderTop: '1px solid var(--hairline)', paddingTop: '2rem' }}>
-        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink)' }} aria-current="page"><Home className="w-4 h-4" /> Home</button>
-        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('games')}><Brain className="w-4 h-4" /> Games</button>
-        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('memories')}><BookOpen className="w-4 h-4" /> Memories</button>
-        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('reminders')}><Bell className="w-4 h-4" /> Reminders</button>
+      <nav className="rail-pad content-col pb-20 grid grid-cols-2 sm:flex sm:items-center gap-x-8 gap-y-4 scroll-reveal" aria-label={t('elderShortcutsAria')} style={{ borderTop: '1px solid var(--hairline)', paddingTop: '2rem' }}>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink)' }} aria-current="page"><Home className="w-4 h-4" /> {t('navHome')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('games')}><Brain className="w-4 h-4" /> {t('navGames')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('memories')}><BookOpen className="w-4 h-4" /> {t('navMemories')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('reminders')}><Bell className="w-4 h-4" /> {t('navReminders')}</button>
       </nav>
 
       <VoiceAssistantModal

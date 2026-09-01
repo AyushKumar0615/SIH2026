@@ -12,17 +12,18 @@ import {
   X,
   ArrowUpRight
 } from 'lucide-react';
-import { CULTURAL_CATALOG } from '../../data/regionalContent';
+import { INDIAN_STATES_AND_UTS, INDIAN_LANGUAGES } from '../../data/regionalContent';
 import Magnetic from './Magnetic';
 import UserAvatar from './UserAvatar';
 import AvatarPicker from './AvatarPicker';
 import { AuthService } from '../../services/authService';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const MODES = [
-  { id: 'elderly', label: 'Elder', icon: HeartPulse, description: 'Daily activities, memories, voice companion' },
-  { id: 'caregiver', label: 'Caregiver', icon: LayoutDashboard, description: 'Cognitive trends, insights, routines' },
-  { id: 'admin', label: 'Admin', icon: Shield, description: 'Regional coverage & audit trail' },
-  { id: 'demo', label: 'Demo', icon: Sparkles, description: 'Guided walkthrough for judges' }
+  { id: 'elderly', labelKey: 'modeElderlyLabel', icon: HeartPulse, descKey: 'modeElderlyDesc' },
+  { id: 'caregiver', labelKey: 'modeCaregiverLabel', icon: LayoutDashboard, descKey: 'modeCaregiverDesc' },
+  { id: 'admin', labelKey: 'modeAdminLabel', icon: Shield, descKey: 'modeAdminDesc' },
+  { id: 'demo', labelKey: 'modeDemoLabel', icon: Sparkles, descKey: 'modeDemoDesc' }
 ];
 
 export default function Header({
@@ -40,6 +41,7 @@ export default function Header({
   onLogout,
   onSessionUpdate
 }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
   const activeMode = MODES.find((m) => m.id === currentMode) || MODES[0];
@@ -79,7 +81,7 @@ export default function Header({
             className={`trigger-btn ${isOpen ? '' : 'trigger-btn-hint'}`}
             aria-haspopup="dialog"
             aria-expanded={isOpen}
-            aria-label={`Open workspace menu — currently ${activeMode.label}`}
+            aria-label={`${t('workspaceMenuAriaPrefix')} ${t(activeMode.labelKey)}`}
           >
             <ActiveIcon className="w-4.5 h-4.5" />
           </button>
@@ -105,12 +107,12 @@ export default function Header({
               transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="flex items-center justify-between mb-10 md:mb-16">
-                <span className="eyebrow">Workspace</span>
+                <span className="eyebrow">{t('workspace')}</span>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
                   className="trigger-btn"
-                  aria-label="Close menu"
+                  aria-label={t('closeMenuAria')}
                 >
                   <X className="w-4.5 h-4.5" />
                 </button>
@@ -134,8 +136,8 @@ export default function Header({
                       <span className="flex items-center gap-4 md:gap-6 min-w-0">
                         <Icon className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
                         <span className="min-w-0">
-                          <span className="font-display font-semibold text-2xl md:text-4xl block leading-tight">{mode.label}</span>
-                          <span className="text-xs md:text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{mode.description}</span>
+                          <span className="font-display font-semibold text-2xl md:text-4xl block leading-tight">{t(mode.labelKey)}</span>
+                          <span className="text-xs md:text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t(mode.descKey)}</span>
                         </span>
                       </span>
                       <ArrowUpRight className="w-5 h-5 shrink-0" />
@@ -151,23 +153,23 @@ export default function Header({
                 className="mt-10 md:mt-14 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8"
               >
                 <div>
-                  <label className="field-label">Language</label>
+                  <label className="field-label">{t('languageLabel')}</label>
                   <select value={currentLang} onChange={(e) => setCurrentLang(e.target.value)} className="select">
-                    <option value="as">Assamese</option>
-                    <option value="en">English</option>
-                    <option value="hi">Hindi</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="field-label">Region</label>
-                  <select value={currentState} onChange={(e) => setCurrentState(e.target.value)} className="select">
-                    {Object.values(CULTURAL_CATALOG).map((state) => (
-                      <option key={state.id} value={state.name}>{state.name}</option>
+                    {INDIAN_LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code}>{lang.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="field-label">Contrast</label>
+                  <label className="field-label">{t('regionLabel')}</label>
+                  <select value={currentState} onChange={(e) => setCurrentState(e.target.value)} className="select">
+                    {INDIAN_STATES_AND_UTS.map((state) => (
+                      <option key={state} value={state}>{state}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="field-label">{t('contrastLabel')}</label>
                   <button
                     type="button"
                     onClick={() => setHighContrast(!highContrast)}
@@ -175,17 +177,17 @@ export default function Header({
                     style={{ color: highContrast ? 'var(--ember)' : 'var(--ink)' }}
                     aria-pressed={highContrast}
                   >
-                    <Contrast className="w-4 h-4" /> {highContrast ? 'On' : 'Off'}
+                    <Contrast className="w-4 h-4" /> {highContrast ? t('contrastOn') : t('contrastOff')}
                   </button>
                 </div>
                 <div>
-                  <label className="field-label">Text Size</label>
+                  <label className="field-label">{t('textSizeLabel')}</label>
                   <button
                     type="button"
                     onClick={() => setFontSize(fontSize === 'normal' ? 'lg' : fontSize === 'lg' ? 'xl' : 'normal')}
                     className="flex items-center gap-2 text-sm font-semibold pt-2"
                   >
-                    <TextCursorInput className="w-4 h-4" /> {fontSize === 'normal' ? 'Normal' : fontSize === 'lg' ? 'Large' : 'Extra Large'}
+                    <TextCursorInput className="w-4 h-4" /> {fontSize === 'normal' ? t('textSizeNormal') : fontSize === 'lg' ? t('textSizeLarge') : t('textSizeExtraLarge')}
                   </button>
                 </div>
               </motion.div>
@@ -204,7 +206,7 @@ export default function Header({
                       onClick={() => setAvatarEditorOpen((v) => !v)}
                       className="flex items-center gap-3 min-w-0 text-left"
                       aria-expanded={avatarEditorOpen}
-                      aria-label="Change profile picture"
+                      aria-label={t('changeProfilePictureAria')}
                     >
                       <UserAvatar
                         avatar={session.avatar}
@@ -214,11 +216,11 @@ export default function Header({
                       />
                       <span className="min-w-0">
                         <span className="text-sm font-semibold block truncate">{session.fullName}</span>
-                        <span className="text-xs block truncate capitalize" style={{ color: 'var(--ink-faint)' }}>{session.role} · Change photo</span>
+                        <span className="text-xs block truncate capitalize" style={{ color: 'var(--ink-faint)' }}>{t((MODES.find((m) => m.id === session.role) || MODES[0]).labelKey)} · {t('changePhoto')}</span>
                       </span>
                     </button>
                     <button type="button" onClick={onLogout} className="btn btn-quiet shrink-0">
-                      <LogOut className="w-4 h-4" /> Logout
+                      <LogOut className="w-4 h-4" /> {t('logout')}
                     </button>
                   </div>
 

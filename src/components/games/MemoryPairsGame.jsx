@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const PAIRS = ['Jaapi', 'Pepa', 'Muga', 'Tea', 'Bihu', 'Tulsi'];
 
@@ -10,6 +11,7 @@ function shuffleCards() {
 }
 
 export default function MemoryPairsGame({ difficulty, onFinishGame, onBack }) {
+  const { t } = useTranslation();
   const [cards, setCards] = useState(() => shuffleCards());
   const [open, setOpen] = useState([]);
   const [mistakes, setMistakes] = useState(0);
@@ -45,10 +47,10 @@ export default function MemoryPairsGame({ difficulty, onFinishGame, onBack }) {
 
   return (
     <div className="page max-w-2xl">
-      <button type="button" onClick={onBack} className="btn btn-quiet !flex !px-0 mb-8"><ArrowLeft className="w-4 h-4" /> Game Library</button>
+      <button type="button" onClick={onBack} className="btn btn-quiet !flex !px-0 mb-8"><ArrowLeft className="w-4 h-4" /> {t('gameLibrary')}</button>
 
-      <span className="eyebrow eyebrow-jade">Memory Domain</span>
-      <h2 className="font-display text-3xl font-medium mt-2 mb-8">Match Familiar Assam Pairs</h2>
+      <span className="eyebrow eyebrow-jade">{t('memoryDomain')}</span>
+      <h2 className="font-display text-3xl font-medium mt-2 mb-8">{t('matchFamiliarPairsTitle')}</h2>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
         {cards.map((card) => {
@@ -66,8 +68,8 @@ export default function MemoryPairsGame({ difficulty, onFinishGame, onBack }) {
       </div>
 
       <div className="flex items-center justify-between text-sm font-medium mt-8 pt-5" style={{ borderTop: '1px solid var(--hairline)', color: 'var(--ink-soft)' }}>
-        <span>Moves: <strong style={{ color: 'var(--jade)' }}>{moves}</strong></span>
-        <span>Mistakes: <strong style={{ color: 'var(--ember)' }}>{mistakes}</strong></span>
+        <span>{t('movesLabel')}: <strong style={{ color: 'var(--jade)' }}>{moves}</strong></span>
+        <span>{t('mistakesLabel')}: <strong style={{ color: 'var(--ember)' }}>{mistakes}</strong></span>
       </div>
     </div>
   );

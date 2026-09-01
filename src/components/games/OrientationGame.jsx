@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { AudioService } from '../../services/audioService';
 import { ArrowLeft, Compass } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export default function OrientationGame({ onFinishGame, onBack }) {
+  const { t } = useTranslation();
   const questions = [
     { id: 'q1', question: 'Which season is celebrated during Rongali Bihu in Assam?', options: ['Spring / New Year (Bohag)', 'Winter Peak', 'Monsoon Rain'], answer: 'Spring / New Year (Bohag)', hint: 'It takes place in mid-April when new leaves bloom' },
     { id: 'q2', question: 'What time of day is tea typically enjoyed in Assamese households?', options: ['Morning & Evening', 'Midnight', 'Only late night'], answer: 'Morning & Evening', hint: 'Served hot at 8:00 AM and 4:30 PM' },
@@ -35,8 +37,8 @@ export default function OrientationGame({ onFinishGame, onBack }) {
   return (
     <div className="page max-w-2xl">
       <div className="flex items-center justify-between gap-4 mb-8">
-        <button type="button" onClick={onBack} className="btn btn-quiet !px-0"><ArrowLeft className="w-4 h-4" /> Quit</button>
-        <span className="eyebrow">Question {currentIndex + 1} of {questions.length}</span>
+        <button type="button" onClick={onBack} className="btn btn-quiet !px-0"><ArrowLeft className="w-4 h-4" /> {t('quit')}</button>
+        <span className="eyebrow">{t('questionLabel')} {currentIndex + 1} {t('ofLabel')} {questions.length}</span>
       </div>
 
       <div className="text-center space-y-6">
@@ -44,13 +46,13 @@ export default function OrientationGame({ onFinishGame, onBack }) {
           <Compass className="w-7 h-7" />
         </div>
         <h3 className="font-display text-2xl sm:text-3xl font-medium leading-tight">{currentQ.question}</h3>
-        <p className="pin max-w-md mx-auto">Hint: {currentQ.hint}</p>
+        <p className="pin max-w-md mx-auto">{t('hintPrefix')}: {currentQ.hint}</p>
 
         <div className="index-list text-left pt-4">
           {currentQ.options.map((opt) => (
             <button type="button" key={opt} onClick={() => handleSelect(opt)} className="index-row justify-between">
               <span className="font-medium">{opt}</span>
-              <span className="text-xs font-semibold opacity-0 hover:opacity-100 transition-opacity" style={{ color: 'var(--jade)' }}>Select →</span>
+              <span className="text-xs font-semibold opacity-0 hover:opacity-100 transition-opacity" style={{ color: 'var(--jade)' }}>{t('selectAction')} →</span>
             </button>
           ))}
         </div>

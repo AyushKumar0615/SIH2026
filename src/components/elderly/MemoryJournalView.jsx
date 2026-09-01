@@ -6,8 +6,10 @@ import { AudioService } from '../../services/audioService';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import Magnetic from '../common/Magnetic';
 import Waveform from '../common/Waveform';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeMemory, setActiveMemory] = useState(MOCK_FAMILY_MEMORIES[0]);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -21,6 +23,7 @@ export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
   const imgTiltYSpring = useSpring(imgTiltY, { stiffness: 80, damping: 18, mass: 0.6 });
 
   const categories = ['All', 'Family', 'Festivals', 'Places'];
+  const categoryLabelKeys = { All: 'categoryAll', Family: 'categoryFamily', Festivals: 'categoryFestivals', Places: 'categoryPlaces' };
   const filteredMemories = selectedCategory === 'All' ? MOCK_FAMILY_MEMORIES : MOCK_FAMILY_MEMORIES.filter((m) => m.category === selectedCategory);
 
   const handleNarrate = (mem) => {
@@ -66,8 +69,8 @@ export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
   return (
     <div ref={containerRef} className="page max-w-5xl">
       <div className="flex items-center justify-between gap-4 mb-8">
-        <button type="button" onClick={onBack} className="btn btn-quiet !px-0"><ArrowLeft className="w-4 h-4" /> Back</button>
-        <h2 className="font-display text-2xl font-medium">Memory Journal</h2>
+        <button type="button" onClick={onBack} className="btn btn-quiet !px-0"><ArrowLeft className="w-4 h-4" /> {t('back')}</button>
+        <h2 className="font-display text-2xl font-medium">{t('memoryJournal')}</h2>
       </div>
 
       <div className="flex items-center gap-6 mb-8 overflow-x-auto scrollbar-none" style={{ borderBottom: '1px solid var(--hairline)' }}>
@@ -76,7 +79,7 @@ export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
             type="button" key={cat} onClick={() => setSelectedCategory(cat)}
             className={`tab-link ${selectedCategory === cat ? 'is-active' : ''}`}
           >
-            {cat}
+            {t(categoryLabelKeys[cat])}
             {selectedCategory === cat && (
               <motion.span layoutId="memory-tab-underline" className="absolute left-0 right-0 -bottom-px h-[2px]" style={{ background: 'var(--ember)' }} transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }} />
             )}
@@ -111,7 +114,7 @@ export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
               </AnimatePresence>
               <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, transparent 45%, rgba(11,10,8,0.94) 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-7">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-soft)' }}>{activeMemory.category}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-soft)' }}>{t(categoryLabelKeys[activeMemory.category]) || activeMemory.category}</span>
                 <h3 className="font-display text-3xl sm:text-[2.15rem] font-medium mt-1.5 leading-tight">{activeMemory.name}</h3>
                 <p className="text-sm font-medium mt-1" style={{ color: 'var(--jade)' }}>{activeMemory.relation}</p>
               </div>
@@ -123,16 +126,16 @@ export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
                   <AnimatePresence mode="wait" initial={false}>
                     {justFinished ? (
                       <motion.span key="done" className="inline-flex items-center gap-2" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.16 }}>
-                        <Check className="w-4.5 h-4.5" /> Played
+                        <Check className="w-4.5 h-4.5" /> {t('played')}
                       </motion.span>
                     ) : isPlayingAudio ? (
                       <motion.span key="playing" className="inline-flex items-center gap-2.5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
                         <Waveform active barWidth={2.5} height={16} />
-                        Narrating…
+                        {t('narratingEllipsis')}
                       </motion.span>
                     ) : (
                       <motion.span key="idle" className="inline-flex items-center gap-2.5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
-                        <Volume2 className="w-4.5 h-4.5" /> Listen to voice memory
+                        <Volume2 className="w-4.5 h-4.5" /> {t('listenToVoiceMemory')}
                       </motion.span>
                     )}
                   </AnimatePresence>
@@ -144,7 +147,7 @@ export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
               <div className="notice-strip is-ember flex items-start gap-3">
                 <Heart className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--ember)' }} />
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
-                  <span className="font-semibold" style={{ color: 'var(--ink)' }}>Special moment —</span> {activeMemory.favoriteMemory}
+                  <span className="font-semibold" style={{ color: 'var(--ink)' }}>{t('specialMoment')}</span> {activeMemory.favoriteMemory}
                 </p>
               </div>
             </div>
@@ -153,8 +156,8 @@ export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
 
         <div className="lg:col-span-5 scroll-reveal" data-reveal-delay="1">
           <div className="flex items-center justify-between mb-2">
-            <span className="pin">{filteredMemories.length} memories</span>
-            <button type="button" onClick={onOpenVoiceAssistant} className="text-xs font-semibold" style={{ color: 'var(--jade)' }}>Ask "Who is this?" →</button>
+            <span className="pin">{filteredMemories.length} {t('memoriesCountSuffix')}</span>
+            <button type="button" onClick={onOpenVoiceAssistant} className="text-xs font-semibold" style={{ color: 'var(--jade)' }}>{t('askWhoIsThis')} →</button>
           </div>
 
           <div className="index-list max-h-[560px] overflow-y-auto scrollbar-none">

@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const items = ['Tea leaf', 'Jaapi', 'Bamboo', 'Muga', 'Pepa', 'Tea leaf', 'Tulsi', 'Tea leaf', 'Bihu', 'Rice'];
 
 export default function TargetSelectGame({ onFinishGame, onBack }) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState([]);
   const start = useMemo(() => Date.now(), []);
   const targets = items.filter((item) => item === 'Tea leaf').length;
@@ -24,9 +26,9 @@ export default function TargetSelectGame({ onFinishGame, onBack }) {
 
   return (
     <div className="page max-w-2xl">
-      <button type="button" onClick={onBack} className="btn btn-quiet !flex !px-0 mb-8"><ArrowLeft className="w-4 h-4" /> Game Library</button>
+      <button type="button" onClick={onBack} className="btn btn-quiet !flex !px-0 mb-8"><ArrowLeft className="w-4 h-4" /> {t('gameLibrary')}</button>
 
-      <span className="eyebrow">Attention Domain</span>
+      <span className="eyebrow">{t('attentionDomain')}</span>
       <h2 className="font-display text-3xl font-medium mt-2 mb-8">Find Every "Tea Leaf"</h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -41,7 +43,7 @@ export default function TargetSelectGame({ onFinishGame, onBack }) {
         ))}
       </div>
 
-      <button type="button" onClick={finish} className="btn btn-ember w-full mt-8">Finish Focus Task</button>
+      <button type="button" onClick={finish} className="btn btn-ember w-full mt-8">{t('finishFocusTask')}</button>
     </div>
   );
 }

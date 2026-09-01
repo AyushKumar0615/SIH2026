@@ -2,9 +2,11 @@ import React from 'react';
 import ImpactDashboard from './ImpactDashboard';
 import { CULTURAL_CATALOG } from '../../data/regionalContent';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { useTranslation } from '../../hooks/useTranslation';
 import { Shield, Server, Globe } from 'lucide-react';
 
 export default function AdminPortal() {
+  const { t } = useTranslation();
   const containerRef = useScrollReveal();
 
   const auditLogs = [
@@ -18,11 +20,11 @@ export default function AdminPortal() {
     <div ref={containerRef} className="page space-y-16">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 scroll-reveal" style={{ borderBottom: '1px solid var(--hairline)' }}>
         <div>
-          <span className="eyebrow">Platform Governance</span>
-          <h1 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98]">System Health & Regional Administration</h1>
+          <span className="eyebrow">{t('platformGovernance')}</span>
+          <h1 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98]">{t('systemHealthTitle')}</h1>
         </div>
         <div className="flex items-center gap-2 shrink-0 text-sm font-semibold" style={{ color: 'var(--jade)' }}>
-          <Server className="w-4.5 h-4.5 animate-soft-pulse" /> All Regional Nodes Operational
+          <Server className="w-4.5 h-4.5 animate-soft-pulse" /> {t('allNodesOperational')}
         </div>
       </div>
 
@@ -30,7 +32,7 @@ export default function AdminPortal() {
 
       <div className="scroll-reveal" data-reveal-delay="2">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl font-medium flex items-center gap-2.5"><Globe className="w-5 h-5" style={{ color: 'var(--jade)' }} /> North Eastern Region — 8 States</h2>
+          <h2 className="font-display text-2xl font-medium flex items-center gap-2.5"><Globe className="w-5 h-5" style={{ color: 'var(--jade)' }} /> {t('neRegionTitle')}</h2>
         </div>
         <div className="index-list">
           {Object.values(CULTURAL_CATALOG).map((st, idx) => (
@@ -47,11 +49,11 @@ export default function AdminPortal() {
       </div>
 
       <div className="scroll-reveal" data-reveal-delay="3">
-        <h2 className="font-display text-2xl font-medium flex items-center gap-2.5 mb-6"><Shield className="w-5 h-5" style={{ color: 'var(--ember)' }} /> Security & Privacy Audit Trail</h2>
+        <h2 className="font-display text-2xl font-medium flex items-center gap-2.5 mb-6"><Shield className="w-5 h-5" style={{ color: 'var(--ember)' }} /> {t('auditTrailTitle')}</h2>
         <div className="data-table-wrap">
           <div className="overflow-x-auto">
             <table className="data-table text-sm">
-              <thead><tr><th>Timestamp</th><th>User & Role</th><th>Action</th><th>IP Address</th></tr></thead>
+              <thead><tr><th>{t('colTimestamp')}</th><th>{t('colUserRole')}</th><th>{t('colAction')}</th><th>{t('colIpAddress')}</th></tr></thead>
               <tbody>
                 {auditLogs.map((log) => (
                   <tr key={log.id}>
