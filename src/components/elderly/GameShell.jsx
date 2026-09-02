@@ -17,6 +17,7 @@ export default function GameShell({ stateName = 'Assam', onBack }) {
   const [activeGameKey, setActiveGameKey] = useState(null);
   const [completedSession, setCompletedSession] = useState(null);
   const [recommendation, setRecommendation] = useState(null);
+  const [activeCategory, setActiveCategory] = useState('all');
   const containerRef = useScrollReveal();
 
   const gameOptions = [
@@ -25,6 +26,9 @@ export default function GameShell({ stateName = 'Assam', onBack }) {
     { id: 'target', title: 'NER Craft Focus', domain: 'Attention', icon: '🎯', desc: 'Find target tea leaf among distracting items.' },
     { id: 'orientation', title: 'Date & Festival Orientation', domain: 'Orientation', icon: '🗓️', desc: 'Recognize Bihu seasons & tea garden times.' }
   ];
+
+  const categories = ['all', ...new Set(gameOptions.map((g) => g.domain))];
+  const visibleGames = activeCategory === 'all' ? gameOptions : gameOptions.filter((g) => g.domain === activeCategory);
 
   const handleFinishGame = (sessionData) => {
     const score = CognitiveEngine.calculateSessionScore(sessionData.accuracy, sessionData.responseTimeSec, sessionData.mistakes);
@@ -95,16 +99,34 @@ export default function GameShell({ stateName = 'Assam', onBack }) {
   } else {
     content = (
     <div ref={containerRef} className="page">
-      <div className="flex items-start justify-between gap-4 mb-10">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5 mb-10">
         <div>
           <span className="eyebrow">{t('cognitiveExercises')}</span>
           <h2 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98]">{t('gameLibrary')}</h2>
         </div>
-        <button type="button" onClick={onBack} className="btn btn-quiet shrink-0"><ArrowLeft className="w-4 h-4" /> {t('back')}</button>
+        <div className="flex flex-wrap items-center gap-4 sm:justify-end shrink-0">
+          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t('gameLibrary')}>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveCategory(cat)}
+                aria-pressed={activeCategory === cat}
+                className="btn !min-h-8 !px-3 !py-1 text-xs"
+                style={activeCategory === cat
+                  ? { background: 'var(--ember)', color: '#1a0f08', borderColor: 'var(--ember)' }
+                  : { background: 'transparent', border: '1px solid var(--hairline-strong)', color: 'var(--ink-soft)' }}
+              >
+                {cat === 'all' ? t('categoryAll') : cat}
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={onBack} className="btn btn-quiet shrink-0"><ArrowLeft className="w-4 h-4" /> {t('back')}</button>
+        </div>
       </div>
 
       <div className="index-list scroll-reveal">
-        {gameOptions.map((g, idx) => (
+        {visibleGames.map((g, idx) => (
           <button type="button" key={g.id} onClick={() => setActiveGameKey(g.id)} className="index-row">
             <span className="index-num">0{idx + 1}</span>
             <span className="index-icon">{g.icon}</span>

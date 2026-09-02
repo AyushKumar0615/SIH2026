@@ -417,18 +417,6 @@ a { color: inherit; }
     .index-row:hover .index-desc { max-height: 3rem; opacity: 1; margin-top: 0.35rem; }
   }
 
-  /* ─── JUDGE BAR — recedes until the user actually needs it ───── */
-  .judge-bar {
-    opacity: 0.4;
-    transform: translateY(4px) scale(0.97);
-    transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease);
-  }
-  .judge-bar:hover,
-  .judge-bar:focus-within {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
   /* ─── GLASS (reserved: overlay chrome + tooltips only) ───────── */
   .glass {
     background: rgba(27, 24, 21, 0.55);

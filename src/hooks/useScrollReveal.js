@@ -1,9 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 
 /**
  * Lightweight scroll-reveal hook using IntersectionObserver.
  * Adds `.revealed` class when elements enter the viewport.
  * Supports staggered delays for child elements via `data-reveal-delay`.
+ *
+ * Implemented as a callback ref (not useRef+useEffect) so the observer is
+ * re-attached whenever the underlying DOM node actually changes — including
+ * when a persistent parent component swaps its rendered content via internal
+ * state (e.g. Back navigation) without the parent itself unmounting. A plain
+ * useEffect with stable deps would only ever run once per component instance
+ * and silently go stale, leaving later content permanently at opacity: 0.
  *
  * Usage:
  *   const containerRef = useScrollReveal();
@@ -13,19 +20,23 @@ import { useEffect, useRef } from 'react';
  *   </div>
  */
 export function useScrollReveal(options = {}) {
-  const containerRef = useRef(null);
+  const observerRef = useRef(null);
   const { threshold = 0.08, rootMargin = '0px 0px -40px 0px' } = options;
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
+  const containerRef = useCallback((node) => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
 
-    const container = containerRef.current;
-    if (!container) return;
+    if (!node) return;
+
+    window.scrollTo(0, 0);
 
     // Respect reduced-motion preferences
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
-      container.querySelectorAll('.scroll-reveal').forEach((el) => el.classList.add('revealed'));
+      node.querySelectorAll('.scroll-reveal').forEach((el) => el.classList.add('revealed'));
       return;
     }
 
@@ -46,10 +57,8 @@ export function useScrollReveal(options = {}) {
       { threshold, rootMargin }
     );
 
-    const elements = container.querySelectorAll('.scroll-reveal');
-    elements.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
+    node.querySelectorAll('.scroll-reveal').forEach((el) => observer.observe(el));
+    observerRef.current = observer;
   }, [threshold, rootMargin]);
 
   return containerRef;
