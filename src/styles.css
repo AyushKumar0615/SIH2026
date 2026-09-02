@@ -32,6 +32,21 @@
   --paper-ink: #17140f;
   --paper-line: rgba(23, 20, 15, 0.12);
 
+  /* Floating chrome / overlay surfaces — theme-aware, see body.theme-light */
+  --chrome-chip: rgba(19, 17, 16, 0.35);
+  --glass-panel: rgba(27, 24, 21, 0.55);
+  --overlay-scrim: rgba(11, 10, 8, 0.86);
+  --body-glow:
+    radial-gradient(ellipse 60rem 40rem at 20% -10%, rgba(226, 112, 58, 0.05), transparent 60%),
+    radial-gradient(ellipse 50rem 40rem at 100% 10%, rgba(79, 174, 142, 0.035), transparent 60%),
+    radial-gradient(ellipse 70rem 60rem at 50% 100%, rgba(0, 0, 0, 0.4), transparent 70%);
+
+  /* Fixed tone for text overlaid on the always-dark photo scrims in Story
+     Mode / Memory Journal captions — must stay legible regardless of theme. */
+  --on-photo: #f4efe7;
+  --on-photo-soft: #b7ac9e;
+  --on-photo-faint: #7c7267;
+
   /* Accents */
   --ember: #e2703a;
   --ember-deep: #b4501f;
@@ -95,6 +110,32 @@ body.high-contrast-mode {
   --shadow-lg: 0 0 0 1.5px rgba(255, 255, 255, 0.8);
 }
 
+/* ─── Light Theme Override ────────────────────────────────────────
+   Mirrors the high-contrast override pattern above: swaps the same
+   token set so every component built on var(--canvas)/var(--ink)/etc.
+   repaints automatically. Dark (the :root default) stays untouched. */
+body.theme-light {
+  color-scheme: light;
+
+  --canvas: #ece5d7;
+  --canvas-raised: #ffffff;
+  --canvas-recessed: #ddd4c0;
+  --hairline: rgba(23, 20, 15, 0.12);
+  --hairline-strong: rgba(23, 20, 15, 0.22);
+
+  --ink: #1b1712;
+  --ink-soft: #55503f;
+  --ink-faint: #746b59;
+
+  --chrome-chip: rgba(255, 255, 255, 0.55);
+  --glass-panel: rgba(255, 255, 255, 0.6);
+  --overlay-scrim: rgba(248, 244, 236, 0.94);
+  --body-glow:
+    radial-gradient(ellipse 60rem 40rem at 20% -10%, rgba(226, 112, 58, 0.07), transparent 60%),
+    radial-gradient(ellipse 50rem 40rem at 100% 10%, rgba(79, 174, 142, 0.05), transparent 60%),
+    radial-gradient(ellipse 70rem 60rem at 50% 100%, rgba(23, 20, 15, 0.05), transparent 70%);
+}
+
 /* ─── Font Scale ────────────────────────────────────────────────── */
 .font-scale-lg { font-size: 1.08rem; }
 .font-scale-xl { font-size: 1.2rem; }
@@ -112,11 +153,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse 60rem 40rem at 20% -10%, rgba(226, 112, 58, 0.05), transparent 60%),
-    radial-gradient(ellipse 50rem 40rem at 100% 10%, rgba(79, 174, 142, 0.035), transparent 60%),
-    radial-gradient(ellipse 70rem 60rem at 50% 100%, rgba(0, 0, 0, 0.4), transparent 70%),
-    var(--canvas);
+  background: var(--body-glow), var(--canvas);
   background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-sans);
@@ -126,6 +163,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
+  transition: background-color var(--t-slow) var(--ease), color var(--t-slow) var(--ease);
 }
 
 body::before {
@@ -274,8 +312,8 @@ a { color: inherit; }
     color: var(--ember);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    background: rgba(19, 17, 16, 0.35);
-    transition: border-color var(--t-base) var(--ease), transform var(--t-fast) var(--ease-spring), box-shadow var(--t-base) var(--ease);
+    background: var(--chrome-chip);
+    transition: border-color var(--t-base) var(--ease), transform var(--t-fast) var(--ease-spring), box-shadow var(--t-base) var(--ease), background-color var(--t-slow) var(--ease);
   }
   .mark-btn:hover .mark-glyph, .mark-btn:focus-visible .mark-glyph {
     border-color: var(--ember);
@@ -293,8 +331,8 @@ a { color: inherit; }
     color: var(--ink);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    background: rgba(19, 17, 16, 0.35);
-    transition: all var(--t-base) var(--ease);
+    background: var(--chrome-chip);
+    transition: all var(--t-base) var(--ease), background-color var(--t-slow) var(--ease);
   }
   .trigger-btn:hover { border-color: var(--ember); color: var(--ember); }
 
@@ -319,10 +357,11 @@ a { color: inherit; }
     position: fixed;
     inset: 0;
     z-index: 100;
-    background: rgba(11, 10, 8, 0.86);
+    background: var(--overlay-scrim);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     overflow-y: auto;
+    transition: background-color var(--t-slow) var(--ease);
   }
 
   .workspace-row {
@@ -417,21 +456,9 @@ a { color: inherit; }
     .index-row:hover .index-desc { max-height: 3rem; opacity: 1; margin-top: 0.35rem; }
   }
 
-  /* ─── JUDGE BAR — recedes until the user actually needs it ───── */
-  .judge-bar {
-    opacity: 0.4;
-    transform: translateY(4px) scale(0.97);
-    transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease);
-  }
-  .judge-bar:hover,
-  .judge-bar:focus-within {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
   /* ─── GLASS (reserved: overlay chrome + tooltips only) ───────── */
   .glass {
-    background: rgba(27, 24, 21, 0.55);
+    background: var(--glass-panel);
     border: 1px solid var(--hairline);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -455,6 +482,12 @@ a { color: inherit; }
     background: var(--canvas-recessed);
     border: 1px solid var(--hairline);
     border-radius: var(--radius-md);
+  }
+
+  /* Subtle cross-fade for the handful of static surfaces above that
+     don't already declare their own transition list. */
+  .glass, .panel-dark, .well, .modal-panel, .notice-box, .data-table-wrap {
+    transition: background-color var(--t-slow) var(--ease), border-color var(--t-slow) var(--ease), color var(--t-slow) var(--ease);
   }
 
   /* ─── BUTTONS ─────────────────────────────────────────────────── */

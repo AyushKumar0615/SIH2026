@@ -6,12 +6,6 @@ import AuthPortal from './components/auth/AuthPortal';
 import ElderlyHome from './components/elderly/ElderlyHome';
 import CaregiverDashboard from './components/caregiver/CaregiverDashboard';
 import AdminPortal from './components/admin/AdminPortal';
-import SIHDemoBar from './components/demo/SIHDemoBar';
-import GameShell from './components/elderly/GameShell';
-import MemoryJournalView from './components/elderly/MemoryJournalView';
-import RemindersView from './components/elderly/RemindersView';
-import StoryModeView from './components/elderly/StoryModeView';
-import VoiceAssistantModal from './components/elderly/VoiceAssistantModal';
 import { NER_STATES } from './data/regionalContent';
 import { AuthService } from './services/authService';
 import { LanguageProvider } from './hooks/useTranslation';
@@ -20,15 +14,25 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [currentMode, setCurrentMode] = useState('elderly');
-  const [currentSubView, setCurrentSubView] = useState('home');
   const [currentLang, setCurrentLang] = useState('as');
   const [currentState, setCurrentState] = useState(NER_STATES.ASSAM);
 
   const [highContrast, setHighContrast] = useState(false);
   const [fontSize, setFontSize] = useState('normal');
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('smritisetu-theme') === 'light' ? 'light' : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
 
-  const [demoStep, setDemoStep] = useState(1);
-  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  useEffect(() => {
+    document.body.classList.toggle('theme-light', theme === 'light');
+    try { localStorage.setItem('smritisetu-theme', theme); } catch {}
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
 
   useEffect(() => {
     let cancelled = false;
@@ -58,15 +62,12 @@ export default function App() {
     setCurrentMode(nextSession.role);
     setCurrentLang(nextSession.language || 'en');
     setCurrentState(nextSession.state || NER_STATES.ASSAM);
-    setCurrentSubView('home');
   };
 
   const handleLogout = async () => {
     await AuthService.logout();
     setSession(null);
     setCurrentMode('elderly');
-    setCurrentSubView('home');
-    setIsVoiceModalOpen(false);
   };
 
   if (isRestoringSession) {
@@ -77,43 +78,11 @@ export default function App() {
     return (
       <MotionConfig reducedMotion="user">
         <LanguageProvider lang="en">
-          <AuthPortal onAuthenticated={handleAuthenticated} />
+          <AuthPortal onAuthenticated={handleAuthenticated} theme={theme} onToggleTheme={toggleTheme} />
         </LanguageProvider>
       </MotionConfig>
     );
   }
-
-  const handleExecuteDemoStep = (stepObj) => {
-    const target = stepObj.targetView;
-    if (target === 'elderly') {
-      setCurrentMode('elderly');
-      setCurrentSubView('home');
-      setIsVoiceModalOpen(false);
-    } else if (target === 'elderly_games') {
-      setCurrentMode('elderly');
-      setCurrentSubView('games');
-      setIsVoiceModalOpen(false);
-    } else if (target === 'elderly_memories') {
-      setCurrentMode('elderly');
-      setCurrentSubView('memories');
-      setIsVoiceModalOpen(false);
-    } else if (target === 'elderly_voice') {
-      setCurrentMode('elderly');
-      setCurrentSubView('home');
-      setIsVoiceModalOpen(true);
-    } else if (target === 'elderly_reminders') {
-      setCurrentMode('elderly');
-      setCurrentSubView('reminders');
-      setIsVoiceModalOpen(false);
-    } else if (target === 'elderly_story') {
-      setCurrentMode('elderly');
-      setCurrentSubView('story');
-      setIsVoiceModalOpen(false);
-    } else if (target === 'caregiver' || target === 'caregiver_analytics' || target === 'caregiver_insights') {
-      setCurrentMode('caregiver');
-      setIsVoiceModalOpen(false);
-    }
-  };
 
   return (
     <MotionConfig reducedMotion="user">
@@ -121,13 +90,7 @@ export default function App() {
     <div className={`app-shell ${fontSize === 'lg' ? 'font-scale-lg' : fontSize === 'xl' ? 'font-scale-xl' : ''}`}>
       <Header
         currentMode={currentMode}
-        setCurrentMode={(mode) => {
-          setCurrentMode(mode);
-          if (mode === 'demo') {
-            setDemoStep(1);
-            handleExecuteDemoStep({ targetView: 'elderly' });
-          }
-        }}
+        setCurrentMode={setCurrentMode}
         currentLang={currentLang}
         setCurrentLang={setCurrentLang}
         currentState={currentState}
@@ -136,6 +99,8 @@ export default function App() {
         setHighContrast={setHighContrast}
         fontSize={fontSize}
         setFontSize={setFontSize}
+        theme={theme}
+        onToggleTheme={toggleTheme}
         session={session}
         onLogout={handleLogout}
         onSessionUpdate={setSession}
@@ -143,32 +108,11 @@ export default function App() {
 
       <main className="flex-1 pb-24">
         <AnimatePresence mode="wait">
-          {currentMode === 'elderly' && currentSubView === 'home' && (
+          {currentMode === 'elderly' && (
             <motion.div key="elderly-home" {...pageTransition}>
               <ElderlyHome currentLang={currentLang} currentState={currentState} session={session} />
             </motion.div>
           )}
-          {currentMode === 'elderly' && currentSubView === 'games' && (
-            <motion.div key="elderly-games" {...pageTransition}>
-              <GameShell stateName={currentState} onBack={() => setCurrentSubView('home')} />
-            </motion.div>
-          )}
-          {currentMode === 'elderly' && currentSubView === 'memories' && (
-            <motion.div key="elderly-memories" {...pageTransition}>
-              <MemoryJournalView onBack={() => setCurrentSubView('home')} onOpenVoiceAssistant={() => setIsVoiceModalOpen(true)} />
-            </motion.div>
-          )}
-          {currentMode === 'elderly' && currentSubView === 'reminders' && (
-            <motion.div key="elderly-reminders" {...pageTransition}>
-              <RemindersView onBack={() => setCurrentSubView('home')} />
-            </motion.div>
-          )}
-          {currentMode === 'elderly' && currentSubView === 'story' && (
-            <motion.div key="elderly-story" {...pageTransition}>
-              <StoryModeView onBack={() => setCurrentSubView('home')} />
-            </motion.div>
-          )}
-
           {currentMode === 'caregiver' && (
             <motion.div key="caregiver" {...pageTransition}>
               <CaregiverDashboard session={session} />
@@ -186,22 +130,6 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
-
-      <VoiceAssistantModal
-        isOpen={isVoiceModalOpen}
-        onClose={() => setIsVoiceModalOpen(false)}
-        onOpenGame={() => {
-          setIsVoiceModalOpen(false);
-          setCurrentMode('elderly');
-          setCurrentSubView('games');
-        }}
-      />
-
-      <SIHDemoBar
-        currentStep={demoStep}
-        setCurrentStep={setDemoStep}
-        onExecuteStep={handleExecuteDemoStep}
-      />
     </div>
     </LanguageProvider>
     </MotionConfig>

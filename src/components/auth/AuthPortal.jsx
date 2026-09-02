@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Feather, LockKeyhole, UserPlus, ArrowRight } from 'lucide-react';
-import { NER_STATES } from '../../data/regionalContent';
+import { INDIAN_STATES_AND_UTS, INDIAN_LANGUAGES } from '../../data/regionalContent';
 import { AuthService } from '../../services/authService';
 import Magnetic from '../common/Magnetic';
 import AvatarPicker from '../common/AvatarPicker';
+import ThemeToggle from '../common/ThemeToggle';
 import { useTranslation } from '../../hooks/useTranslation';
 
 const initialLogin = { email: '', password: '' };
-const initialRegister = { fullName: '', email: '', password: '', role: 'caregiver', state: NER_STATES.ASSAM, language: 'en', avatar: null };
+const initialRegister = { fullName: '', email: '', password: '', role: 'caregiver', state: 'Assam', language: 'en', avatar: null };
 
-export default function AuthPortal({ onAuthenticated }) {
+export default function AuthPortal({ onAuthenticated, theme, onToggleTheme }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('login');
   const [loginForm, setLoginForm] = useState(initialLogin);
@@ -50,9 +51,12 @@ export default function AuthPortal({ onAuthenticated }) {
         }}
       />
 
-      <header className="relative rail-pad pt-8 md:pt-10 flex items-center gap-2.5">
-        <span className="mark-glyph"><Feather className="w-4 h-4" /></span>
-        <span className="eyebrow">SmritiSetu — Keeping Memories Close</span>
+      <header className="relative rail-pad pt-8 md:pt-10 flex items-center justify-between gap-2.5">
+        <span className="flex items-center gap-2.5">
+          <span className="mark-glyph"><Feather className="w-4 h-4" /></span>
+          <span className="eyebrow">SmritiSetu — Keeping Memories Close</span>
+        </span>
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </header>
 
       <main className="relative rail-pad flex-1 flex items-center py-12 md:py-0">
@@ -157,15 +161,13 @@ export default function AuthPortal({ onAuthenticated }) {
                     <div>
                       <label className="field-label">{t('stateLabel')}</label>
                       <select value={registerForm.state} onChange={(e) => setRegisterForm({ ...registerForm, state: e.target.value })} className="select">
-                        {Object.values(NER_STATES).map((state) => (<option key={state} value={state}>{state}</option>))}
+                        {INDIAN_STATES_AND_UTS.map((state) => (<option key={state} value={state}>{state}</option>))}
                       </select>
                     </div>
                     <div>
                       <label className="field-label">{t('languageLabel')}</label>
                       <select value={registerForm.language} onChange={(e) => setRegisterForm({ ...registerForm, language: e.target.value })} className="select">
-                        <option value="as">Assamese</option>
-                        <option value="en">English</option>
-                        <option value="hi">Hindi</option>
+                        {INDIAN_LANGUAGES.map((lang) => (<option key={lang.code} value={lang.code}>{lang.name}</option>))}
                       </select>
                     </div>
                   </div>
