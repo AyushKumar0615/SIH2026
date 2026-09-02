@@ -5,12 +5,13 @@ import { INDIAN_STATES_AND_UTS, INDIAN_LANGUAGES } from '../../data/regionalCont
 import { AuthService } from '../../services/authService';
 import Magnetic from '../common/Magnetic';
 import AvatarPicker from '../common/AvatarPicker';
+import ThemeToggle from '../common/ThemeToggle';
 import { useTranslation } from '../../hooks/useTranslation';
 
 const initialLogin = { email: '', password: '' };
 const initialRegister = { fullName: '', email: '', password: '', role: 'caregiver', state: 'Assam', language: 'en', avatar: null };
 
-export default function AuthPortal({ onAuthenticated }) {
+export default function AuthPortal({ onAuthenticated, theme, onToggleTheme }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('login');
   const [loginForm, setLoginForm] = useState(initialLogin);
@@ -50,9 +51,12 @@ export default function AuthPortal({ onAuthenticated }) {
         }}
       />
 
-      <header className="relative rail-pad pt-8 md:pt-10 flex items-center gap-2.5">
-        <span className="mark-glyph"><Feather className="w-4 h-4" /></span>
-        <span className="eyebrow">SmritiSetu — Keeping Memories Close</span>
+      <header className="relative rail-pad pt-8 md:pt-10 flex items-center justify-between gap-2.5">
+        <span className="flex items-center gap-2.5">
+          <span className="mark-glyph"><Feather className="w-4 h-4" /></span>
+          <span className="eyebrow">SmritiSetu — Keeping Memories Close</span>
+        </span>
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </header>
 
       <main className="relative rail-pad flex-1 flex items-center py-12 md:py-0">

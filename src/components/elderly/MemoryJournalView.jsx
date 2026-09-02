@@ -114,8 +114,8 @@ export default function MemoryJournalView({ onBack, onOpenVoiceAssistant }) {
               </AnimatePresence>
               <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, transparent 45%, rgba(11,10,8,0.94) 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-7">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-soft)' }}>{t(categoryLabelKeys[activeMemory.category]) || activeMemory.category}</span>
-                <h3 className="font-display text-3xl sm:text-[2.15rem] font-medium mt-1.5 leading-tight">{activeMemory.name}</h3>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--on-photo-soft)' }}>{t(categoryLabelKeys[activeMemory.category]) || activeMemory.category}</span>
+                <h3 className="font-display text-3xl sm:text-[2.15rem] font-medium mt-1.5 leading-tight" style={{ color: 'var(--on-photo)' }}>{activeMemory.name}</h3>
                 <p className="text-sm font-medium mt-1" style={{ color: 'var(--jade)' }}>{activeMemory.relation}</p>
               </div>
             </div>

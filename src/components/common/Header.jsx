@@ -16,6 +16,7 @@ import { INDIAN_STATES_AND_UTS, INDIAN_LANGUAGES } from '../../data/regionalCont
 import Magnetic from './Magnetic';
 import UserAvatar from './UserAvatar';
 import AvatarPicker from './AvatarPicker';
+import ThemeToggle from './ThemeToggle';
 import { AuthService } from '../../services/authService';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -37,6 +38,8 @@ export default function Header({
   setHighContrast,
   fontSize,
   setFontSize,
+  theme,
+  onToggleTheme,
   session,
   onLogout,
   onSessionUpdate
@@ -74,18 +77,21 @@ export default function Header({
           </button>
         </Magnetic>
 
-        <Magnetic strength={0.3}>
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            className={`trigger-btn ${isOpen ? '' : 'trigger-btn-hint'}`}
-            aria-haspopup="dialog"
-            aria-expanded={isOpen}
-            aria-label={`${t('workspaceMenuAriaPrefix')} ${t(activeMode.labelKey)}`}
-          >
-            <ActiveIcon className="w-4.5 h-4.5" />
-          </button>
-        </Magnetic>
+        <div className="flex items-center gap-2.5">
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          <Magnetic strength={0.3}>
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              className={`trigger-btn ${isOpen ? '' : 'trigger-btn-hint'}`}
+              aria-haspopup="dialog"
+              aria-expanded={isOpen}
+              aria-label={`${t('workspaceMenuAriaPrefix')} ${t(activeMode.labelKey)}`}
+            >
+              <ActiveIcon className="w-4.5 h-4.5" />
+            </button>
+          </Magnetic>
+        </div>
       </div>
 
       <AnimatePresence>

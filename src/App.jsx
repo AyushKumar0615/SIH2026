@@ -19,6 +19,20 @@ export default function App() {
 
   const [highContrast, setHighContrast] = useState(false);
   const [fontSize, setFontSize] = useState('normal');
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('smritisetu-theme') === 'light' ? 'light' : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  useEffect(() => {
+    document.body.classList.toggle('theme-light', theme === 'light');
+    try { localStorage.setItem('smritisetu-theme', theme); } catch {}
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
 
   useEffect(() => {
     let cancelled = false;
@@ -64,7 +78,7 @@ export default function App() {
     return (
       <MotionConfig reducedMotion="user">
         <LanguageProvider lang="en">
-          <AuthPortal onAuthenticated={handleAuthenticated} />
+          <AuthPortal onAuthenticated={handleAuthenticated} theme={theme} onToggleTheme={toggleTheme} />
         </LanguageProvider>
       </MotionConfig>
     );
@@ -85,6 +99,8 @@ export default function App() {
         setHighContrast={setHighContrast}
         fontSize={fontSize}
         setFontSize={setFontSize}
+        theme={theme}
+        onToggleTheme={toggleTheme}
         session={session}
         onLogout={handleLogout}
         onSessionUpdate={setSession}

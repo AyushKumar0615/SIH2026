@@ -57,6 +57,8 @@ export const DICTIONARY = {
     textSizeNormal: 'Normal',
     textSizeLarge: 'Large',
     textSizeExtraLarge: 'Extra Large',
+    switchToLightMode: 'Switch to light mode',
+    switchToDarkMode: 'Switch to dark mode',
     changePhoto: 'Change photo',
     logout: 'Logout',
 
