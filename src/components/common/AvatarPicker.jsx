@@ -5,8 +5,8 @@ import { useTranslation } from '../../hooks/useTranslation';
 
 const MAX_DIM = 320;
 
-function resizeToDataUrl(source, sw, sh) {
-  const scale = Math.min(1, MAX_DIM / Math.max(sw, sh));
+export function resizeToDataUrl(source, sw, sh, maxDim = MAX_DIM) {
+  const scale = Math.min(1, maxDim / Math.max(sw, sh));
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(sw * scale);
   canvas.height = Math.round(sh * scale);
