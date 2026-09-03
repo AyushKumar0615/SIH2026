@@ -318,7 +318,21 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
           </div>
 
           {filteredMemories.length === 0 ? (
-            <p className="text-sm text-center py-10" style={{ color: 'var(--ink-faint)' }}>{t('noMemoriesInCategory')}</p>
+            <div className="text-center py-10 space-y-4">
+              <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('noMemoriesInCategory')}</p>
+              <Magnetic strength={0.15} className="inline-block">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm((f) => ({ ...f, category: selectedCategory === 'All' ? f.category : selectedCategory }));
+                    setShowAddForm(true);
+                  }}
+                  className="btn btn-line !min-h-9 !py-2 text-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" /> {t('addMemory')}
+                </button>
+              </Magnetic>
+            </div>
           ) : (
             <div className="index-list max-h-[560px] overflow-y-auto scrollbar-none">
               {filteredMemories.map((mem) => (
