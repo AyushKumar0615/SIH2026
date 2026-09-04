@@ -217,7 +217,12 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
     );
   } else if (memories.length === 0 && !showAddForm) {
     body = (
-      <div className="panel-light p-9 sm:p-12 text-center space-y-6 max-w-xl mx-auto scroll-reveal">
+      <motion.div
+        initial={{ opacity: 0, y: 26 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="panel-light p-9 sm:p-12 text-center space-y-6 max-w-xl mx-auto"
+      >
         <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: 'rgba(226,112,58,0.15)', color: 'var(--ember-deep)' }}>
           <Heart className="w-7 h-7" />
         </div>
@@ -230,13 +235,18 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
             <Plus className="w-4.5 h-4.5" /> {t('addMemory')}
           </button>
         </Magnetic>
-      </div>
+      </motion.div>
     );
   } else if (memories.length > 0) {
     body = (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {activeMemory && (
-          <div className="lg:col-span-7 scroll-reveal">
+          <motion.div
+            initial={{ opacity: 0, y: 26 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-7"
+          >
             <div
               className="relative rounded-[var(--radius-lg)] overflow-hidden h-72 sm:h-[27rem]"
               onMouseMove={handleImageMove}
@@ -308,10 +318,15 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
 
-        <div className="lg:col-span-5 scroll-reveal" data-reveal-delay="1">
+        <motion.div
+          initial={{ opacity: 0, y: 26 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
+          className="lg:col-span-5"
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="pin">{filteredMemories.length} {t('memoriesCountSuffix')}</span>
             <button type="button" onClick={onOpenVoiceAssistant} className="text-xs font-semibold" style={{ color: 'var(--jade)' }}>{t('askWhoIsThis')} →</button>
@@ -350,7 +365,7 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     );
   } else {
