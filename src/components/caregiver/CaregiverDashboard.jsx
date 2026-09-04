@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import CognitiveAnalytics from './CognitiveAnalytics';
 import ExplainableInsightsView from './ExplainableInsightsView';
 import RoutineManager from './RoutineManager';
-import { MOCK_ELDERLY_USER } from '../../data/mockData';
+import { ReminderService } from '../../services/reminderService';
+import { MemoryService } from '../../services/memoryService';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { pageTransition } from '../common/pageTransition';
 import UserAvatar from '../common/UserAvatar';
@@ -14,7 +15,47 @@ export default function CaregiverDashboard({ session }) {
   const { t } = useTranslation();
   const userName = session?.fullName || t('guestLabel');
   const [activeTab, setActiveTab] = useState('insights');
+  const [routines, setRoutines] = useState([]);
+  const [isLoadingRoutines, setIsLoadingRoutines] = useState(true);
+  const [routinesError, setRoutinesError] = useState('');
+  const [memories, setMemories] = useState([]);
+  const [isLoadingMemories, setIsLoadingMemories] = useState(true);
   const containerRef = useScrollReveal();
+
+  const loadRoutines = useCallback(async () => {
+    if (!session?.id) {
+      setIsLoadingRoutines(false);
+      return;
+    }
+    setIsLoadingRoutines(true);
+    setRoutinesError('');
+    const result = await ReminderService.listReminders(session.id);
+    if (!result.ok) {
+      setRoutinesError(result.error || t('remindersLoadError'));
+      setIsLoadingRoutines(false);
+      return;
+    }
+    setRoutines(result.reminders);
+    setIsLoadingRoutines(false);
+  }, [session?.id, t]);
+
+  useEffect(() => {
+    loadRoutines();
+  }, [loadRoutines]);
+
+  useEffect(() => {
+    if (!session?.id) {
+      setIsLoadingMemories(false);
+      return;
+    }
+    setIsLoadingMemories(true);
+    MemoryService.listMemories(session.id).then((result) => {
+      setMemories(result.ok ? result.memories : []);
+      setIsLoadingMemories(false);
+    });
+  }, [session?.id]);
+
+  const completedToday = routines.filter((r) => r.isCompleted).length;
 
   const tabs = [
     { id: 'insights', labelKey: 'tabAiInsights', icon: Lightbulb },
@@ -31,14 +72,14 @@ export default function CaregiverDashboard({ session }) {
             <h1 className="font-display text-3xl md:text-4xl font-medium mt-2 truncate">
               {t('monitoring')} <em className="italic" style={{ color: 'var(--ember)' }}>{userName}</em>
             </h1>
-            <p className="pin mt-1">{MOCK_ELDERLY_USER.conditionSummary} · {MOCK_ELDERLY_USER.location}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-8 shrink-0">
-          <div className="figure"><span className="figure-label">{t('todayLabel')}</span><span className="figure-value" style={{ color: 'var(--jade)' }}>4/4</span></div>
-          <div className="figure"><span className="figure-label">{t('trendLabel')}</span><span className="figure-value" style={{ color: 'var(--ember)' }}>+8%</span></div>
-        </div>
+        {!isLoadingRoutines && routines.length > 0 && (
+          <div className="flex items-center gap-8 shrink-0">
+            <div className="figure"><span className="figure-label">{t('todayLabel')}</span><span className="figure-value" style={{ color: 'var(--jade)' }}>{completedToday}/{routines.length}</span></div>
+          </div>
+        )}
       </div>
 
       <div className="notice-strip is-ember flex items-center gap-3 my-8 scroll-reveal" data-reveal-delay="1">
@@ -64,9 +105,27 @@ export default function CaregiverDashboard({ session }) {
       <div className="scroll-reveal" data-reveal-delay="3">
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} {...pageTransition}>
-            {activeTab === 'insights' && <ExplainableInsightsView userName={userName} />}
+            {activeTab === 'insights' && (
+              <ExplainableInsightsView
+                userName={userName}
+                memories={memories}
+                isLoadingMemories={isLoadingMemories}
+                routines={routines}
+                isLoadingRoutines={isLoadingRoutines}
+              />
+            )}
             {activeTab === 'analytics' && <CognitiveAnalytics />}
-            {activeTab === 'routines' && <RoutineManager userName={userName} />}
+            {activeTab === 'routines' && (
+              <RoutineManager
+                session={session}
+                userName={userName}
+                routines={routines}
+                setRoutines={setRoutines}
+                isLoading={isLoadingRoutines}
+                loadError={routinesError}
+                onRetry={loadRoutines}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
