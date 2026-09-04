@@ -90,7 +90,7 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
   } else if (activeSubView === 'memories') {
     content = <MemoryJournalView session={session} onBack={() => setActiveSubView('home')} onOpenVoiceAssistant={() => setIsAssistantOpen(true)} />;
   } else if (activeSubView === 'reminders') {
-    content = <RemindersView onBack={() => setActiveSubView('home')} />;
+    content = <RemindersView session={session} onBack={() => setActiveSubView('home')} />;
   } else if (activeSubView === 'story') {
     content = <StoryModeView onBack={() => setActiveSubView('home')} />;
   } else {
