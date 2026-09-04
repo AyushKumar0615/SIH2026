@@ -123,6 +123,10 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
     </AnimatePresence>
   );
 
+  const completionHistory = routines
+    .filter((r) => r.isCompleted)
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
   let body;
   if (isLoading) {
     body = <div className="py-16 text-center text-sm" style={{ color: 'var(--ink-faint)' }}>{t('remindersLoading')}</div>;
@@ -200,6 +204,31 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
       )}
 
       {body}
+
+      {!isLoading && !(loadError && routines.length === 0) && routines.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
+          <h4 className="font-display text-lg font-medium mb-4">{t('completionHistoryTitle')}</h4>
+          {completionHistory.length === 0 ? (
+            <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('noCompletionHistoryYet')}</p>
+          ) : (
+            <div className="index-list">
+              {completionHistory.map((r) => {
+                const categoryLabel = categoryLabelKeys[r.category] ? t(categoryLabelKeys[r.category]) : r.category;
+                return (
+                  <div key={r.id} className="index-row !cursor-default">
+                    <span className="index-icon">{r.icon}</span>
+                    <span className="flex-1 min-w-0">
+                      <span className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--ember)' }}><Clock className="w-3.5 h-3.5" /> {formatTime12h(r.time)} · {categoryLabel}</span>
+                      <span className="font-display text-lg font-medium block mt-0.5 truncate">{r.title}</span>
+                    </span>
+                    <CheckCircle2 className="w-6 h-6 shrink-0" style={{ color: 'var(--jade)' }} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </motion.div>
+      )}
     </div>
   );
 }

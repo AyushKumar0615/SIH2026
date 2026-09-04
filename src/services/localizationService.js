@@ -179,6 +179,8 @@ export const DICTIONARY = {
     saveReminder: "Save Reminder",
     deleteTooltip: "Delete",
     editTooltip: "Edit",
+    completionHistoryTitle: "Completion History",
+    noCompletionHistoryYet: "No completed routines yet.",
     remindersLoading: "Loading your reminders…",
     remindersLoadError: "Couldn't load your reminders. Please try again.",
     noRemindersYetTitle: "No reminders yet",
