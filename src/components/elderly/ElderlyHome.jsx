@@ -129,7 +129,6 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
                 <em className="italic" style={{ color: 'var(--ember)' }}>{userName}</em>
               </h1>
               <div className="flex flex-wrap items-center gap-5 mt-6">
-                {session?.state && <p className="pin">{session.state}</p>}
                 <button type="button" onClick={handleSpeakGreeting} className="btn btn-quiet !px-0">
                   <Volume2 className={`w-4 h-4 ${isSpeaking ? 'animate-soft-pulse' : ''}`} /> {isSpeaking ? t('speakingEllipsis') : t('listenToGreeting')}
                 </button>
