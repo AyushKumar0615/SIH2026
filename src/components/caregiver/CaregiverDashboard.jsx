@@ -72,7 +72,6 @@ export default function CaregiverDashboard({ session }) {
             <h1 className="font-display text-3xl md:text-4xl font-medium mt-2 truncate">
               {t('monitoring')} <em className="italic" style={{ color: 'var(--ember)' }}>{userName}</em>
             </h1>
-            {session?.state && <p className="pin mt-1">{session.state}</p>}
           </div>
         </div>
 
