@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { pageTransition } from '../common/pageTransition';
-import { MOCK_ELDERLY_USER, MOCK_ROUTINE_SCHEDULE, ROUTINE_TRANSLATION_KEYS } from '../../data/mockData';
 import UserAvatar, { isPhotoAvatar } from '../common/UserAvatar';
 import { LocalizationService } from '../../services/localizationService';
 import { useTranslation } from '../../hooks/useTranslation';
 import { AudioService } from '../../services/audioService';
+import { ReminderService, formatTime12h } from '../../services/reminderService';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import GameShell from './GameShell';
 import MemoryJournalView from './MemoryJournalView';
@@ -24,6 +24,8 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
   const [activeSubView, setActiveSubView] = useState('home');
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [reminders, setReminders] = useState([]);
+  const [isLoadingReminders, setIsLoadingReminders] = useState(true);
   const containerRef = useScrollReveal();
   const spotlightRef = useRef(null);
   const heroRef = useRef(null);
@@ -40,11 +42,26 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
   const tiltYSpring = useSpring(tiltY, { stiffness: 60, damping: 16, mass: 0.6 });
 
   const culturalProfile = LocalizationService.getCulturalProfile(currentState);
-  const nextTask = MOCK_ROUTINE_SCHEDULE.find((item) => !item.completed) || MOCK_ROUTINE_SCHEDULE[0];
-  const nextTaskKeys = ROUTINE_TRANSLATION_KEYS[nextTask.id];
-  const nextTaskTitle = nextTaskKeys ? `${nextTaskKeys.emojiPrefix || ''}${t(nextTaskKeys.titleKey)}` : nextTask.title;
-  const completedCount = MOCK_ROUTINE_SCHEDULE.filter((i) => i.completed).length;
-  const todayFraction = completedCount / MOCK_ROUTINE_SCHEDULE.length;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (activeSubView !== 'home') return;
+    if (!session?.id) {
+      setIsLoadingReminders(false);
+      return;
+    }
+    setIsLoadingReminders(true);
+    ReminderService.listReminders(session.id).then((result) => {
+      if (cancelled) return;
+      setReminders(result.ok ? result.reminders : []);
+      setIsLoadingReminders(false);
+    });
+    return () => { cancelled = true; };
+  }, [session?.id, activeSubView]);
+
+  const completedCount = reminders.filter((r) => r.isCompleted).length;
+  const todayFraction = reminders.length > 0 ? completedCount / reminders.length : 0;
+  const nextTask = reminders.find((r) => !r.isCompleted) || null;
 
   const getGreetingTime = () => {
     const hour = new Date().getHours();
@@ -113,9 +130,7 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
                 <em className="italic" style={{ color: 'var(--ember)' }}>{userName}</em>
               </h1>
               <div className="flex flex-wrap items-center gap-5 mt-6">
-                <p className="pin">
-                  {t('modeCaregiverLabel')} <strong style={{ color: 'var(--ink)' }}>{MOCK_ELDERLY_USER.caregiverName}</strong> · {MOCK_ELDERLY_USER.location}
-                </p>
+                {session?.state && <p className="pin">{session.state}</p>}
                 <button type="button" onClick={handleSpeakGreeting} className="btn btn-quiet !px-0">
                   <Volume2 className={`w-4 h-4 ${isSpeaking ? 'animate-soft-pulse' : ''}`} /> {isSpeaking ? t('speakingEllipsis') : t('listenToGreeting')}
                 </button>
@@ -148,15 +163,26 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
 
         {/* Connective tissue into the next section */}
         <motion.div style={{ opacity: nextTaskOpacity, y: nextTaskY }} className="rail-pad content-col pt-1 pb-9 relative z-10 reveal-left scroll-reveal" data-reveal-delay="2">
-          <div className="notice-strip is-jade flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0">
-              <span className="text-xs font-semibold" style={{ color: 'var(--jade)', textTransform: 'uppercase' }}>{t('nextLabel')} · {nextTask.time}</span>
-              <span className="font-display text-lg md:text-xl font-medium truncate">{nextTaskTitle}</span>
-            </div>
-            <button type="button" onClick={() => setActiveSubView('reminders')} className="btn btn-quiet shrink-0 !px-0" style={{ color: 'var(--jade)' }}>
-              {t('markComplete')} <ArrowUpRight className="w-4 h-4" />
-            </button>
-          </div>
+          {!isLoadingReminders && (
+            nextTask ? (
+              <div className="notice-strip is-jade flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4 min-w-0">
+                  <span className="text-xs font-semibold" style={{ color: 'var(--jade)', textTransform: 'uppercase' }}>{t('nextLabel')} · {formatTime12h(nextTask.time)}</span>
+                  <span className="font-display text-lg md:text-xl font-medium truncate">{nextTask.icon} {nextTask.title}</span>
+                </div>
+                <button type="button" onClick={() => setActiveSubView('reminders')} className="btn btn-quiet shrink-0 !px-0" style={{ color: 'var(--jade)' }}>
+                  {t('markComplete')} <ArrowUpRight className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="notice-strip is-jade flex items-center justify-between gap-4">
+                <span className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('noUpcomingReminders')}</span>
+                <button type="button" onClick={() => setActiveSubView('reminders')} className="btn btn-quiet shrink-0 !px-0" style={{ color: 'var(--jade)' }}>
+                  {t('addReminder')} <ArrowUpRight className="w-4 h-4" />
+                </button>
+              </div>
+            )
+          )}
         </motion.div>
       </section>
 
@@ -166,7 +192,9 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
       <section className="rail-pad content-col py-14 md:py-20 section-ambient">
         <div className="flex items-end justify-between mb-6 scroll-reveal">
           <h2 className="font-display text-2xl md:text-3xl font-medium">{t('dailyActivities')}</h2>
-          <span className="text-xs font-medium hidden sm:block" style={{ color: 'var(--ink-faint)' }}>{completedCount}/{MOCK_ROUTINE_SCHEDULE.length} {t('doneTodaySuffix')}</span>
+          {reminders.length > 0 && (
+            <span className="text-xs font-medium hidden sm:block" style={{ color: 'var(--ink-faint)' }}>{completedCount}/{reminders.length} {t('doneTodaySuffix')}</span>
+          )}
         </div>
 
         <button
@@ -227,16 +255,18 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
               <span className="font-display text-xl md:text-2xl font-medium block">{LocalizationService.getText('myReminders', currentLang)}</span>
               <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('remindersDesc')}</span>
             </span>
-            <span className="hidden sm:flex items-center gap-2 shrink-0" style={{ color: 'var(--ink-faint)' }}>
-              <svg width="26" height="26" viewBox="0 0 26 26" className="-rotate-90">
-                <circle cx="13" cy="13" r="11" fill="none" stroke="var(--hairline-strong)" strokeWidth="2.5" />
-                <circle
-                  cx="13" cy="13" r="11" fill="none" stroke="var(--jade)" strokeWidth="2.5" strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 11} strokeDashoffset={2 * Math.PI * 11 * (1 - todayFraction)}
-                />
-              </svg>
-              <span className="text-xs font-semibold">{completedCount}/{MOCK_ROUTINE_SCHEDULE.length}</span>
-            </span>
+            {reminders.length > 0 && (
+              <span className="hidden sm:flex items-center gap-2 shrink-0" style={{ color: 'var(--ink-faint)' }}>
+                <svg width="26" height="26" viewBox="0 0 26 26" className="-rotate-90">
+                  <circle cx="13" cy="13" r="11" fill="none" stroke="var(--hairline-strong)" strokeWidth="2.5" />
+                  <circle
+                    cx="13" cy="13" r="11" fill="none" stroke="var(--jade)" strokeWidth="2.5" strokeLinecap="round"
+                    strokeDasharray={2 * Math.PI * 11} strokeDashoffset={2 * Math.PI * 11 * (1 - todayFraction)}
+                  />
+                </svg>
+                <span className="text-xs font-semibold">{completedCount}/{reminders.length}</span>
+              </span>
+            )}
             <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
 
@@ -253,8 +283,8 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
           <button
             type="button"
             onClick={() => {
-              AudioService.speak('Connecting emergency call to Priya Devi.', 'en');
-              alert('Call Initiated to Primary Caregiver: Priya Devi (+91 98640 12345)');
+              AudioService.speak('Connecting emergency call to your caregiver.', 'en');
+              alert('Call Initiated to Primary Caregiver.');
             }}
             className="index-row"
           >

@@ -190,6 +190,7 @@ export const DICTIONARY = {
     repeatWeekly: "Weekly",
     reminderDaysLabel: "Days",
     reminderActiveLabel: "Active",
+    noUpcomingReminders: "No upcoming reminders",
     reminderTitleRequired: "Please enter a title.",
     reminderSaveError: "Couldn't save this reminder. Please try again.",
     savingReminder: "Saving…",

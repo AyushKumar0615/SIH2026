@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Clock, Plus, X, Pencil, Trash2, Bell } from 'lucide-react';
-import { ReminderService } from '../../services/reminderService';
+import { ReminderService, formatTime12h } from '../../services/reminderService';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import Magnetic from '../common/Magnetic';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -13,14 +13,6 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const dayLabelKeys = { Sun: 'dayAbbrSun', Mon: 'dayAbbrMon', Tue: 'dayAbbrTue', Wed: 'dayAbbrWed', Thu: 'dayAbbrThu', Fri: 'dayAbbrFri', Sat: 'dayAbbrSat' };
 
 const initialForm = { title: '', notes: '', time: '09:00', category: 'Activity', repeatFrequency: 'Daily', daysOfWeek: [], isActive: true };
-
-function formatTime12h(time24) {
-  if (!time24) return '';
-  const [h, m] = time24.split(':').map(Number);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
-}
 
 export default function RemindersView({ session, onBack }) {
   const { t } = useTranslation();

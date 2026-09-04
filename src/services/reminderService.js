@@ -1,5 +1,13 @@
 import { supabase } from './supabaseClient';
 
+export function formatTime12h(time24) {
+  if (!time24) return '';
+  const [h, m] = time24.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+}
+
 function fromRow(row) {
   return {
     id: row.id,
