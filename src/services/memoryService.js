@@ -9,7 +9,8 @@ function fromRow(row) {
     description: row.description || '',
     voiceNote: row.voice_note || '',
     favoriteMemory: row.favorite_memory || '',
-    photoUrl: row.photo_url || null
+    photoUrl: row.photo_url || null,
+    createdAt: row.created_at
   };
 }
 

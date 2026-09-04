@@ -21,7 +21,8 @@ function fromRow(row) {
     repeatFrequency: row.repeat_frequency,
     daysOfWeek: row.days_of_week || [],
     isActive: row.is_active,
-    isCompleted: row.is_completed
+    isCompleted: row.is_completed,
+    createdAt: row.created_at
   };
 }
 

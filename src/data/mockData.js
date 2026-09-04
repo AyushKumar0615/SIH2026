@@ -1,49 +1,3 @@
-export const MOCK_PERSONAL_BASELINE = {
-  elderlyId: 'usr_kamala_72',
-  establishedDate: '2026-08-01',
-  sampleSessionsCount: 28,
-  domains: {
-    memory: {
-      avgAccuracyPercent: 82,
-      avgResponseTimeSec: 42,
-      typicalDifficulty: 'Medium',
-      trend: 'Improving (+8%)'
-    },
-    attention: {
-      avgAccuracyPercent: 78,
-      avgResponseTimeSec: 35,
-      typicalDifficulty: 'Medium',
-      trend: 'Stable'
-    },
-    orientation: {
-      avgAccuracyPercent: 90,
-      avgResponseTimeSec: 28,
-      typicalDifficulty: 'Easy',
-      trend: 'High Accuracy'
-    },
-    language: {
-      avgAccuracyPercent: 85,
-      avgResponseTimeSec: 38,
-      typicalDifficulty: 'Medium',
-      trend: 'Stable'
-    },
-    logic: {
-      avgAccuracyPercent: 74,
-      avgResponseTimeSec: 50,
-      typicalDifficulty: 'Easy',
-      trend: 'Needs Encouragement'
-    },
-    visualSpatial: {
-      avgAccuracyPercent: 80,
-      avgResponseTimeSec: 45,
-      typicalDifficulty: 'Medium',
-      trend: 'Stable'
-    }
-  },
-  overallEngagementMinutesPerDay: 35,
-  completionRatePercent: 88
-};
-
 export const MOCK_FAMILY_MEMORIES = [
   {
     id: 'mem_1',
@@ -99,48 +53,6 @@ export const MOCK_FAMILY_MEMORIES = [
     favoriteMemory: 'Morning sunshine with hot Assam tea.'
   }
 ];
-
-export const MOCK_GAME_SESSIONS = [
-  { id: 'gs_1', date: '2026-08-27', time: '09:45 AM', gameName: 'Bihu Memory Pairs', domain: 'Memory', score: 95, accuracy: 92, responseTimeSec: 36, difficulty: 'Medium', mistakes: 1, adaptiveRecommendation: 'Maintain Medium difficulty' },
-  { id: 'gs_2', date: '2026-08-26', time: '04:15 PM', gameName: 'Face & Relation Match', domain: 'Memory', score: 100, accuracy: 100, responseTimeSec: 28, difficulty: 'Medium', mistakes: 0, adaptiveRecommendation: 'Try Advanced level next' },
-  { id: 'gs_3', date: '2026-08-26', time: '10:30 AM', gameName: 'NER Craft Focus', domain: 'Attention', score: 80, accuracy: 78, responseTimeSec: 44, difficulty: 'Medium', mistakes: 2, adaptiveRecommendation: 'Good steady focus' },
-  { id: 'gs_4', date: '2026-08-25', time: '11:00 AM', gameName: 'Date & Time Orientation', domain: 'Orientation', score: 90, accuracy: 90, responseTimeSec: 30, difficulty: 'Easy', mistakes: 1, adaptiveRecommendation: 'High orientation score' },
-  { id: 'gs_5', date: '2026-08-24', time: '03:30 PM', gameName: 'Picture Naming (Assamese)', domain: 'Language', score: 88, accuracy: 85, responseTimeSec: 39, difficulty: 'Medium', mistakes: 1, adaptiveRecommendation: 'Consistent fluency' }
-];
-
-export const MOCK_CAREGIVER_ALERTS = [
-  {
-    id: 'alt_1',
-    timestamp: '2026-08-27 10:15 AM',
-    severity: 'INFO',
-    title: 'Morning Routine Completed',
-    summary: 'Morning routine completed — breakfast & medicine on time.',
-    explainableReason: 'Caregiver Priya verified completion within 15 minutes of scheduled time.'
-  },
-  {
-    id: 'alt_2',
-    timestamp: '2026-08-26 05:00 PM',
-    severity: 'ATTENTION',
-    title: 'Slight Change in Logic Game Speed',
-    summary: 'Logic sorting game response time was 54s (personal baseline: 42s).',
-    explainableReason: 'The AI identified a temporary 28% slowdown in response time during evening hours. Accuracy remained high (80%). Recommended check-in: Ensure user is not fatigued.'
-  },
-  {
-    id: 'alt_3',
-    timestamp: '2026-08-24 02:00 PM',
-    severity: 'INFO',
-    title: 'High Family Recognition Milestone',
-    summary: '100% accuracy achieved in identifying granddaughter Ananya and son Rahul.',
-    explainableReason: 'User correctly identified relationship and names in 28 seconds without hints.'
-  }
-];
-
-// Maps fixed demo alert ids to their translation keys in localizationService.
-export const ALERT_TRANSLATION_KEYS = {
-  alt_1: { titleKey: 'alert1Title', summaryKey: 'alert1Summary', reasonKey: 'alert1Reason' },
-  alt_2: { titleKey: 'alert2Title', summaryKey: 'alert2Summary', reasonKey: 'alert2Reason' },
-  alt_3: { titleKey: 'alert3Title', summaryKey: 'alert3Summary', reasonKey: 'alert3Reason' }
-};
 
 export const MOCK_IMPACT_METRICS = {
   totalUsersSupported: 1420,

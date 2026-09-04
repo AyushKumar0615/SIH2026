@@ -4,6 +4,7 @@ import CognitiveAnalytics from './CognitiveAnalytics';
 import ExplainableInsightsView from './ExplainableInsightsView';
 import RoutineManager from './RoutineManager';
 import { ReminderService } from '../../services/reminderService';
+import { MemoryService } from '../../services/memoryService';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { pageTransition } from '../common/pageTransition';
 import UserAvatar from '../common/UserAvatar';
@@ -17,6 +18,8 @@ export default function CaregiverDashboard({ session }) {
   const [routines, setRoutines] = useState([]);
   const [isLoadingRoutines, setIsLoadingRoutines] = useState(true);
   const [routinesError, setRoutinesError] = useState('');
+  const [memories, setMemories] = useState([]);
+  const [isLoadingMemories, setIsLoadingMemories] = useState(true);
   const containerRef = useScrollReveal();
 
   const loadRoutines = useCallback(async () => {
@@ -39,6 +42,18 @@ export default function CaregiverDashboard({ session }) {
   useEffect(() => {
     loadRoutines();
   }, [loadRoutines]);
+
+  useEffect(() => {
+    if (!session?.id) {
+      setIsLoadingMemories(false);
+      return;
+    }
+    setIsLoadingMemories(true);
+    MemoryService.listMemories(session.id).then((result) => {
+      setMemories(result.ok ? result.memories : []);
+      setIsLoadingMemories(false);
+    });
+  }, [session?.id]);
 
   const completedToday = routines.filter((r) => r.isCompleted).length;
 
@@ -91,7 +106,15 @@ export default function CaregiverDashboard({ session }) {
       <div className="scroll-reveal" data-reveal-delay="3">
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} {...pageTransition}>
-            {activeTab === 'insights' && <ExplainableInsightsView userName={userName} />}
+            {activeTab === 'insights' && (
+              <ExplainableInsightsView
+                userName={userName}
+                memories={memories}
+                isLoadingMemories={isLoadingMemories}
+                routines={routines}
+                isLoadingRoutines={isLoadingRoutines}
+              />
+            )}
             {activeTab === 'analytics' && <CognitiveAnalytics />}
             {activeTab === 'routines' && (
               <RoutineManager
