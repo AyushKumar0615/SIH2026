@@ -120,9 +120,8 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
         <div className="rail-pad content-col relative z-10 pt-24 pb-5 md:pt-32 md:pb-10">
           <div className="grid lg:grid-cols-[1.15fr_0.7fr] gap-8 lg:gap-12 items-center">
             <div className="scroll-reveal">
-              <span className="eyebrow">{culturalProfile.greeting} · {currentState}</span>
               <h1
-                className="font-display font-medium leading-[0.94] text-[clamp(2.6rem,7vw,5.6rem)] mt-5"
+                className="font-display font-medium leading-[0.94] text-[clamp(2.6rem,7vw,5.6rem)]"
                 style={{ letterSpacing: '-0.02em' }}
               >
                 {getGreetingTime()}
