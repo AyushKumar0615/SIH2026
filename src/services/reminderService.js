@@ -1,5 +1,7 @@
 import { supabase } from './supabaseClient';
 
+export const REMINDER_CATEGORY_ICONS = { Medication: '💊', Meals: '🍛', Activity: '🔔', Family: '📞' };
+
 export function formatTime12h(time24) {
   if (!time24) return '';
   const [h, m] = time24.split(':').map(Number);

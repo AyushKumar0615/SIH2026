@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Clock, Plus, X, Pencil, Trash2, Bell } from 'lucide-react';
-import { ReminderService, formatTime12h } from '../../services/reminderService';
+import { ReminderService, formatTime12h, REMINDER_CATEGORY_ICONS } from '../../services/reminderService';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import Magnetic from '../common/Magnetic';
 import { useTranslation } from '../../hooks/useTranslation';
 
-const CATEGORY_ICONS = { Medication: '💊', Meals: '🍛', Activity: '🔔', Family: '📞' };
 const categoryLabelKeys = { Medication: 'categoryMedication', Meals: 'categoryMeals', Activity: 'categoryActivity', Family: 'categoryFamilyCall' };
-const categories = Object.keys(CATEGORY_ICONS);
+const categories = Object.keys(REMINDER_CATEGORY_ICONS);
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const dayLabelKeys = { Sun: 'dayAbbrSun', Mon: 'dayAbbrMon', Tue: 'dayAbbrTue', Wed: 'dayAbbrWed', Thu: 'dayAbbrThu', Fri: 'dayAbbrFri', Sat: 'dayAbbrSat' };
 
@@ -105,7 +104,7 @@ export default function RemindersView({ session, onBack }) {
     setFormError('');
     setIsSaving(true);
 
-    const payload = { ...form, icon: CATEGORY_ICONS[form.category] };
+    const payload = { ...form, icon: REMINDER_CATEGORY_ICONS[form.category] };
 
     if (editingId) {
       const result = await ReminderService.updateReminder(editingId, payload);
