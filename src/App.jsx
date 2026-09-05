@@ -14,6 +14,7 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [currentMode, setCurrentMode] = useState('elderly');
+  const [homeResetKey, setHomeResetKey] = useState(0);
   const [currentLang, setCurrentLang] = useState('as');
   const [currentState, setCurrentState] = useState(NER_STATES.ASSAM);
 
@@ -64,6 +65,11 @@ export default function App() {
     setCurrentState(nextSession.state || NER_STATES.ASSAM);
   };
 
+  const goHome = () => {
+    setCurrentMode('elderly');
+    setHomeResetKey((k) => k + 1);
+  };
+
   const handleLogout = async () => {
     await AuthService.logout();
     setSession(null);
@@ -91,6 +97,7 @@ export default function App() {
       <Header
         currentMode={currentMode}
         setCurrentMode={setCurrentMode}
+        onLogoClick={goHome}
         currentLang={currentLang}
         setCurrentLang={setCurrentLang}
         currentState={currentState}
@@ -109,7 +116,7 @@ export default function App() {
       <main className="flex-1 pb-24">
         <AnimatePresence mode="wait">
           {currentMode === 'elderly' && (
-            <motion.div key="elderly-home" {...pageTransition}>
+            <motion.div key={`elderly-home-${homeResetKey}`} {...pageTransition}>
               <ElderlyHome currentLang={currentLang} currentState={currentState} session={session} />
             </motion.div>
           )}
