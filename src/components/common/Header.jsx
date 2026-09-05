@@ -30,6 +30,7 @@ const MODES = [
 export default function Header({
   currentMode,
   setCurrentMode,
+  onLogoClick,
   currentLang,
   setCurrentLang,
   currentState,
@@ -69,7 +70,7 @@ export default function Header({
     <>
       <div className="float-bar">
         <Magnetic strength={0.25}>
-          <button type="button" className="mark-btn" onClick={() => handleSelectMode('elderly')}>
+          <button type="button" className="mark-btn" onClick={onLogoClick}>
             <span className="mark-glyph"><Feather className="w-4 h-4" /></span>
             <span className="hidden sm:flex items-center h-10 px-4 rounded-full leading-none" style={{ background: 'rgba(19, 17, 16, 0.35)', border: '1px solid var(--hairline-strong)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <span className="font-display font-semibold text-base">Smriti<em className="italic" style={{ color: 'var(--ember)' }}>Setu</em></span>
