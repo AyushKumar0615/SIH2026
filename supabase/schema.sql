@@ -244,7 +244,12 @@ declare
   v_code text;
 begin
   select role into v_role from public.profiles where id = auth.uid();
-  if v_role is distinct from 'elderly' then
+  -- Compare case/whitespace-insensitively: a role value that only differs by
+  -- case or stray spacing (e.g. from data entered outside the app's own
+  -- registration form) must not incorrectly lock a real elder out of their
+  -- own connection code. This does not loosen who qualifies as an elder —
+  -- it only stops formatting noise from being treated as a different role.
+  if v_role is null or lower(trim(v_role)) <> 'elderly' then
     raise exception 'not_elder';
   end if;
   v_code := public.generate_unique_connection_code();
@@ -273,13 +278,16 @@ declare
   v_new_id uuid;
 begin
   select role into v_caregiver_role from public.profiles where id = auth.uid();
-  if v_caregiver_role is distinct from 'caregiver' then
+  -- Same case/whitespace-insensitive comparison as regenerate_connection_code(),
+  -- so both RPCs judge "is this an elder/caregiver account" from the same
+  -- source (profiles.role via auth.uid()) the same way.
+  if v_caregiver_role is null or lower(trim(v_caregiver_role)) <> 'caregiver' then
     raise exception 'not_caregiver';
   end if;
 
   select p.id, p.full_name into v_elder_id, v_elder_name
   from public.profiles p
-  where p.role = 'elderly' and p.connection_code = trim(p_code)
+  where lower(trim(p.role)) = 'elderly' and p.connection_code = trim(p_code)
   limit 1;
 
   if v_elder_id is null then
