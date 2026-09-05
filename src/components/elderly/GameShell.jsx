@@ -1,153 +1,186 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import MemoryPairsGame from '../games/MemoryPairsGame';
-import FaceRelationGame from '../games/FaceRelationGame';
-import TargetSelectGame from '../games/TargetSelectGame';
-import OrientationGame from '../games/OrientationGame';
-import { CognitiveEngine } from '../../services/cognitiveEngine';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
-import { ArrowLeft, Award, RotateCcw, ArrowUpRight, Sparkles } from 'lucide-react';
-import Magnetic from '../common/Magnetic';
+import MemoryTrailGame from '../games/MemoryTrailGame';
+import CulturalGridGame from '../games/CulturalGridGame';
+import MemoryMarketGame from '../games/MemoryMarketGame';
+import HeritageSequenceGame from '../games/HeritageSequenceGame';
+import WhatChangedGame from '../games/WhatChangedGame';
+import GameIntro from '../games/shared/GameIntro';
+import GameResult from '../games/shared/GameResult';
+import CategoryFilter from '../games/shared/CategoryFilter';
+import GameCard, { FeaturedGameCard } from '../games/shared/GameCard';
 import { pageTransition } from '../common/pageTransition';
 import { useTranslation } from '../../hooks/useTranslation';
 import confetti from 'canvas-confetti';
 
-export default function GameShell({ stateName = 'Assam', onBack }) {
+const GAME_DEFS = [
+  {
+    id: 'trail', title: 'Memory Trail', category: 'Memory', icon: '🛤️',
+    skill: 'Working memory', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 5,
+    description: 'Study a trail of Indian cultural landmarks, art forms and festivals, then recreate the sequence from memory.',
+    howItWorks: [
+      'Watch a short trail of cultural cards appear in sequence.',
+      'When the trail disappears, rebuild it by tapping the cards in order.',
+      'Sequences grow longer as you improve.'
+    ],
+    Component: MemoryTrailGame
+  },
+  {
+    id: 'grid', title: 'Cultural Grid', category: 'Attention', icon: '🔎',
+    skill: 'Selective attention', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 4,
+    description: "Scan a grid of cultural objects and quickly spot the ones that match the instruction, before time runs out.",
+    howItWorks: [
+      'Read the instruction at the top of the grid.',
+      'Tap every card that matches it, then submit before the timer ends.',
+      'Grids get larger and distractors more similar as you progress.'
+    ],
+    Component: CulturalGridGame
+  },
+  {
+    id: 'market', title: 'Memory Market', category: 'Memory', icon: '🛍️',
+    skill: 'Visual & spatial memory', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 5,
+    description: "Browse a bustling Indian marketplace, then recall exactly what changed after it's rearranged.",
+    howItWorks: [
+      'Observe every stall in the market for a few seconds.',
+      'The market changes — an item may vanish, move, or appear.',
+      'Answer what changed from the options shown.'
+    ],
+    Component: MemoryMarketGame
+  },
+  {
+    id: 'sequence', title: 'Heritage Sequence', category: 'Orientation', icon: '📜',
+    skill: 'Sequencing & reasoning', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 5,
+    description: 'Drag cultural events, festivals and craft traditions into their correct order.',
+    howItWorks: [
+      'Read the prompt describing what needs ordering.',
+      'Drag the cards up or down until they are in the right order.',
+      'Submit your order to see how many are correctly placed.'
+    ],
+    Component: HeritageSequenceGame
+  },
+  {
+    id: 'changed', title: 'What Changed?', category: 'Attention', icon: '👁️',
+    skill: 'Attention & change detection', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 4,
+    description: "Study a cultural scene, then spot every detail that changes when you look again.",
+    howItWorks: [
+      'Study the scene carefully for a few seconds.',
+      'The scene changes — items may move, disappear or appear.',
+      'Tap every position that looks different from before.'
+    ],
+    Component: WhatChangedGame
+  }
+];
+
+export default function GameShell({ onBack }) {
   const { t } = useTranslation();
-  const [activeGameKey, setActiveGameKey] = useState(null);
-  const [completedSession, setCompletedSession] = useState(null);
-  const [recommendation, setRecommendation] = useState(null);
+  const [view, setView] = useState('library'); // library | intro | playing | result
+  const [activeGameId, setActiveGameId] = useState(null);
+  const [result, setResult] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
-  const containerRef = useScrollReveal();
 
-  const gameOptions = [
-    { id: 'pairs', title: 'Bihu Memory Pairs', domain: 'Memory', icon: '🧠', desc: 'Match traditional Assamese crafts, Jaapi, Pepa & tea leaves.' },
-    { id: 'face', title: 'Face & Relation Match', domain: 'Memory', icon: '👨‍👩‍👧', desc: 'Identify granddaughter Ananya, Priya & Rahul.' },
-    { id: 'target', title: 'NER Craft Focus', domain: 'Attention', icon: '🎯', desc: 'Find target tea leaf among distracting items.' },
-    { id: 'orientation', title: 'Date & Festival Orientation', domain: 'Orientation', icon: '🗓️', desc: 'Recognize Bihu seasons & tea garden times.' }
-  ];
+  const categories = ['all', ...new Set(GAME_DEFS.map((g) => g.category))];
+  const visibleGames = activeCategory === 'all' ? GAME_DEFS : GAME_DEFS.filter((g) => g.category === activeCategory);
+  const featured = visibleGames[0];
+  const restGames = visibleGames.slice(1);
+  const activeGame = GAME_DEFS.find((g) => g.id === activeGameId);
 
-  const categories = ['all', ...new Set(gameOptions.map((g) => g.domain))];
-  const visibleGames = activeCategory === 'all' ? gameOptions : gameOptions.filter((g) => g.domain === activeCategory);
+  const openIntro = (game) => { setActiveGameId(game.id); setView('intro'); };
+  const startGame = () => setView('playing');
+  const exitToLibrary = () => { setActiveGameId(null); setResult(null); setView('library'); };
 
   const handleFinishGame = (sessionData) => {
-    const score = CognitiveEngine.calculateSessionScore(sessionData.accuracy, sessionData.responseTimeSec, sessionData.mistakes);
-    const rec = CognitiveEngine.getAdaptiveRecommendation(
-      sessionData.domain.toLowerCase(), sessionData.accuracy, sessionData.responseTimeSec, sessionData.difficulty
-    );
-    setCompletedSession({ ...sessionData, score, date: new Date().toLocaleDateString() });
-    setRecommendation(rec);
+    setResult(sessionData);
+    setView('result');
     try { confetti({ particleCount: 90, spread: 75, origin: { y: 0.5 }, colors: ['#E2703A', '#4FAE8E', '#F4EFE7'] }); } catch (e) {}
   };
 
   let content;
 
-  if (completedSession) {
+  if (view === 'result' && result) {
     content = (
-      <div className="page max-w-2xl">
-        <div className="panel-light p-9 sm:p-12 text-center space-y-8">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: 'rgba(79,174,142,0.15)', color: 'var(--jade-deep)' }}>
-            <Award className="w-8 h-8" />
-          </div>
-          <div>
-            <span className="eyebrow eyebrow-jade justify-center">{t('sessionComplete')}</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-medium mt-2">{completedSession.gameName}</h2>
-            <p className="text-sm mt-1" style={{ color: 'rgba(23,20,15,0.55)' }}>{t('cognitiveDomain')}: {completedSession.domain}</p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-6 max-w-md mx-auto" style={{ borderTop: '1px solid var(--paper-line)', borderBottom: '1px solid var(--paper-line)', padding: '1.5rem 0' }}>
-            <div>
-              <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('accuracyLabel')}</span>
-              <span className="figure-value" style={{ color: 'var(--jade-deep)' }}>{completedSession.accuracy}%</span>
-            </div>
-            <div>
-              <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('timeLabel')}</span>
-              <span className="figure-value" style={{ color: 'var(--ember-deep)' }}>{completedSession.responseTimeSec}s</span>
-            </div>
-            <div>
-              <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('scoreLabel')}</span>
-              <span className="figure-value" style={{ color: 'var(--paper-ink)' }}>{completedSession.score}</span>
-            </div>
-          </div>
-
-          {recommendation && (
-            <div className="text-left flex items-start gap-3" style={{ color: 'var(--paper-ink)' }}>
-              <Sparkles className="w-4.5 h-4.5 shrink-0 mt-0.5" style={{ color: 'var(--ember-deep)' }} />
-              <p className="text-sm leading-relaxed">
-                <strong>{t('nextDifficulty')}: {recommendation.newLevel}.</strong> {recommendation.reason}
-              </p>
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
-            <button type="button" onClick={() => { setCompletedSession(null); setActiveGameKey(null); }} className="btn btn-line" style={{ color: 'var(--paper-ink)', borderColor: 'var(--paper-line)' }}>
-              <RotateCcw className="w-4 h-4" /> {t('anotherGame')}
-            </button>
-            <button type="button" onClick={onBack} className="btn btn-on-light">{t('returnHome')}</button>
-          </div>
-        </div>
-      </div>
+      <GameResult
+        gameName={result.gameName}
+        skill={result.skill}
+        score={result.score}
+        accuracy={result.accuracy}
+        bestStreak={result.bestStreak}
+        difficultyLevel={result.difficultyLevel}
+        onPlayAgain={() => setView('intro')}
+        onBackToGames={exitToLibrary}
+      />
     );
-  } else if (activeGameKey === 'pairs') {
-    content = <MemoryPairsGame stateName={stateName} difficulty="Medium" onFinishGame={handleFinishGame} onBack={() => setActiveGameKey(null)} />;
-  } else if (activeGameKey === 'face') {
-    content = <FaceRelationGame onFinishGame={handleFinishGame} onBack={() => setActiveGameKey(null)} />;
-  } else if (activeGameKey === 'target') {
-    content = <TargetSelectGame onFinishGame={handleFinishGame} onBack={() => setActiveGameKey(null)} />;
-  } else if (activeGameKey === 'orientation') {
-    content = <OrientationGame onFinishGame={handleFinishGame} onBack={() => setActiveGameKey(null)} />;
+  } else if (view === 'intro' && activeGame) {
+    content = (
+      <GameIntro
+        gameId={activeGame.id}
+        icon={activeGame.icon}
+        title={activeGame.title}
+        skill={activeGame.skill}
+        howItWorks={activeGame.howItWorks}
+        difficultyText={activeGame.difficultyText}
+        estimatedMinutes={activeGame.estimatedMinutes}
+        onStart={startGame}
+        onBack={exitToLibrary}
+      />
+    );
+  } else if (view === 'playing' && activeGame) {
+    const GameComponent = activeGame.Component;
+    content = <GameComponent onFinishGame={handleFinishGame} onBack={exitToLibrary} />;
   } else {
     content = (
-    <div ref={containerRef} className="page">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5 mb-10">
-        <div>
-          <span className="eyebrow">{t('cognitiveExercises')}</span>
-          <h2 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98]">{t('gameLibrary')}</h2>
-        </div>
-        <div className="flex flex-wrap items-center gap-4 sm:justify-end shrink-0">
-          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t('gameLibrary')}>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setActiveCategory(cat)}
-                aria-pressed={activeCategory === cat}
-                className="btn !min-h-8 !px-3 !py-1 text-xs"
-                style={activeCategory === cat
-                  ? { background: 'var(--ember)', color: '#1a0f08', borderColor: 'var(--ember)' }
-                  : { background: 'transparent', border: '1px solid var(--hairline-strong)', color: 'var(--ink-soft)' }}
-              >
-                {cat === 'all' ? t('categoryAll') : cat}
-              </button>
-            ))}
+      <div className="page">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5 mb-10">
+            <div>
+              <span className="eyebrow">{t('cognitiveExercises')}</span>
+              <h2 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98] max-w-xl">{t('gameLibraryHeading')}</h2>
+              <p className="text-sm mt-3 max-w-md" style={{ color: 'var(--ink-faint)' }}>{t('gameLibrarySubtext')}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 sm:justify-end shrink-0">
+              <CategoryFilter categories={categories} active={activeCategory} onChange={setActiveCategory} />
+              <button type="button" onClick={onBack} className="btn btn-quiet shrink-0">{t('back')}</button>
+            </div>
           </div>
-          <button type="button" onClick={onBack} className="btn btn-quiet shrink-0"><ArrowLeft className="w-4 h-4" /> {t('back')}</button>
-        </div>
-      </div>
+        </motion.div>
 
-      <div className="index-list scroll-reveal">
-        {visibleGames.map((g, idx) => (
-          <button type="button" key={g.id} onClick={() => setActiveGameKey(g.id)} className="index-row">
-            <span className="index-num">0{idx + 1}</span>
-            <span className="index-icon">{g.icon}</span>
-            <span className="flex-1 min-w-0">
-              <span className="flex items-center gap-2.5">
-                <span className="font-display text-xl md:text-2xl font-medium">{g.title}</span>
-                <span className="pin hidden sm:inline" style={{ color: 'var(--ink-faint)' }}>· {g.domain}</span>
-              </span>
-              <span className="text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{g.desc}</span>
-            </span>
-            <Magnetic strength={0.3}>
-              <span className="index-arrow" style={{ opacity: 1, color: 'var(--ink)' }}><ArrowUpRight className="w-5 h-5" /></span>
-            </Magnetic>
-          </button>
-        ))}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeCategory}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {featured && (
+              <div className="mb-10">
+                <FeaturedGameCard game={featured} onPlay={openIntro} />
+              </div>
+            )}
+
+            {restGames.length > 0 && (
+              <div>
+                <span className="eyebrow">{t('exploreExercisesLabel')}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  {restGames.map((game, idx) => (
+                    <motion.div
+                      key={game.id}
+                      initial={{ opacity: 0, y: 14 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.08 + idx * 0.06, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <GameCard game={{ ...game, number: idx + 2 }} onPlay={openIntro} />
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </div>
     );
   }
 
-  const viewKey = completedSession ? 'done' : activeGameKey || 'library';
+  const viewKey = view === 'library' ? 'library' : `${view}-${activeGameId}`;
 
   return (
     <AnimatePresence mode="wait">
