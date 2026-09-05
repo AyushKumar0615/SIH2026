@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { CULTURAL_ITEMS, MARKET_ITEMS, HERITAGE_SEQUENCES } from '../../../data/culturalContent';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 // Purely decorative, static previews of each game's mechanic for the Game
 // Library cards/featured panel/intro screen. These read fixed slices of the
@@ -52,12 +53,13 @@ function MarketPreview() {
 }
 
 function SequencePreview() {
+  const { t } = useTranslation();
   return (
     <div className="gp-seq">
       {SEQUENCE_SAMPLE.map((step, idx) => (
         <React.Fragment key={step.id}>
           {idx > 0 && <ArrowRight className="gp-arrow shrink-0" />}
-          <span className="gp-seq-chip">{step.label}</span>
+          <span className="gp-seq-chip">{t(step.labelKey)}</span>
         </React.Fragment>
       ))}
     </div>

@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CULTURAL_ITEMS, itemsByTag, difficultyLabel } from '../../data/culturalContent';
+import { CULTURAL_ITEMS, itemsByTag, difficultyLabelKey } from '../../data/culturalContent';
 import { computeRoundScore, nextDifficultyLevel } from '../../services/gameScoring';
 import GameHeader from './shared/GameHeader';
 import ProgressBar from './shared/ProgressBar';
 import FeedbackState from './shared/FeedbackState';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ROUND_TYPES = ['festival', 'duplicate', 'odd-one-out'];
+const ROUND_INSTRUCTION_KEYS = {
+  festival: 'gridInstructionFestival',
+  duplicate: 'gridInstructionDuplicate',
+  'odd-one-out': 'gridInstructionOddOneOut'
+};
 const LEVEL_CONFIG = {
   1: { gridSize: 6, timeSec: 22 },
   2: { gridSize: 8, timeSec: 19 },
@@ -26,13 +32,13 @@ function buildRound(type, gridSize) {
     const targets = festivalItems.slice(0, targetCount);
     const distractors = shuffle(CULTURAL_ITEMS.filter((i) => i.tag !== 'Festival')).slice(0, gridSize - targetCount);
     const cells = shuffle([...targets, ...distractors]).map((item, idx) => ({ key: `${item.id}-${idx}`, item }));
-    return { instruction: 'Find all objects associated with festivals.', cells, correctKeys: new Set(cells.filter((c) => c.item.tag === 'Festival').map((c) => c.key)) };
+    return { instructionKey: ROUND_INSTRUCTION_KEYS.festival, cells, correctKeys: new Set(cells.filter((c) => c.item.tag === 'Festival').map((c) => c.key)) };
   }
   if (type === 'duplicate') {
     const pool = shuffle(CULTURAL_ITEMS).slice(0, Math.min(gridSize - 1, CULTURAL_ITEMS.length - 1));
     const dup = pool[Math.floor(Math.random() * pool.length)];
     const cells = shuffle([...pool, dup]).map((item, idx) => ({ key: `${item.id}-${idx}`, item }));
-    return { instruction: 'Find the only item that appears twice.', cells, correctKeys: new Set(cells.filter((c) => c.item.id === dup.id).map((c) => c.key)) };
+    return { instructionKey: ROUND_INSTRUCTION_KEYS.duplicate, cells, correctKeys: new Set(cells.filter((c) => c.item.id === dup.id).map((c) => c.key)) };
   }
   const tags = [...new Set(CULTURAL_ITEMS.map((i) => i.tag))];
   const dominantTag = tags[Math.floor(Math.random() * tags.length)];
@@ -40,10 +46,11 @@ function buildRound(type, gridSize) {
   const oddItem = shuffle(CULTURAL_ITEMS.filter((i) => i.tag !== dominantTag))[0];
   const dominantItems = dominantPool.slice(0, Math.min(gridSize - 1, dominantPool.length));
   const cells = shuffle([...dominantItems, oddItem]).map((item, idx) => ({ key: `${item.id}-${idx}`, item }));
-  return { instruction: 'Find the object that does not belong with the rest.', cells, correctKeys: new Set(cells.filter((c) => c.item.id === oddItem.id).map((c) => c.key)) };
+  return { instructionKey: ROUND_INSTRUCTION_KEYS['odd-one-out'], cells, correctKeys: new Set(cells.filter((c) => c.item.id === oddItem.id).map((c) => c.key)) };
 }
 
 export default function CulturalGridGame({ onFinishGame, onBack }) {
+  const { t } = useTranslation();
   const [level, setLevel] = useState(1);
   const [round, setRound] = useState(1);
   const [roundData, setRoundData] = useState(() => buildRound(ROUND_TYPES[0], LEVEL_CONFIG[1].gridSize));
@@ -93,7 +100,7 @@ export default function CulturalGridGame({ onFinishGame, onBack }) {
       if (round >= ROUND_TYPES.length) {
         const finalAccuracy = Math.round((accuracySum + roundAccuracy) / ROUND_TYPES.length);
         onFinishGame({
-          gameName: 'Cultural Grid', domain: 'Attention', skill: 'Selective attention & visual discrimination',
+          gameNameKey: 'gameGridTitle', domain: 'Attention', skillKey: 'gameGridResultSkill',
           score: score + roundScore, accuracy: finalAccuracy, bestStreak: Math.max(bestStreak, nextStreak), difficultyLevel: level
         });
         return;
@@ -111,15 +118,15 @@ export default function CulturalGridGame({ onFinishGame, onBack }) {
 
   return (
     <div className="page max-w-2xl">
-      <GameHeader title="Cultural Grid" level={level} progress={`Round ${round}/${ROUND_TYPES.length}`} score={score} onExit={onBack} />
+      <GameHeader title={t('gameGridTitle')} level={level} progress={`${t('roundLabel')} ${round}/${ROUND_TYPES.length}`} score={score} onExit={onBack} />
 
       <div className="text-center mb-6">
-        <span className="eyebrow justify-center">Instruction</span>
-        <h3 className="font-display text-2xl font-medium mt-2">{roundData.instruction}</h3>
+        <span className="eyebrow justify-center">{t('instructionEyebrow')}</span>
+        <h3 className="font-display text-2xl font-medium mt-2">{t(roundData.instructionKey)}</h3>
       </div>
 
       <ProgressBar value={(timeLeft / config.timeSec) * 100} />
-      <p className="text-center text-xs font-semibold mt-2 mb-6" style={{ color: 'var(--ink-faint)' }}>{timeLeft}s remaining</p>
+      <p className="text-center text-xs font-semibold mt-2 mb-6" style={{ color: 'var(--ink-faint)' }}>{timeLeft}{t('secondsUnit')} {t('remainingLabel')}</p>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
         {roundData.cells.map((cell) => {
@@ -141,18 +148,18 @@ export default function CulturalGridGame({ onFinishGame, onBack }) {
               className={`cog-slot is-selectable ${stateClass}`}
             >
               <span className="cog-slot-icon">{cell.item.icon}</span>
-              <span className="cog-slot-label">{cell.item.name}</span>
+              <span className="cog-slot-label">{t(cell.item.nameKey)}</span>
             </motion.button>
           );
         })}
       </div>
 
       <div className="flex flex-col items-center gap-3 mt-8">
-        <button type="button" onClick={submit} disabled={locked || selected.length === 0} className="btn btn-ember">Submit Selection</button>
-        <FeedbackState state={feedback} correctText="Well spotted!" incorrectText="Not quite — see the highlights above" />
+        <button type="button" onClick={submit} disabled={locked || selected.length === 0} className="btn btn-ember">{t('submitSelectionLabel')}</button>
+        <FeedbackState state={feedback} correctText={t('wellSpottedFeedback')} incorrectText={t('notQuiteFeedback')} />
       </div>
 
-      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{difficultyLabel(level)} · Level {level}</p>
+      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
     </div>
   );
 }

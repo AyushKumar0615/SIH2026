@@ -39,7 +39,7 @@ export default function GameIntro({ gameId, icon, title, skill, howItWorks, diff
             <Clock className="w-4 h-4 mt-0.5 shrink-0" style={{ color: 'var(--ember)' }} />
             <div>
               <span className="figure-label">{t('estimatedTimeLabel')}</span>
-              <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--ink)' }}>{estimatedMinutes} min</p>
+              <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--ink)' }}>{estimatedMinutes} {t('minLabel')}</p>
             </div>
           </div>
         </div>

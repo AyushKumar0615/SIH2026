@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CULTURAL_ITEMS, difficultyLabel } from '../../data/culturalContent';
+import { CULTURAL_ITEMS, difficultyLabelKey } from '../../data/culturalContent';
 import { computeRoundScore, nextDifficultyLevel } from '../../services/gameScoring';
 import GameHeader from './shared/GameHeader';
 import ProgressBar from './shared/ProgressBar';
 import FeedbackState from './shared/FeedbackState';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const TOTAL_ROUNDS = 3;
 const LEVEL_CONFIG = {
@@ -65,6 +66,7 @@ function buildRound(config) {
 }
 
 export default function WhatChangedGame({ onFinishGame, onBack }) {
+  const { t } = useTranslation();
   const [level, setLevel] = useState(1);
   const [round, setRound] = useState(1);
   const [phase, setPhase] = useState('study'); // study | transition | find | feedback
@@ -115,7 +117,7 @@ export default function WhatChangedGame({ onFinishGame, onBack }) {
       if (round >= TOTAL_ROUNDS) {
         const finalAccuracy = Math.round((accuracySum + roundAccuracy) / TOTAL_ROUNDS);
         onFinishGame({
-          gameName: 'What Changed?', domain: 'Attention', skill: 'Visual attention & change detection',
+          gameNameKey: 'gameChangedTitle', domain: 'Attention', skillKey: 'gameChangedResultSkill',
           score: score + roundScore, accuracy: finalAccuracy, bestStreak: Math.max(bestStreak, nextStreak), difficultyLevel: level
         });
         return;
@@ -136,19 +138,19 @@ export default function WhatChangedGame({ onFinishGame, onBack }) {
 
   return (
     <div className="page max-w-2xl">
-      <GameHeader title="What Changed?" level={level} progress={`Round ${round}/${TOTAL_ROUNDS}`} score={score} onExit={onBack} />
+      <GameHeader title={t('gameChangedTitle')} level={level} progress={`${t('roundLabel')} ${round}/${TOTAL_ROUNDS}`} score={score} onExit={onBack} />
 
       {phase === 'study' && (
         <div className="text-center mb-4">
-          <span className="eyebrow eyebrow-jade justify-center">Study the scene</span>
-          <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>Something will change in {viewLeft}s</p>
+          <span className="eyebrow eyebrow-jade justify-center">{t('changedStudyEyebrow')}</span>
+          <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('changedStudyHintPrefix')} {viewLeft}{t('secondsUnit')}</p>
         </div>
       )}
-      {phase === 'transition' && <div className="text-center mb-4"><span className="eyebrow justify-center">Changing…</span></div>}
+      {phase === 'transition' && <div className="text-center mb-4"><span className="eyebrow justify-center">{t('changingEllipsisLabel')}</span></div>}
       {(phase === 'find' || phase === 'feedback') && (
         <div className="text-center mb-4">
-          <span className="eyebrow justify-center">Find what changed</span>
-          <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>Tap every position that looks different from before.</p>
+          <span className="eyebrow justify-center">{t('findWhatChangedEyebrow')}</span>
+          <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('findWhatChangedHint')}</p>
         </div>
       )}
 
@@ -181,7 +183,7 @@ export default function WhatChangedGame({ onFinishGame, onBack }) {
                 whileTap={{ scale: 0.94 }}
                 className={`cog-slot ${phase === 'find' ? 'is-selectable' : ''} ${!item ? 'is-empty' : ''} ${stateClass}`}
               >
-                {item ? (<><span className="cog-slot-icon">{item.icon}</span><span className="cog-slot-label">{item.name}</span></>) : null}
+                {item ? (<><span className="cog-slot-icon">{item.icon}</span><span className="cog-slot-label">{t(item.nameKey)}</span></>) : null}
               </motion.button>
             );
           })}
@@ -190,13 +192,13 @@ export default function WhatChangedGame({ onFinishGame, onBack }) {
 
       {phase === 'find' && (
         <div className="flex justify-center mt-8">
-          <button type="button" onClick={submit} disabled={selected.length === 0} className="btn btn-ember">Confirm Changes</button>
+          <button type="button" onClick={submit} disabled={selected.length === 0} className="btn btn-ember">{t('confirmChangesLabel')}</button>
         </div>
       )}
 
-      <div className="flex justify-center mt-6"><FeedbackState state={feedback} correctText="Sharp eyes!" incorrectText="Some changes were missed — see the highlights above" /></div>
+      <div className="flex justify-center mt-6"><FeedbackState state={feedback} correctText={t('sharpEyesFeedback')} incorrectText={t('changesMissedFeedback')} /></div>
 
-      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{difficultyLabel(level)} · Level {level}</p>
+      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
     </div>
   );
 }

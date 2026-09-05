@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Award, RotateCcw } from 'lucide-react';
 import { useTranslation } from '../../../hooks/useTranslation';
-import { difficultyLabel } from '../../../data/culturalContent';
+import { difficultyLabelKey } from '../../../data/culturalContent';
 
 export default function GameResult({ gameName, skill, score, accuracy, bestStreak, difficultyLevel, onPlayAgain, onBackToGames }) {
   const { t } = useTranslation();
@@ -50,7 +50,7 @@ export default function GameResult({ gameName, skill, score, accuracy, bestStrea
           </div>
           <div>
             <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('difficultyReachedLabel')}</span>
-            <span className="figure-value" style={{ fontSize: '1.4rem', color: 'var(--paper-ink)' }}>{difficultyLabel(difficultyLevel)}</span>
+            <span className="figure-value" style={{ fontSize: '1.4rem', color: 'var(--paper-ink)' }}>{t(difficultyLabelKey(difficultyLevel))}</span>
           </div>
         </motion.div>
 

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 // Ticks from `seconds` down to 1, then calls onComplete once.
 export default function Countdown({ seconds = 3, label, onComplete }) {
+  const { t } = useTranslation();
   const [count, setCount] = useState(seconds);
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export default function Countdown({ seconds = 3, label, onComplete }) {
           className="font-display text-6xl font-medium"
           style={{ color: 'var(--ember)' }}
         >
-          {count > 0 ? count : 'Go'}
+          {count > 0 ? count : t('goLabel')}
         </motion.span>
       </AnimatePresence>
     </div>
