@@ -9,7 +9,7 @@ const categories = Object.keys(REMINDER_CATEGORY_ICONS);
 const categoryLabelKeys = { Medication: 'categoryMedication', Meals: 'categoryMeals', Activity: 'categoryActivity', Family: 'categoryFamilyCall' };
 const initialForm = { title: '', time: '17:00', category: 'Medication' };
 
-export default function RoutineManager({ session, userName = 'Guest', routines, setRoutines, isLoading, loadError, onRetry }) {
+export default function RoutineManager({ session, userName = 'Guest', routines, setRoutines, isLoading, loadError, onRetry, readOnly = false }) {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -150,9 +150,11 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
           <h3 className="font-display text-xl sm:text-2xl font-medium">{t('noRemindersYetTitle')}</h3>
           <p className="text-sm mt-2" style={{ color: 'rgba(23,20,15,0.6)' }}>{t('noRemindersYetDesc')}</p>
         </div>
-        <button type="button" onClick={openAddForm} className="btn btn-on-light">
-          <Plus className="w-4 h-4" /> {t('addReminder')}
-        </button>
+        {!readOnly && (
+          <button type="button" onClick={openAddForm} className="btn btn-on-light">
+            <Plus className="w-4 h-4" /> {t('addReminder')}
+          </button>
+        )}
       </motion.div>
     );
   } else {
@@ -167,15 +169,23 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
                 <span className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--ember)' }}><Clock className="w-3.5 h-3.5" /> {formatTime12h(r.time)} · {categoryLabel}</span>
                 <span className={`font-display text-lg font-medium block mt-0.5 truncate ${r.isCompleted ? 'line-through' : ''}`}>{r.title}</span>
               </span>
-              <button type="button" onClick={() => openEditForm(r)} className="p-2 rounded-full shrink-0" style={{ color: 'var(--ink-faint)' }} title={t('editTooltip')}>
-                <Pencil className="w-4.5 h-4.5" />
-              </button>
-              <button type="button" onClick={() => handleDelete(r.id)} className="p-2 rounded-full shrink-0" style={{ color: 'var(--alert)' }} title={t('deleteTooltip')}>
-                <Trash2 className="w-4.5 h-4.5" />
-              </button>
-              <button type="button" onClick={() => toggleComplete(r)} className="shrink-0">
-                <CheckCircle2 className="w-6 h-6" style={{ color: r.isCompleted ? 'var(--jade)' : 'var(--hairline-strong)' }} />
-              </button>
+              {!readOnly && (
+                <>
+                  <button type="button" onClick={() => openEditForm(r)} className="p-2 rounded-full shrink-0" style={{ color: 'var(--ink-faint)' }} title={t('editTooltip')}>
+                    <Pencil className="w-4.5 h-4.5" />
+                  </button>
+                  <button type="button" onClick={() => handleDelete(r.id)} className="p-2 rounded-full shrink-0" style={{ color: 'var(--alert)' }} title={t('deleteTooltip')}>
+                    <Trash2 className="w-4.5 h-4.5" />
+                  </button>
+                </>
+              )}
+              {readOnly ? (
+                <CheckCircle2 className="w-6 h-6 shrink-0" style={{ color: r.isCompleted ? 'var(--jade)' : 'var(--hairline-strong)' }} />
+              ) : (
+                <button type="button" onClick={() => toggleComplete(r)} className="shrink-0">
+                  <CheckCircle2 className="w-6 h-6" style={{ color: r.isCompleted ? 'var(--jade)' : 'var(--hairline-strong)' }} />
+                </button>
+              )}
             </div>
           );
         })}
@@ -190,14 +200,14 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
           <h3 className="font-display text-xl md:text-2xl font-medium">{t('routinesAndReminders')}</h3>
           <p className="pin mt-1">{t('configureAlertsFor')} {userName}</p>
         </div>
-        {!isLoading && !(loadError && routines.length === 0) && (
+        {!readOnly && !isLoading && !(loadError && routines.length === 0) && (
           <button type="button" onClick={() => (showForm ? closeForm() : openAddForm())} className="btn btn-ember shrink-0">
             {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />} {showForm ? t('close') : t('addReminder')}
           </button>
         )}
       </div>
 
-      {renderForm()}
+      {!readOnly && renderForm()}
 
       {loadError && routines.length > 0 && (
         <div className="notice-strip is-alert text-sm" style={{ color: 'var(--alert)' }} role="alert">{loadError}</div>
