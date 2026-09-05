@@ -132,15 +132,15 @@ export default function CaregiverConnectionsView({ session, onBack }) {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="mt-6 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4">
           <div
-            className="font-mono text-3xl sm:text-4xl font-semibold tracking-[0.3em] px-6 py-4 rounded-[var(--radius-md)] text-center sm:text-left"
+            className="font-mono text-3xl sm:text-4xl font-semibold tracking-[0.3em] px-6 py-4 rounded-[var(--radius-md)] text-center sm:text-left shrink-0"
             style={{ background: 'var(--canvas-recessed)', border: '1px solid var(--hairline)', color: 'var(--ink)', minWidth: '11rem' }}
             aria-live="polite"
           >
             {isLoadingCode ? '······' : code}
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button type="button" onClick={handleCopy} disabled={isLoadingCode || !code} className="btn btn-line" style={{ color: 'var(--ink)' }}>
               {copied ? <Check className="w-4 h-4" style={{ color: 'var(--jade)' }} /> : <Copy className="w-4 h-4" />} {t('copyCodeLabel')}
             </button>
