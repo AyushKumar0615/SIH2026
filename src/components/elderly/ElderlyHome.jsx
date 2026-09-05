@@ -11,10 +11,11 @@ import GameShell from './GameShell';
 import MemoryJournalView from './MemoryJournalView';
 import RemindersView from './RemindersView';
 import StoryModeView from './StoryModeView';
+import CaregiverConnectionsView from './CaregiverConnectionsView';
 import VoiceAssistantModal from './VoiceAssistantModal';
 import VoiceOrb from './VoiceOrb';
 import Magnetic from '../common/Magnetic';
-import { Volume2, ArrowUpRight, PhoneCall, Home, Brain, BookOpen, Bell } from 'lucide-react';
+import { Volume2, ArrowUpRight, PhoneCall, Home, Brain, BookOpen, Bell, Users } from 'lucide-react';
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 20;
 
@@ -110,6 +111,8 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
     content = <RemindersView session={session} onBack={() => setActiveSubView('home')} />;
   } else if (activeSubView === 'story') {
     content = <StoryModeView onBack={() => setActiveSubView('home')} />;
+  } else if (activeSubView === 'caregivers') {
+    content = <CaregiverConnectionsView session={session} onBack={() => setActiveSubView('home')} />;
   } else {
     content = (
     <div ref={containerRef}>
@@ -278,6 +281,16 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
             <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
 
+          <button type="button" onClick={() => setActiveSubView('caregivers')} className="index-row">
+            <span className="index-num">04</span>
+            <span className="index-icon">🤝</span>
+            <span className="flex-1 min-w-0">
+              <span className="font-display text-xl md:text-2xl font-medium block">{t('navMyCaregivers')}</span>
+              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('myCaregiversDesc')}</span>
+            </span>
+            <ArrowUpRight className="index-arrow w-5 h-5" />
+          </button>
+
           <button
             type="button"
             onClick={() => {
@@ -286,7 +299,7 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
             }}
             className="index-row"
           >
-            <span className="index-num">04</span>
+            <span className="index-num">05</span>
             <span className="index-icon" style={{ background: 'var(--alert-soft)', color: 'var(--alert)' }}><PhoneCall className="w-4.5 h-4.5" /></span>
             <span className="flex-1 min-w-0">
               <span className="font-display text-xl md:text-2xl font-medium block" style={{ color: 'var(--alert)' }}>{t('callCaregiver')}</span>
@@ -302,6 +315,7 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
         <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('games')}><Brain className="w-4 h-4" /> {t('navGames')}</button>
         <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('memories')}><BookOpen className="w-4 h-4" /> {t('navMemories')}</button>
         <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('reminders')}><Bell className="w-4 h-4" /> {t('navReminders')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('caregivers')}><Users className="w-4 h-4" /> {t('navMyCaregivers')}</button>
       </nav>
 
       <VoiceAssistantModal
