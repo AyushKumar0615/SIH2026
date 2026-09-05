@@ -15,61 +15,47 @@ import confetti from 'canvas-confetti';
 
 const GAME_DEFS = [
   {
-    id: 'trail', title: 'Memory Trail', category: 'Memory', icon: '🛤️',
-    skill: 'Working memory', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 5,
-    description: 'Study a trail of Indian cultural landmarks, art forms and festivals, then recreate the sequence from memory.',
-    howItWorks: [
-      'Watch a short trail of cultural cards appear in sequence.',
-      'When the trail disappears, rebuild it by tapping the cards in order.',
-      'Sequences grow longer as you improve.'
-    ],
+    id: 'trail', titleKey: 'gameTrailTitle', category: 'Memory', icon: '🛤️',
+    skillKey: 'gameTrailSkill', estimatedMinutes: 5,
+    descriptionKey: 'gameTrailDesc',
+    howItWorksKeys: ['gameTrailHow1', 'gameTrailHow2', 'gameTrailHow3'],
     Component: MemoryTrailGame
   },
   {
-    id: 'grid', title: 'Cultural Grid', category: 'Attention', icon: '🔎',
-    skill: 'Selective attention', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 4,
-    description: "Scan a grid of cultural objects and quickly spot the ones that match the instruction, before time runs out.",
-    howItWorks: [
-      'Read the instruction at the top of the grid.',
-      'Tap every card that matches it, then submit before the timer ends.',
-      'Grids get larger and distractors more similar as you progress.'
-    ],
+    id: 'grid', titleKey: 'gameGridTitle', category: 'Attention', icon: '🔎',
+    skillKey: 'gameGridSkill', estimatedMinutes: 4,
+    descriptionKey: 'gameGridDesc',
+    howItWorksKeys: ['gameGridHow1', 'gameGridHow2', 'gameGridHow3'],
     Component: CulturalGridGame
   },
   {
-    id: 'market', title: 'Memory Market', category: 'Memory', icon: '🛍️',
-    skill: 'Visual & spatial memory', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 5,
-    description: "Browse a bustling Indian marketplace, then recall exactly what changed after it's rearranged.",
-    howItWorks: [
-      'Observe every stall in the market for a few seconds.',
-      'The market changes — an item may vanish, move, or appear.',
-      'Answer what changed from the options shown.'
-    ],
+    id: 'market', titleKey: 'gameMarketTitle', category: 'Memory', icon: '🛍️',
+    skillKey: 'gameMarketSkill', estimatedMinutes: 5,
+    descriptionKey: 'gameMarketDesc',
+    howItWorksKeys: ['gameMarketHow1', 'gameMarketHow2', 'gameMarketHow3'],
     Component: MemoryMarketGame
   },
   {
-    id: 'sequence', title: 'Heritage Sequence', category: 'Orientation', icon: '📜',
-    skill: 'Sequencing & reasoning', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 5,
-    description: 'Drag cultural events, festivals and craft traditions into their correct order.',
-    howItWorks: [
-      'Read the prompt describing what needs ordering.',
-      'Drag the cards up or down until they are in the right order.',
-      'Submit your order to see how many are correctly placed.'
-    ],
+    id: 'sequence', titleKey: 'gameSequenceTitle', category: 'Orientation', icon: '📜',
+    skillKey: 'gameSequenceSkill', estimatedMinutes: 5,
+    descriptionKey: 'gameSequenceDesc',
+    howItWorksKeys: ['gameSequenceHow1', 'gameSequenceHow2', 'gameSequenceHow3'],
     Component: HeritageSequenceGame
   },
   {
-    id: 'changed', title: 'What Changed?', category: 'Attention', icon: '👁️',
-    skill: 'Attention & change detection', difficultyText: 'Adaptive · 5 levels', estimatedMinutes: 4,
-    description: "Study a cultural scene, then spot every detail that changes when you look again.",
-    howItWorks: [
-      'Study the scene carefully for a few seconds.',
-      'The scene changes — items may move, disappear or appear.',
-      'Tap every position that looks different from before.'
-    ],
+    id: 'changed', titleKey: 'gameChangedTitle', category: 'Attention', icon: '👁️',
+    skillKey: 'gameChangedSkill', estimatedMinutes: 4,
+    descriptionKey: 'gameChangedDesc',
+    howItWorksKeys: ['gameChangedHow1', 'gameChangedHow2', 'gameChangedHow3'],
     Component: WhatChangedGame
   }
 ];
+
+const CATEGORY_LABEL_KEYS = {
+  Memory: 'gameCategoryMemory',
+  Attention: 'gameCategoryAttention',
+  Orientation: 'gameCategoryOrientation'
+};
 
 export default function GameShell({ onBack }) {
   const { t } = useTranslation();
@@ -78,11 +64,21 @@ export default function GameShell({ onBack }) {
   const [result, setResult] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
 
+  const translatedGames = GAME_DEFS.map((g) => ({
+    ...g,
+    title: t(g.titleKey),
+    skill: t(g.skillKey),
+    description: t(g.descriptionKey),
+    difficultyText: t('adaptiveDifficultyText'),
+    howItWorks: g.howItWorksKeys.map((k) => t(k)),
+    categoryLabel: t(CATEGORY_LABEL_KEYS[g.category])
+  }));
+
   const categories = ['all', ...new Set(GAME_DEFS.map((g) => g.category))];
-  const visibleGames = activeCategory === 'all' ? GAME_DEFS : GAME_DEFS.filter((g) => g.category === activeCategory);
+  const visibleGames = activeCategory === 'all' ? translatedGames : translatedGames.filter((g) => g.category === activeCategory);
   const featured = visibleGames[0];
   const restGames = visibleGames.slice(1);
-  const activeGame = GAME_DEFS.find((g) => g.id === activeGameId);
+  const activeGame = translatedGames.find((g) => g.id === activeGameId);
 
   const openIntro = (game) => { setActiveGameId(game.id); setView('intro'); };
   const startGame = () => setView('playing');
@@ -99,8 +95,8 @@ export default function GameShell({ onBack }) {
   if (view === 'result' && result) {
     content = (
       <GameResult
-        gameName={result.gameName}
-        skill={result.skill}
+        gameName={t(result.gameNameKey)}
+        skill={t(result.skillKey)}
         score={result.score}
         accuracy={result.accuracy}
         bestStreak={result.bestStreak}

@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MARKET_ITEMS, difficultyLabel } from '../../data/culturalContent';
+import { MARKET_ITEMS, difficultyLabelKey } from '../../data/culturalContent';
 import { computeRoundScore, nextDifficultyLevel } from '../../services/gameScoring';
 import GameHeader from './shared/GameHeader';
 import ProgressBar from './shared/ProgressBar';
 import FeedbackState from './shared/FeedbackState';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const TOTAL_ROUNDS = 3;
 const LEVEL_CONFIG = {
@@ -15,8 +16,18 @@ const LEVEL_CONFIG = {
   5: { slotCount: 12, itemCount: 9, viewSec: 4, changeCount: 3 }
 };
 
+const QUESTION_KEYS = {
+  removed: 'marketQuestionDisappeared',
+  added: 'marketQuestionNew',
+  moved: 'marketQuestionMoved'
+};
+
 function shuffle(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function findItem(id) {
+  return MARKET_ITEMS.find((i) => i.id === id);
 }
 
 function buildRound(config) {
@@ -38,7 +49,7 @@ function buildRound(config) {
       const idx = occupied[Math.floor(Math.random() * occupied.length)];
       const item = after[idx];
       after[idx] = null;
-      changeLog.push({ type: 'removed', itemName: item.name });
+      changeLog.push({ type: 'removed', itemId: item.id });
     } else if (roll < 0.67 && empty.length > 0) {
       const unused = MARKET_ITEMS.filter((i) => !usedIds.has(i.id));
       if (unused.length > 0) {
@@ -46,7 +57,7 @@ function buildRound(config) {
         usedIds.add(item.id);
         const idx = empty[Math.floor(Math.random() * empty.length)];
         after[idx] = item;
-        changeLog.push({ type: 'added', itemName: item.name });
+        changeLog.push({ type: 'added', itemId: item.id });
       }
     } else if (occupied.length > 0 && empty.length > 0) {
       const fromIdx = occupied[Math.floor(Math.random() * occupied.length)];
@@ -54,27 +65,24 @@ function buildRound(config) {
       const item = after[fromIdx];
       after[toIdx] = item;
       after[fromIdx] = null;
-      changeLog.push({ type: 'moved', itemName: item.name });
+      changeLog.push({ type: 'moved', itemId: item.id });
     }
   }
 
   if (changeLog.length === 0) {
     const idx = before.findIndex((v) => v);
-    if (idx !== -1) { after[idx] = null; changeLog.push({ type: 'removed', itemName: before[idx].name }); }
+    if (idx !== -1) { after[idx] = null; changeLog.push({ type: 'removed', itemId: before[idx].id }); }
   }
 
   const target = changeLog[Math.floor(Math.random() * changeLog.length)];
-  const question = target.type === 'removed' ? 'Which item disappeared from the market?'
-    : target.type === 'added' ? 'Which item is new to the market?'
-    : 'Which item changed position in the market?';
+  const distractorPool = shuffle([...new Set([...chosen.map((i) => i.id), ...MARKET_ITEMS.map((i) => i.id)])].filter((id) => id !== target.itemId));
+  const options = shuffle([target.itemId, ...distractorPool.slice(0, 3)]);
 
-  const distractorPool = shuffle([...new Set([...chosen.map((i) => i.name), ...MARKET_ITEMS.map((i) => i.name)])].filter((n) => n !== target.itemName));
-  const options = shuffle([target.itemName, ...distractorPool.slice(0, 3)]);
-
-  return { before, after, question, correctAnswer: target.itemName, options, slotCount: config.slotCount };
+  return { before, after, questionKey: QUESTION_KEYS[target.type], correctAnswer: target.itemId, options, slotCount: config.slotCount };
 }
 
 export default function MemoryMarketGame({ onFinishGame, onBack }) {
+  const { t } = useTranslation();
   const [level, setLevel] = useState(1);
   const [round, setRound] = useState(1);
   const [phase, setPhase] = useState('view'); // view | transition | recall | feedback
@@ -97,10 +105,10 @@ export default function MemoryMarketGame({ onFinishGame, onBack }) {
     return () => window.clearTimeout(id);
   }, [phase, viewLeft]);
 
-  const selectAnswer = (option) => {
+  const selectAnswer = (optionId) => {
     if (phase !== 'recall') return;
-    setChosenAnswer(option);
-    const isCorrect = option === roundData.correctAnswer;
+    setChosenAnswer(optionId);
+    const isCorrect = optionId === roundData.correctAnswer;
     const timeTaken = Math.round((Date.now() - startedAt) / 1000);
     const nextStreak = isCorrect ? streak + 1 : 0;
     const roundScore = computeRoundScore({ correct: isCorrect, difficultyLevel: level, timeTakenSec: timeTaken, timeLimitSec: config.viewSec * 4, streak: nextStreak });
@@ -119,7 +127,7 @@ export default function MemoryMarketGame({ onFinishGame, onBack }) {
       if (round >= TOTAL_ROUNDS) {
         const finalAccuracy = Math.round((accuracySum + roundAccuracy) / TOTAL_ROUNDS);
         onFinishGame({
-          gameName: 'Memory Market', domain: 'Memory', skill: 'Visual memory & change detection',
+          gameNameKey: 'gameMarketTitle', domain: 'Memory', skillKey: 'gameMarketResultSkill',
           score: score + roundScore, accuracy: finalAccuracy, bestStreak: Math.max(bestStreak, nextStreak), difficultyLevel: level
         });
         return;
@@ -136,24 +144,25 @@ export default function MemoryMarketGame({ onFinishGame, onBack }) {
 
   const scene = phase === 'view' ? roundData.before : roundData.after;
   const cols = roundData.slotCount <= 6 ? 3 : 4;
+  const correctItem = findItem(roundData.correctAnswer);
 
   return (
     <div className="page max-w-2xl">
-      <GameHeader title="Memory Market" level={level} progress={`Round ${round}/${TOTAL_ROUNDS}`} score={score} onExit={onBack} />
+      <GameHeader title={t('gameMarketTitle')} level={level} progress={`${t('roundLabel')} ${round}/${TOTAL_ROUNDS}`} score={score} onExit={onBack} />
 
       {phase === 'view' && (
         <div className="text-center mb-4">
-          <span className="eyebrow eyebrow-jade justify-center">Observe the market</span>
-          <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>Remember every stall — the market changes in {viewLeft}s</p>
+          <span className="eyebrow eyebrow-jade justify-center">{t('marketObserveEyebrow')}</span>
+          <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('marketObserveHintPrefix')} {viewLeft}{t('secondsUnit')}</p>
         </div>
       )}
       {phase === 'transition' && (
-        <div className="text-center mb-4"><span className="eyebrow justify-center">The market is changing…</span></div>
+        <div className="text-center mb-4"><span className="eyebrow justify-center">{t('marketChangingLabel')}</span></div>
       )}
       {(phase === 'recall' || phase === 'feedback') && (
         <div className="text-center mb-4">
-          <span className="eyebrow justify-center">What changed?</span>
-          <h3 className="font-display text-xl sm:text-2xl font-medium mt-2">{roundData.question}</h3>
+          <span className="eyebrow justify-center">{t('marketWhatChangedEyebrow')}</span>
+          <h3 className="font-display text-xl sm:text-2xl font-medium mt-2">{t(roundData.questionKey)}</h3>
         </div>
       )}
 
@@ -170,7 +179,7 @@ export default function MemoryMarketGame({ onFinishGame, onBack }) {
         >
           {scene.map((item, idx) => (
             <div key={idx} className={`cog-slot ${!item ? 'is-empty' : ''}`}>
-              {item ? (<><span className="cog-slot-icon">{item.icon}</span><span className="cog-slot-label">{item.name}</span></>) : null}
+              {item ? (<><span className="cog-slot-icon">{item.icon}</span><span className="cog-slot-label">{t(item.nameKey)}</span></>) : null}
             </div>
           ))}
         </motion.div>
@@ -178,26 +187,27 @@ export default function MemoryMarketGame({ onFinishGame, onBack }) {
 
       {(phase === 'recall' || phase === 'feedback') && (
         <div className="grid grid-cols-2 gap-3 mt-8">
-          {roundData.options.map((opt) => {
-            const isChosen = chosenAnswer === opt;
+          {roundData.options.map((optId) => {
+            const optItem = findItem(optId);
+            const isChosen = chosenAnswer === optId;
             const showResult = phase === 'feedback';
-            const isCorrectOpt = opt === roundData.correctAnswer;
+            const isCorrectOpt = optId === roundData.correctAnswer;
             let style = { color: 'var(--ink)', borderColor: 'var(--hairline-strong)' };
             if (showResult && isCorrectOpt) style = { color: 'var(--jade-deep)', borderColor: 'var(--jade)', background: 'var(--jade-soft)' };
             else if (showResult && isChosen) style = { color: 'var(--alert)', borderColor: 'var(--alert)', background: 'var(--alert-soft)' };
             else if (isChosen) style = { color: 'var(--ember)', borderColor: 'var(--ember)', background: 'var(--ember-soft)' };
             return (
-              <button key={opt} type="button" disabled={phase === 'feedback'} onClick={() => selectAnswer(opt)} className="btn btn-line justify-start" style={style}>
-                {opt}
+              <button key={optId} type="button" disabled={phase === 'feedback'} onClick={() => selectAnswer(optId)} className="btn btn-line justify-start" style={style}>
+                {t(optItem.nameKey)}
               </button>
             );
           })}
         </div>
       )}
 
-      <div className="flex justify-center mt-6"><FeedbackState state={feedback} correctText="Correct!" incorrectText={`It was ${roundData.correctAnswer}`} /></div>
+      <div className="flex justify-center mt-6"><FeedbackState state={feedback} correctText={t('correctExclamationLabel')} incorrectText={`${t('itWasLabel')} ${t(correctItem.nameKey)}`} /></div>
 
-      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{difficultyLabel(level)} · Level {level}</p>
+      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
     </div>
   );
 }

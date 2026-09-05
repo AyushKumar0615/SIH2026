@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CULTURAL_ITEMS, difficultyLabel } from '../../data/culturalContent';
+import { CULTURAL_ITEMS, difficultyLabelKey } from '../../data/culturalContent';
 import { computeRoundScore, computeAccuracy, nextDifficultyLevel } from '../../services/gameScoring';
 import GameHeader from './shared/GameHeader';
 import ProgressBar from './shared/ProgressBar';
 import FeedbackState from './shared/FeedbackState';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const TOTAL_ROUNDS = 3;
 const LEVEL_CONFIG = {
@@ -24,6 +25,7 @@ function pickSequence(length) {
 }
 
 export default function MemoryTrailGame({ onFinishGame, onBack }) {
+  const { t } = useTranslation();
   const [level, setLevel] = useState(1);
   const [round, setRound] = useState(1);
   const [phase, setPhase] = useState('study'); // study | recall | feedback
@@ -80,7 +82,7 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
       if (round >= TOTAL_ROUNDS) {
         const finalAccuracy = Math.round((accuracySum + roundAccuracy) / TOTAL_ROUNDS);
         onFinishGame({
-          gameName: 'Memory Trail', domain: 'Memory', skill: 'Working memory & sequential recall',
+          gameNameKey: 'gameTrailTitle', domain: 'Memory', skillKey: 'gameTrailResultSkill',
           score: score + roundScore, accuracy: finalAccuracy, bestStreak: Math.max(bestStreak, nextStreak), difficultyLevel: level
         });
         return;
@@ -100,13 +102,13 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
 
   return (
     <div className="page max-w-2xl">
-      <GameHeader title="Memory Trail" level={level} progress={`Round ${round}/${TOTAL_ROUNDS}`} score={score} onExit={onBack} />
+      <GameHeader title={t('gameTrailTitle')} level={level} progress={`${t('roundLabel')} ${round}/${TOTAL_ROUNDS}`} score={score} onExit={onBack} />
 
       {phase === 'study' && (
         <div className="space-y-6">
           <div className="text-center">
-            <span className="eyebrow eyebrow-jade justify-center">Study the trail</span>
-            <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>Remember the order — it disappears in {studyLeft}s</p>
+            <span className="eyebrow eyebrow-jade justify-center">{t('trailStudyEyebrow')}</span>
+            <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('trailStudyHintPrefix')} {studyLeft}{t('secondsUnit')}</p>
           </div>
           <ProgressBar value={(studyLeft / config.studySec) * 100} />
           <div className="flex flex-wrap justify-center gap-3 pt-4">
@@ -120,7 +122,7 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
                 style={{ width: '5.5rem' }}
               >
                 <span className="cog-slot-icon">{item.icon}</span>
-                <span className="cog-slot-label">{item.name}</span>
+                <span className="cog-slot-label">{t(item.nameKey)}</span>
               </motion.div>
             ))}
           </div>
@@ -130,8 +132,8 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
       {(phase === 'recall' || phase === 'feedback') && (
         <div className="space-y-8">
           <div className="text-center">
-            <span className="eyebrow justify-center">Recreate the trail</span>
-            <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>Tap the items in the order they appeared.</p>
+            <span className="eyebrow justify-center">{t('trailRecallEyebrow')}</span>
+            <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('trailRecallHint')}</p>
           </div>
 
           <div className="flex flex-wrap justify-center gap-3">
@@ -148,7 +150,7 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
                   {item ? (
                     <>
                       <span className="cog-slot-icon">{item.icon}</span>
-                      <span className="cog-slot-label">{item.name}</span>
+                      <span className="cog-slot-label">{t(item.nameKey)}</span>
                     </>
                   ) : (
                     <span className="font-mono text-xs" style={{ color: 'var(--ink-faint)' }}>{idx + 1}</span>
@@ -169,21 +171,21 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
                 style={{ width: '5.5rem' }}
               >
                 <span className="cog-slot-icon">{item.icon}</span>
-                <span className="cog-slot-label">{item.name}</span>
+                <span className="cog-slot-label">{t(item.nameKey)}</span>
               </button>
             ))}
           </div>
 
           <div className="flex items-center justify-center gap-3">
-            <button type="button" onClick={undoLast} disabled={phase === 'feedback' || placed.length === 0} className="btn btn-line">Undo</button>
-            <button type="button" onClick={checkAnswer} disabled={phase === 'feedback' || placed.length < sequence.length} className="btn btn-ember">Check Sequence</button>
+            <button type="button" onClick={undoLast} disabled={phase === 'feedback' || placed.length === 0} className="btn btn-line">{t('undoLabel')}</button>
+            <button type="button" onClick={checkAnswer} disabled={phase === 'feedback' || placed.length < sequence.length} className="btn btn-ember">{t('checkSequenceLabel')}</button>
           </div>
 
-          <div className="flex justify-center"><FeedbackState state={feedback} correctText="Sequence correct!" incorrectText="Not quite — see the highlights above" /></div>
+          <div className="flex justify-center"><FeedbackState state={feedback} correctText={t('sequenceCorrectFeedback')} incorrectText={t('notQuiteFeedback')} /></div>
         </div>
       )}
 
-      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{difficultyLabel(level)} · Level {level}</p>
+      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Reorder } from 'framer-motion';
 import { GripVertical } from 'lucide-react';
-import { HERITAGE_SEQUENCES, difficultyLabel } from '../../data/culturalContent';
+import { HERITAGE_SEQUENCES, difficultyLabelKey } from '../../data/culturalContent';
 import { computeRoundScore, computeAccuracy, nextDifficultyLevel } from '../../services/gameScoring';
 import GameHeader from './shared/GameHeader';
 import FeedbackState from './shared/FeedbackState';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const TOTAL_ROUNDS = 3;
 const LEVEL_CONFIG = {
@@ -26,6 +27,7 @@ function pickSequence(usedIds) {
 }
 
 export default function HeritageSequenceGame({ onFinishGame, onBack }) {
+  const { t } = useTranslation();
   const [level, setLevel] = useState(1);
   const [round, setRound] = useState(1);
   const [usedIds, setUsedIds] = useState(() => new Set());
@@ -74,7 +76,7 @@ export default function HeritageSequenceGame({ onFinishGame, onBack }) {
       if (round >= TOTAL_ROUNDS) {
         const finalAccuracy = Math.round((accuracySum + roundAccuracy) / TOTAL_ROUNDS);
         onFinishGame({
-          gameName: 'Heritage Sequence', domain: 'Orientation', skill: 'Sequencing & reasoning',
+          gameNameKey: 'gameSequenceTitle', domain: 'Orientation', skillKey: 'gameSequenceSkill',
           score: score + roundScore, accuracy: finalAccuracy, bestStreak: Math.max(bestStreak, nextStreak), difficultyLevel: level
         });
         return;
@@ -94,12 +96,12 @@ export default function HeritageSequenceGame({ onFinishGame, onBack }) {
 
   return (
     <div className="page max-w-2xl">
-      <GameHeader title="Heritage Sequence" level={level} progress={`Round ${round}/${TOTAL_ROUNDS}`} score={score} onExit={onBack} />
+      <GameHeader title={t('gameSequenceTitle')} level={level} progress={`${t('roundLabel')} ${round}/${TOTAL_ROUNDS}`} score={score} onExit={onBack} />
 
       <div className="text-center mb-8">
-        <span className="eyebrow justify-center">{sequenceSet.title}</span>
-        <p className="text-sm mt-2 max-w-md mx-auto" style={{ color: 'var(--ink-faint)' }}>{sequenceSet.prompt}</p>
-        <p className="text-xs font-semibold mt-3" style={{ color: 'var(--ink-faint)' }}>{timeLeft}s remaining · drag cards to reorder</p>
+        <span className="eyebrow justify-center">{t(sequenceSet.titleKey)}</span>
+        <p className="text-sm mt-2 max-w-md mx-auto" style={{ color: 'var(--ink-faint)' }}>{t(sequenceSet.promptKey)}</p>
+        <p className="text-xs font-semibold mt-3" style={{ color: 'var(--ink-faint)' }}>{timeLeft}{t('secondsUnit')} {t('remainingLabel')} · {t('dragToReorderHint')}</p>
       </div>
 
       <Reorder.Group axis="y" values={items} onReorder={setItems} className="space-y-3" as="div">
@@ -118,8 +120,8 @@ export default function HeritageSequenceGame({ onFinishGame, onBack }) {
               <GripVertical className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-faint)' }} />
               <span className="font-mono text-xs shrink-0" style={{ color: 'var(--ink-faint)' }}>0{idx + 1}</span>
               <span className="flex-1 min-w-0">
-                <span className="text-sm font-medium block">{item.label}</span>
-                {config.showNotes && item.note && !locked && <span className="text-xs block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{item.note}</span>}
+                <span className="text-sm font-medium block">{t(item.labelKey)}</span>
+                {config.showNotes && item.noteKey && !locked && <span className="text-xs block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t(item.noteKey)}</span>}
               </span>
             </Reorder.Item>
           );
@@ -127,11 +129,11 @@ export default function HeritageSequenceGame({ onFinishGame, onBack }) {
       </Reorder.Group>
 
       <div className="flex flex-col items-center gap-3 mt-8">
-        <button type="button" onClick={checkOrder} disabled={locked} className="btn btn-ember">Check Order</button>
-        <FeedbackState state={feedback} correctText="Perfect order!" incorrectText="Some cards are out of place — see the highlights above" />
+        <button type="button" onClick={checkOrder} disabled={locked} className="btn btn-ember">{t('checkOrderLabel')}</button>
+        <FeedbackState state={feedback} correctText={t('perfectOrderFeedback')} incorrectText={t('cardsOutOfPlaceFeedback')} />
       </div>
 
-      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{difficultyLabel(level)} · Level {level}</p>
+      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
     </div>
   );
 }

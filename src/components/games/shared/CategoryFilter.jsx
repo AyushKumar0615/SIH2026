@@ -10,6 +10,13 @@ const CATEGORY_ICONS = {
   Orientation: Compass
 };
 
+const CATEGORY_LABEL_KEYS = {
+  all: 'categoryAll',
+  Memory: 'gameCategoryMemory',
+  Attention: 'gameCategoryAttention',
+  Orientation: 'gameCategoryOrientation'
+};
+
 export default function CategoryFilter({ categories, active, onChange }) {
   const { t } = useTranslation();
   return (
@@ -35,7 +42,7 @@ export default function CategoryFilter({ categories, active, onChange }) {
               />
             )}
             <Icon className="relative w-3.5 h-3.5" />
-            <span className="relative">{cat === 'all' ? t('categoryAll') : cat}</span>
+            <span className="relative">{t(CATEGORY_LABEL_KEYS[cat] || cat)}</span>
           </button>
         );
       })}
