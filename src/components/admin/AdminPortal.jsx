@@ -11,7 +11,7 @@ export default function AdminPortal() {
 
   const auditLogs = [
     { id: 'log_1', timestamp: '2026-08-27 09:45:10', user: 'Priya Devi (Caregiver)', action: 'Updated morning blood pressure medication schedule', ip: '157.33.20.14' },
-    { id: 'log_2', timestamp: '2026-08-27 10:12:04', user: 'Kamala Devi (Elderly)', action: 'Completed Bihu Memory Pairs game session (Score 95)', ip: '157.33.20.14' },
+    { id: 'log_2', timestamp: '2026-08-27 10:12:04', user: 'Kamala Devi (Elderly)', action: 'Completed Memory Trail game session (Score 95)', ip: '157.33.20.14' },
     { id: 'log_3', timestamp: '2026-08-26 16:30:22', user: 'Priya Devi (Caregiver)', action: 'Added memory entry: Rongali Bihu 2025 celebration photo', ip: '157.33.20.14' },
     { id: 'log_4', timestamp: '2026-08-25 11:00:15', user: 'Dr. R. Phukan (Admin)', action: 'Verified Assamese regional dictionary translation tokens', ip: '10.0.4.12' }
   ];
