@@ -3,18 +3,22 @@ import { AnimatePresence, motion } from 'framer-motion';
 import ImpactDashboard from './ImpactDashboard';
 import { CULTURAL_CATALOG } from '../../data/regionalContent';
 import { AdminService, formatDateTime } from '../../services/adminService';
+import { LocationService } from '../../services/locationService';
+import LocationMap from '../common/LocationMap';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { useTranslation } from '../../hooks/useTranslation';
 import ConfirmDialog from '../common/ConfirmDialog';
 import InlineNotice from '../common/InlineNotice';
 import {
   Shield, Server, Globe, Users, HeartPulse, LayoutDashboard, ChevronDown,
-  Search, UserCheck, UserX, Link2
+  Search, UserCheck, UserX, Link2, MapPin, Clock, Navigation
 } from 'lucide-react';
 
 const ROLE_LABEL_KEYS = { elderly: 'modeElderlyLabel', caregiver: 'modeCaregiverLabel', admin: 'modeAdminLabel' };
 const ROLE_ICONS = { elderly: HeartPulse, caregiver: LayoutDashboard, admin: Shield };
 const CONNECTION_STATUS_KEYS = { pending: 'pendingApprovalNotice', accepted: 'statusAcceptedLabel', rejected: 'statusRejectedLabel' };
+const LOCATION_STATUS_KEYS = { live: 'locationStatusLive', recent: 'locationStatusRecent', offline: 'locationStatusOffline' };
+const LOCATION_STATUS_COLORS = { live: 'var(--jade)', recent: 'var(--ember)', offline: 'var(--ink-faint)' };
 
 export default function AdminPortal() {
   const { t } = useTranslation();
@@ -316,23 +320,32 @@ function UserManagementSection({ t, onMutation }) {
 function ExpandedUserDetail({ user, t, refreshKey, onToggleActive, onRequestDisconnect }) {
   const [counts, setCounts] = useState(null);
   const [connections, setConnections] = useState(null);
+  const [location, setLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const role = (user.role || '').trim().toLowerCase();
+  const isElder = role === 'elderly';
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    Promise.all([AdminService.getUserActivityCounts(user.id), AdminService.getUserConnections(user.id)]).then(([countsRes, connRes]) => {
+    Promise.all([
+      AdminService.getUserActivityCounts(user.id),
+      AdminService.getUserConnections(user.id),
+      isElder ? LocationService.getLatestLocation(user.id) : Promise.resolve({ ok: true, location: null })
+    ]).then(([countsRes, connRes, locationRes]) => {
       if (cancelled) return;
       setCounts(countsRes.ok ? countsRes : null);
       setConnections(connRes.ok ? connRes : null);
+      setLocation(locationRes.ok ? locationRes.location : null);
       setIsLoading(false);
     });
     return () => { cancelled = true; };
-  }, [user.id, refreshKey]);
+  }, [user.id, isElder, refreshKey]);
 
-  const role = (user.role || '').trim().toLowerCase();
   const relevantConnections = role === 'elderly' ? connections?.asElder : role === 'caregiver' ? connections?.asCaregiver : [];
   const relationshipLabelKey = role === 'elderly' ? 'relationshipsAsElderLabel' : 'relationshipsAsCaregiverLabel';
+  const locationStatus = LocationService.getLocationStatus(location);
 
   return (
     <div className="well p-5 mb-2 space-y-5">
@@ -387,6 +400,37 @@ function ExpandedUserDetail({ user, t, refreshKey, onToggleActive, onRequestDisc
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {isElder && (
+            <div>
+              <span className="figure-label flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {t('elderLocationTitle')}</span>
+              {!location ? (
+                <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('noLocationSharedYetDesc')}</p>
+              ) : (
+                <div className="mt-2 space-y-3">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                    <span className="flex items-center gap-2 font-semibold" style={{ color: LOCATION_STATUS_COLORS[locationStatus] }}>
+                      <span className="w-2 h-2 rounded-full" style={{ background: LOCATION_STATUS_COLORS[locationStatus] }} />
+                      {t(LOCATION_STATUS_KEYS[locationStatus])}
+                    </span>
+                    <span className="flex items-center gap-1.5" style={{ color: 'var(--ink-faint)' }}><Clock className="w-3.5 h-3.5" /> {t('lastUpdatedLabel')}: {formatDateTime(location.recorded_at)}</span>
+                    {typeof location.accuracy === 'number' && (
+                      <span className="flex items-center gap-1.5" style={{ color: 'var(--ink-faint)' }}><Navigation className="w-3.5 h-3.5" /> {t('accuracyLabel')}: {t('accuracyMetersValue').replace('{meters}', Math.round(location.accuracy))}</span>
+                    )}
+                  </div>
+                  <LocationMap
+                    latitude={location.latitude}
+                    longitude={location.longitude}
+                    accuracy={location.accuracy}
+                    label={user.full_name}
+                    recenterLabel={t('recenterMapLabel')}
+                    openInMapsLabel={t('openInMapsLabel')}
+                    height="12rem"
+                  />
                 </div>
               )}
             </div>

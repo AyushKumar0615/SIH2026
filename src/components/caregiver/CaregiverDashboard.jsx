@@ -4,6 +4,7 @@ import CognitiveAnalytics from './CognitiveAnalytics';
 import ExplainableInsightsView from './ExplainableInsightsView';
 import RoutineManager from './RoutineManager';
 import ConnectElderPanel from './ConnectElderPanel';
+import ElderLocationView from './ElderLocationView';
 import { ReminderService } from '../../services/reminderService';
 import { MemoryService } from '../../services/memoryService';
 import { CaregiverConnectionService } from '../../services/caregiverConnectionService';
@@ -11,7 +12,7 @@ import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { pageTransition } from '../common/pageTransition';
 import UserAvatar from '../common/UserAvatar';
 import { useTranslation } from '../../hooks/useTranslation';
-import { BarChart3, Lightbulb, Bell, ShieldAlert, Link2, Users } from 'lucide-react';
+import { BarChart3, Lightbulb, Bell, ShieldAlert, Link2, Users, MapPin } from 'lucide-react';
 
 export default function CaregiverDashboard({ session }) {
   const { t } = useTranslation();
@@ -103,6 +104,7 @@ export default function CaregiverDashboard({ session }) {
     { id: 'insights', labelKey: 'tabAiInsights', icon: Lightbulb },
     { id: 'analytics', labelKey: 'tabCognitiveAnalytics', icon: BarChart3 },
     { id: 'routines', labelKey: 'tabRoutines', icon: Bell },
+    { id: 'location', labelKey: 'tabElderLocation', icon: MapPin },
     { id: 'connect', labelKey: 'tabConnectElder', icon: Link2 }
   ];
 
@@ -200,6 +202,9 @@ export default function CaregiverDashboard({ session }) {
                   readOnly
                 />
               ) : noElderNotice
+            )}
+            {activeTab === 'location' && (
+              connectedElder ? <ElderLocationView elder={connectedElder} /> : noElderNotice
             )}
             {activeTab === 'connect' && (
               <ConnectElderPanel

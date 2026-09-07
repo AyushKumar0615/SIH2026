@@ -9,6 +9,7 @@ import AdminPortal from './components/admin/AdminPortal';
 import { NER_STATES } from './data/regionalContent';
 import { AuthService } from './services/authService';
 import { LanguageProvider } from './hooks/useTranslation';
+import { useElderLocationTracking } from './hooks/useElderLocationTracking';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -49,6 +50,10 @@ export default function App() {
     });
     return () => { cancelled = true; };
   }, []);
+
+  // Mounted here (not inside ElderlyHome) so the watcher survives in-app
+  // navigation and remounts — it only starts/stops on session changes.
+  const locationTracking = useElderLocationTracking(session);
 
   useEffect(() => {
     if (highContrast) {
@@ -117,7 +122,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           {currentMode === 'elderly' && (
             <motion.div key={`elderly-home-${homeResetKey}`} {...pageTransition}>
-              <ElderlyHome currentLang={currentLang} currentState={currentState} session={session} />
+              <ElderlyHome currentLang={currentLang} currentState={currentState} session={session} locationTracking={locationTracking} />
             </motion.div>
           )}
           {currentMode === 'caregiver' && (

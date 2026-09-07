@@ -15,11 +15,11 @@ import CaregiverConnectionsView from './CaregiverConnectionsView';
 import VoiceAssistantModal from './VoiceAssistantModal';
 import VoiceOrb from './VoiceOrb';
 import Magnetic from '../common/Magnetic';
-import { Volume2, ArrowUpRight, PhoneCall, Home, Brain, BookOpen, Bell, Users } from 'lucide-react';
+import { Volume2, ArrowUpRight, PhoneCall, Home, Brain, BookOpen, Bell, Users, MapPin, ShieldAlert } from 'lucide-react';
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 20;
 
-export default function ElderlyHome({ currentLang, currentState, session }) {
+export default function ElderlyHome({ currentLang, currentState, session, locationTracking }) {
   const { t } = useTranslation();
   const userName = session?.fullName || t('guestLabel');
   const [activeSubView, setActiveSubView] = useState('home');
@@ -121,6 +121,7 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
         <div ref={spotlightRef} className="spotlight" />
 
         <div className="rail-pad content-col relative z-10 pt-24 pb-5 md:pt-32 md:pb-10">
+          {locationTracking && <LocationSharingBanner tracking={locationTracking} t={t} />}
           <div className="grid lg:grid-cols-[1.15fr_0.7fr] gap-8 lg:gap-12 items-center">
             <div className="scroll-reveal">
               <h1
@@ -334,4 +335,70 @@ export default function ElderlyHome({ currentLang, currentState, session }) {
       </motion.div>
     </AnimatePresence>
   );
+}
+
+// A safety-focused first-time prompt, a small persistent "sharing active"
+// indicator once granted, or a clear recovery message if permission is
+// missing/denied — never a silent failure. Transient states (checking an
+// already-decided permission, a momentary GPS timeout) render nothing so
+// this stays unobtrusive rather than flickering on every render.
+function LocationSharingBanner({ tracking, t }) {
+  const { status, enableSharing, disableSharing, dismissPrompt } = tracking;
+
+  if (status === 'prompt') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="notice-box is-jade flex flex-col sm:flex-row sm:items-center gap-4 justify-between mb-6"
+      >
+        <div className="flex items-start gap-3 min-w-0">
+          <MapPin className="w-4.5 h-4.5 mt-0.5 shrink-0" style={{ color: 'var(--jade)' }} />
+          <div className="min-w-0">
+            <p className="font-display text-lg font-medium">{t('locationPermissionTitle')}</p>
+            <p className="text-sm mt-1 leading-relaxed" style={{ color: 'var(--ink-soft)' }}>{t('locationPermissionDesc')}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+          <button type="button" onClick={dismissPrompt} className="btn btn-quiet">{t('notNowLabel')}</button>
+          <button type="button" onClick={enableSharing} className="btn btn-ember">{t('enableLocationSharingLabel')}</button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (status === 'granted') {
+    return (
+      <div className="flex items-center gap-3 text-sm font-medium mb-6" style={{ color: 'var(--jade)' }}>
+        <span className="w-2 h-2 rounded-full animate-soft-pulse" style={{ background: 'var(--jade)' }} />
+        {t('locationSharingActiveLabel')}
+        <button type="button" onClick={disableSharing} className="btn btn-quiet !px-0 !min-h-0 text-xs" style={{ color: 'var(--ink-faint)' }}>
+          {t('disableLocationSharingLabel')}
+        </button>
+      </div>
+    );
+  }
+
+  if (status === 'denied' || status === 'unavailable') {
+    return (
+      <div className="notice-strip is-alert flex items-start gap-3 mb-6">
+        <ShieldAlert className="w-4.5 h-4.5 mt-0.5 shrink-0" style={{ color: 'var(--alert)' }} />
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>{t('locationUnavailableMessage')}</p>
+      </div>
+    );
+  }
+
+  // Transient (GPS timeout / no signal) — the watcher keeps retrying on
+  // its own, so this stays a small note rather than an alarming banner,
+  // but it's still surfaced rather than failing silently.
+  if (status === 'error') {
+    return (
+      <div className="flex items-center gap-3 text-sm mb-6" style={{ color: 'var(--ink-faint)' }}>
+        <span className="w-2 h-2 rounded-full" style={{ background: 'var(--ember)' }} />
+        {t('locationErrorMessage')}
+      </div>
+    );
+  }
+
+  return null;
 }
