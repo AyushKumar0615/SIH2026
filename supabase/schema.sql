@@ -1,6 +1,13 @@
 -- Run once in the Supabase SQL editor for this project.
 -- Stores SmritiSetu user profile data (role, region, language, avatar) alongside
 -- Supabase Auth, which owns email/password and is never duplicated here.
+--
+-- This file is the consolidated, always-current reference for manual application
+-- via the Supabase SQL Editor. Everything added here from the "Admin read access"
+-- section onward is also captured, in the same order, as standalone files under
+-- ./migrations/ — use those with `supabase db push` once this project is linked
+-- to the Supabase CLI (`supabase link`), so the schema can be applied and tracked
+-- without hand-copying SQL. Keep both in sync when adding new sections.
 
 create table public.profiles (
   id uuid references auth.users on delete cascade primary key,
@@ -321,3 +328,89 @@ end;
 $$;
 
 grant execute on function public.request_caregiver_connection(text) to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────
+-- Admin read access
+-- The Admin dashboard needs platform-wide visibility (user counts,
+-- recent activity) that no existing policy grants — every policy so
+-- far scopes access to "your own row" or "a party to this specific
+-- connection." is_admin() is SECURITY DEFINER so it can check the
+-- caller's own role without recursing into the policies it's used
+-- inside of. These policies are additive (read-only) and don't
+-- change any existing policy's behavior for non-admin users.
+-- ─────────────────────────────────────────────────────────────────
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and lower(trim(role)) = 'admin'
+  );
+$$;
+
+drop policy if exists "admin select all profiles" on public.profiles;
+create policy "admin select all profiles" on public.profiles
+  for select using (public.is_admin());
+
+drop policy if exists "admin select all reminders" on public.reminders;
+create policy "admin select all reminders" on public.reminders
+  for select using (public.is_admin());
+
+drop policy if exists "admin select all memories" on public.memories;
+create policy "admin select all memories" on public.memories
+  for select using (public.is_admin());
+
+drop policy if exists "admin select all connections" on public.caregiver_connections;
+create policy "admin select all connections" on public.caregiver_connections
+  for select using (public.is_admin());
+
+-- ─────────────────────────────────────────────────────────────────
+-- Admin user management
+-- Adds the account-status column the Admin user list needs, plus two
+-- narrow, admin-only RPCs for the two write actions Admin performs on
+-- other people's data (deactivate/reactivate an account, disconnect a
+-- caregiver/elder pair). RPC-mediated rather than broad admin
+-- UPDATE/DELETE policies, so a bug or compromised session can only
+-- flip one flag or remove one connection row, not write arbitrary
+-- columns. No existing policy changes; normal users still write only
+-- their own rows exactly as before.
+-- ─────────────────────────────────────────────────────────────────
+
+alter table public.profiles add column if not exists is_active boolean not null default true;
+
+create or replace function public.admin_set_user_active(p_user_id uuid, p_is_active boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'not_admin';
+  end if;
+  update public.profiles set is_active = p_is_active where id = p_user_id;
+end;
+$$;
+
+grant execute on function public.admin_set_user_active(uuid, boolean) to authenticated;
+
+create or replace function public.admin_disconnect_connection(p_connection_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'not_admin';
+  end if;
+  delete from public.caregiver_connections where id = p_connection_id;
+end;
+$$;
+
+grant execute on function public.admin_disconnect_connection(uuid) to authenticated;
