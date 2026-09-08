@@ -19,6 +19,7 @@ import AvatarPicker from './AvatarPicker';
 import ThemeToggle from './ThemeToggle';
 import { AuthService } from '../../services/authService';
 import { useTranslation } from '../../hooks/useTranslation';
+import { getAllowedModes } from '../../access/permissions';
 
 const MODES = [
   { id: 'elderly', labelKey: 'modeElderlyLabel', icon: HeartPulse, descKey: 'modeElderlyDesc' },
@@ -48,7 +49,12 @@ export default function Header({
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
-  const activeMode = MODES.find((m) => m.id === currentMode) || MODES[0];
+  // Centralized role -> allowed-modes config (src/access/permissions.js) is
+  // the only place that decides who sees what — never duplicate that check
+  // here, just filter the nav against it.
+  const allowedModeIds = getAllowedModes(session?.role);
+  const visibleModes = MODES.filter((mode) => allowedModeIds.includes(mode.id));
+  const activeMode = visibleModes.find((m) => m.id === currentMode) || visibleModes[0];
   const ActiveIcon = activeMode.icon;
 
   useEffect(() => {
@@ -130,7 +136,7 @@ export default function Header({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
               >
-                {MODES.map((mode) => {
+                {visibleModes.map((mode) => {
                   const Icon = mode.icon;
                   const isActive = currentMode === mode.id;
                   return (

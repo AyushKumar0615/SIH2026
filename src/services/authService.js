@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { normalizeRole, isPublicRegistrationRole } from '../access/permissions';
 
 function toSession(user, profile) {
   if (!user) return null;
@@ -6,7 +7,10 @@ function toSession(user, profile) {
     id: user.id,
     email: user.email,
     fullName: profile?.full_name || '',
-    role: profile?.role || 'caregiver',
+    // normalizeRole falls back to the least-privileged role for anything
+    // missing/unrecognized (e.g. a failed profile fetch) instead of
+    // silently granting a more privileged default.
+    role: normalizeRole(profile?.role),
     state: profile?.state || '',
     language: profile?.language || 'as',
     avatar: profile?.avatar || null
@@ -38,6 +42,14 @@ export const AuthService = {
   },
 
   async register(payload) {
+    // Client-side fail-fast for a tampered/modified registration request —
+    // a friendly error instead of a raw database error. This is NOT the
+    // real security boundary: the "insert own profile" RLS policy rejects
+    // role='admin' at the database layer regardless of what's sent here.
+    if (!isPublicRegistrationRole(payload.role)) {
+      return { ok: false, error: 'Please choose a valid account type.' };
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: payload.email.trim(),
       password: payload.password
