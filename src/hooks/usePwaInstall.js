@@ -13,7 +13,13 @@ export function isStandaloneDisplay() {
 
 export function isIosDevice() {
   try {
-    return /iphone|ipad|ipod/i.test(window.navigator.userAgent) && !window.MSStream;
+    const ua = window.navigator.userAgent;
+    // iPadOS 13+ reports "MacIntel" in the user agent by default (Apple made
+    // iPad Safari masquerade as desktop Safari), so a plain UA regex misses
+    // every modern iPad. Multi-touch is the reliable signal that a
+    // "MacIntel" device is actually an iPad, since real Macs report 0.
+    const isModernIpad = window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1;
+    return (/iphone|ipad|ipod/i.test(ua) || isModernIpad) && !window.MSStream;
   } catch {
     return false;
   }
