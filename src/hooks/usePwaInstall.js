@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+// Centralized "is this already installed?" check — covers the classic
+// standalone media feature, the newer display modes a browser may report for
+// an installed PWA, and iOS Safari's own non-standard navigator flag.
 export function isStandaloneDisplay() {
   try {
+    const isDisplayMode = (mode) => window.matchMedia(`(display-mode: ${mode})`).matches;
     return (
-      window.matchMedia('(display-mode: standalone)').matches ||
+      isDisplayMode('standalone') ||
+      isDisplayMode('fullscreen') ||
+      isDisplayMode('window-controls-overlay') ||
       window.navigator.standalone === true
     );
   } catch {
@@ -23,6 +29,33 @@ export function isIosDevice() {
   } catch {
     return false;
   }
+}
+
+// True only for actual Safari on iOS/iPadOS. Every other iOS browser (Chrome,
+// Firefox, Edge, in-app webviews) is also WebKit under Apple's rules and
+// still carries "Safari" in its UA string, but tags itself with its own
+// token too — and, install-relevant, none of them can produce a genuine
+// standalone-mode PWA the way Safari's own "Add to Home Screen" can.
+export function isIosSafari() {
+  if (!isIosDevice()) return false;
+  try {
+    const ua = window.navigator.userAgent;
+    const isOtherIosBrowser = /crios|fxios|edgios|opios|mercury|gsa|duckduckgo|instagram|fban|fbav|line\//i.test(ua);
+    return /safari/i.test(ua) && !isOtherIosBrowser;
+  } catch {
+    return false;
+  }
+}
+
+// Single source of truth for which install experience applies:
+// - 'standalone'  already installed/running as an app — never show anything
+// - 'native'      Android/Chromium/desktop — driven by beforeinstallprompt
+// - 'ios-safari'  iPhone/iPad in actual Safari — full Share/Add-to-Home-Screen steps
+// - 'ios-other'   iPhone/iPad in a non-Safari browser — points them to Safari
+export function getInstallPlatform() {
+  if (isStandaloneDisplay()) return 'standalone';
+  if (isIosDevice()) return isIosSafari() ? 'ios-safari' : 'ios-other';
+  return 'native';
 }
 
 // Single source of truth for PWA installability/installed state. Listens for
