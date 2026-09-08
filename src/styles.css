@@ -711,6 +711,107 @@ a { color: inherit; }
     width: 100%;
   }
 
+  /* ─── PWA INSTALL PROMPT ──────────────────────────────────────── */
+  .pwa-install-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    background: rgba(8, 7, 6, 0.28);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    pointer-events: none;
+  }
+  body.theme-light .pwa-install-backdrop { background: rgba(23, 20, 15, 0.12); }
+
+  .pwa-install-card {
+    /* Centered on mobile via left/right + auto margins (not transform) —
+       framer-motion writes its own inline transform for the entrance
+       animation, which would silently clobber a CSS translateX(-50%). */
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1.25rem;
+    margin: 0 auto;
+    max-width: 26rem;
+    z-index: 111;
+    background: var(--glass-panel);
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 1.5rem;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+  @media (min-width: 768px) {
+    .pwa-install-card { left: auto; right: 1.75rem; bottom: 1.75rem; margin: 0; width: 26rem; }
+  }
+
+  .pwa-install-close {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--ink-faint);
+    transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+  }
+  .pwa-install-close:hover, .pwa-install-close:focus-visible { color: var(--ink); background: var(--hairline); }
+
+  .pwa-install-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.35rem; }
+  .pwa-install-actions .btn { flex: 1; }
+  .pwa-install-actions .btn-quiet { flex: none; }
+
+  /* ─── PWA UPDATE BANNER ───────────────────────────────────────── */
+  .pwa-update-banner {
+    /* Same left/right + auto-margin centering as .pwa-install-card, for the
+       same reason: framer-motion's inline transform would clobber a CSS
+       translateX(-50%). Sits at the top so it never collides with the
+       install prompt's bottom-anchored card. */
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    margin: 0 auto;
+    max-width: 30rem;
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: var(--glass-panel);
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 0.9rem 0.9rem 0.9rem 1.15rem;
+    padding-top: max(0.9rem, env(safe-area-inset-top));
+  }
+  @media (min-width: 768px) {
+    .pwa-update-banner { left: auto; right: 1.75rem; margin: 0; width: 30rem; }
+  }
+  .pwa-update-banner p { flex: 1; margin: 0; }
+
+  .pwa-update-actions { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+  .pwa-update-actions .btn { padding: 0.6rem 1.15rem; min-height: 2.35rem; font-size: 0.85rem; }
+
+  .pwa-update-close {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--ink-faint);
+    flex-shrink: 0;
+    transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+  }
+  .pwa-update-close:hover, .pwa-update-close:focus-visible { color: var(--ink); background: var(--hairline); }
+
+  @keyframes pwa-update-spin { to { transform: rotate(360deg); } }
+
   /* ─── NOTICE STRIPS (no boxes — inline accent rule) ──────────── */
   .notice-strip {
     border-left: 2px solid var(--hairline-strong);
