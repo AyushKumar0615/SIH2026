@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { pageTransition } from './components/common/pageTransition';
 import Header from './components/common/Header';
@@ -10,6 +10,8 @@ import { NER_STATES } from './data/regionalContent';
 import { AuthService } from './services/authService';
 import { LanguageProvider } from './hooks/useTranslation';
 import { useElderLocationTracking } from './hooks/useElderLocationTracking';
+import { getRoleHome } from './access/permissions';
+import RequireRole from './access/RequireRole';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -42,7 +44,7 @@ export default function App() {
       if (cancelled) return;
       if (restoredSession) {
         setSession(restoredSession);
-        setCurrentMode(restoredSession.role || 'elderly');
+        setCurrentMode(getRoleHome(restoredSession.role));
         setCurrentLang(restoredSession.language || 'as');
         setCurrentState(restoredSession.state || NER_STATES.ASSAM);
       }
@@ -65,15 +67,22 @@ export default function App() {
 
   const handleAuthenticated = (nextSession) => {
     setSession(nextSession);
-    setCurrentMode(nextSession.role);
+    setCurrentMode(getRoleHome(nextSession.role));
     setCurrentLang(nextSession.language || 'en');
     setCurrentState(nextSession.state || NER_STATES.ASSAM);
   };
 
   const goHome = () => {
-    setCurrentMode('elderly');
+    setCurrentMode(getRoleHome(session?.role));
     setHomeResetKey((k) => k + 1);
   };
+
+  // Passed to RequireRole as onDenied: if `currentMode` is ever not
+  // permitted for the current session's role (stale state, a tampered
+  // value, anything), snap straight back to that role's own home mode.
+  const redirectToRoleHome = useCallback(() => {
+    setCurrentMode(getRoleHome(session?.role));
+  }, [session?.role]);
 
   const handleLogout = async () => {
     await AuthService.logout();
@@ -122,17 +131,23 @@ export default function App() {
         <AnimatePresence mode="wait">
           {currentMode === 'elderly' && (
             <motion.div key={`elderly-home-${homeResetKey}`} {...pageTransition}>
-              <ElderlyHome currentLang={currentLang} currentState={currentState} session={session} locationTracking={locationTracking} />
+              <RequireRole session={session} mode="elderly" onDenied={redirectToRoleHome}>
+                <ElderlyHome currentLang={currentLang} currentState={currentState} session={session} locationTracking={locationTracking} />
+              </RequireRole>
             </motion.div>
           )}
           {currentMode === 'caregiver' && (
             <motion.div key="caregiver" {...pageTransition}>
-              <CaregiverDashboard session={session} />
+              <RequireRole session={session} mode="caregiver" onDenied={redirectToRoleHome}>
+                <CaregiverDashboard session={session} />
+              </RequireRole>
             </motion.div>
           )}
           {currentMode === 'admin' && (
             <motion.div key="admin" {...pageTransition}>
-              <AdminPortal />
+              <RequireRole session={session} mode="admin" onDenied={redirectToRoleHome}>
+                <AdminPortal />
+              </RequireRole>
             </motion.div>
           )}
           {currentMode === 'demo' && (

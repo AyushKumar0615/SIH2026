@@ -742,6 +742,11 @@ a { color: inherit; }
     -webkit-backdrop-filter: blur(20px);
     padding: 1.5rem;
     padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    /* Safety net for the longer iOS step list on short viewports (e.g. an
+       iPhone SE in landscape) — never a fixed height, just a cap + scroll. */
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
   }
   @media (min-width: 768px) {
     .pwa-install-card { left: auto; right: 1.75rem; bottom: 1.75rem; margin: 0; width: 26rem; }
@@ -764,6 +769,39 @@ a { color: inherit; }
   .pwa-install-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.35rem; }
   .pwa-install-actions .btn { flex: 1; }
   .pwa-install-actions .btn-quiet { flex: none; }
+
+  /* ─── PWA INSTALL — iOS Share/Add-to-Home-Screen steps ───────── */
+  .pwa-install-steps {
+    list-style: none;
+    margin: 1.15rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .pwa-install-step {
+    display: grid;
+    grid-template-columns: 1.3rem 2.15rem 1fr;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .pwa-install-step-num {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    text-align: center;
+  }
+  .pwa-install-step-icon {
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--canvas-raised);
+    border: 1px solid var(--hairline);
+    color: var(--ember);
+  }
+  .pwa-install-step-text { font-size: 0.9rem; line-height: 1.4; }
 
   /* ─── PWA UPDATE BANNER ───────────────────────────────────────── */
   .pwa-update-banner {

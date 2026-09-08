@@ -155,7 +155,6 @@ export default function AuthPortal({ onAuthenticated, theme, onToggleTheme }) {
                       <select value={registerForm.role} onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })} className="select">
                         <option value="elderly">{t('modeElderlyLabel')}</option>
                         <option value="caregiver">{t('modeCaregiverLabel')}</option>
-                        <option value="admin">{t('modeAdminLabel')}</option>
                       </select>
                     </div>
                     <div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
-import { Feather, X, Share } from 'lucide-react';
-import { usePwaInstall, isStandaloneDisplay, isIosDevice } from '../../hooks/usePwaInstall';
+import { Feather, X, Share, SquarePlus } from 'lucide-react';
+import { usePwaInstall, isStandaloneDisplay, getInstallPlatform } from '../../hooks/usePwaInstall';
 import { LocalizationService } from '../../services/localizationService';
 import {
   INSTALL_PROMPT_SHOW_DELAY_MS,
@@ -34,7 +34,11 @@ const t = (key) => LocalizationService.getText(key, 'en');
 export default function InstallPrompt() {
   const { isInstallable, isInstalled, promptInstall } = usePwaInstall();
   const [visible, setVisible] = useState(false);
-  const [mode, setMode] = useState('native'); // 'native' | 'ios'
+  // 'native' (Android/Chromium beforeinstallprompt) | 'ios-safari' (full
+  // Share -> Add to Home Screen steps) | 'ios-other' (iOS but not Safari —
+  // point them at Safari, since that's the only iOS browser that can
+  // produce a genuine standalone-mode install)
+  const [mode, setMode] = useState('native');
   const cardRef = useRef(null);
   const previousFocusRef = useRef(null);
 
@@ -50,9 +54,10 @@ export default function InstallPrompt() {
       return () => clearTimeout(timer);
     }
 
-    if (isIosDevice()) {
+    const platform = getInstallPlatform();
+    if (platform === 'ios-safari' || platform === 'ios-other') {
       const timer = setTimeout(() => {
-        setMode('ios');
+        setMode(platform);
         setVisible(true);
       }, INSTALL_PROMPT_SHOW_DELAY_MS);
       return () => clearTimeout(timer);
@@ -149,21 +154,42 @@ export default function InstallPrompt() {
                     {t('pwaInstallTitle')}
                   </h2>
                   <p id="pwa-install-body" className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
-                    {mode === 'ios' ? t('pwaInstallIosHint') : t('pwaInstallBody')}
+                    {mode === 'ios-safari' && t('pwaInstallIosBody')}
+                    {mode === 'ios-other' && t('pwaInstallOtherBrowserBody')}
+                    {mode === 'native' && t('pwaInstallBody')}
                   </p>
                 </div>
               </div>
 
-              {mode === 'ios' ? (
+              {mode === 'ios-safari' && (
+                <ol className="pwa-install-steps">
+                  <li className="pwa-install-step">
+                    <span className="pwa-install-step-num" aria-hidden="true">1</span>
+                    <span className="pwa-install-step-icon"><Share className="w-4 h-4" /></span>
+                    <span className="pwa-install-step-text">{t('pwaInstallStepShare')}</span>
+                  </li>
+                  <li className="pwa-install-step">
+                    <span className="pwa-install-step-num" aria-hidden="true">2</span>
+                    <span className="pwa-install-step-icon"><SquarePlus className="w-4 h-4" /></span>
+                    <span className="pwa-install-step-text">{t('pwaInstallStepAddHome')}</span>
+                  </li>
+                  <li className="pwa-install-step">
+                    <span className="pwa-install-step-num" aria-hidden="true">3</span>
+                    <span aria-hidden="true" />
+                    <span className="pwa-install-step-text">{t('pwaInstallStepTapAdd')}</span>
+                  </li>
+                </ol>
+              )}
+
+              {(mode === 'ios-safari' || mode === 'ios-other') && (
                 <div className="pwa-install-actions">
-                  <span className="inline-flex items-center gap-2 text-sm" style={{ color: 'var(--ink-soft)' }}>
-                    <Share className="w-4 h-4" style={{ color: 'var(--ember)' }} />
-                  </span>
-                  <button type="button" onClick={dismiss} className="btn btn-quiet ml-auto">
-                    {t('notNowLabel')}
+                  <button type="button" onClick={dismiss} className="btn btn-ember">
+                    {t('pwaInstallGotIt')}
                   </button>
                 </div>
-              ) : (
+              )}
+
+              {mode === 'native' && (
                 <div className="pwa-install-actions">
                   <button type="button" onClick={handleInstall} className="btn btn-ember">
                     {t('pwaInstallButton')}
