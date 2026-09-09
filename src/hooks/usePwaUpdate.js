@@ -35,7 +35,14 @@ function initServiceWorkerUpdates() {
 
   window.addEventListener('load', async () => {
     try {
-      registration = await navigator.serviceWorker.register('/sw.js');
+      // updateViaCache: 'none' means neither this script nor any of its
+      // imports may ever be served from the browser's HTTP cache on an
+      // update check — belt-and-braces on top of the spec's own default
+      // ('imports', which already exempts the main script), since an
+      // installed PWA can sit on a persistent disk-cached copy for far
+      // longer than a regular browser tab would before this file is
+      // fetched fresh.
+      registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
     } catch {
       return;
     }
@@ -52,6 +59,15 @@ function initServiceWorkerUpdates() {
     });
 
     const checkForUpdate = () => registration.update().catch(() => {});
+    // Check right away, not just on the next interval/visibility/focus tick.
+    // This is the one call that actually matters for an installed Home
+    // Screen PWA: on iOS especially, a fully backgrounded app is usually
+    // terminated outright, so `load` firing on relaunch is the only
+    // reliable moment this app ever gets to ask "is there a new version?" —
+    // waiting out the rest of a since-elapsed interval, or a visibility/
+    // focus event that may not even fire on a fresh launch, could otherwise
+    // delay detection far longer than necessary.
+    checkForUpdate();
     setInterval(checkForUpdate, SW_UPDATE_CHECK_INTERVAL_MS);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') checkForUpdate();
