@@ -2,10 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Clock, Plus, X, Pencil, Trash2, Bell } from 'lucide-react';
 import { ReminderService, formatTime12h, REMINDER_CATEGORY_ICONS } from '../../services/reminderService';
+import { REMINDER_COMPLETED_EVENT } from '../../services/reminderAlertEngine';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import Magnetic from '../common/Magnetic';
 import { useTranslation } from '../../hooks/useTranslation';
 import { SkeletonList } from '../common/Skeleton';
+import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
 
 const categoryLabelKeys = { Medication: 'categoryMedication', Meals: 'categoryMeals', Activity: 'categoryActivity', Family: 'categoryFamilyCall' };
 const categories = Object.keys(REMINDER_CATEGORY_ICONS);
@@ -46,6 +48,17 @@ export default function RemindersView({ session, onBack }) {
   useEffect(() => {
     loadReminders();
   }, [loadReminders]);
+
+  // The reminder alert (mounted app-wide) marks a reminder complete
+  // straight through ReminderService — this re-fetches so a completion
+  // acknowledged from the popup shows up here too, without a page reload.
+  useEffect(() => {
+    const onCompleted = (event) => {
+      if (event.detail?.ownerId === session?.id) loadReminders();
+    };
+    window.addEventListener(REMINDER_COMPLETED_EVENT, onCompleted);
+    return () => window.removeEventListener(REMINDER_COMPLETED_EVENT, onCompleted);
+  }, [session?.id, loadReminders]);
 
   const completedCount = items.filter((i) => i.isCompleted).length;
 
@@ -297,6 +310,8 @@ export default function RemindersView({ session, onBack }) {
       {items.length > 0 && (
         <div className="progress-track my-6"><div className="progress-fill" style={{ width: `${(completedCount / items.length) * 100}%` }} /></div>
       )}
+
+      <NotificationPermissionBanner />
 
       {!isLoading && !(loadError && items.length === 0) && (
         <div className="flex justify-end mb-4">

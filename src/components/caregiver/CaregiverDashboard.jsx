@@ -6,11 +6,13 @@ import RoutineManager from './RoutineManager';
 import ConnectElderPanel from './ConnectElderPanel';
 import ElderLocationView from './ElderLocationView';
 import { ReminderService } from '../../services/reminderService';
+import { REMINDER_COMPLETED_EVENT } from '../../services/reminderAlertEngine';
 import { MemoryService } from '../../services/memoryService';
 import { CaregiverConnectionService } from '../../services/caregiverConnectionService';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { pageTransition } from '../common/pageTransition';
 import UserAvatar from '../common/UserAvatar';
+import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
 import { useTranslation } from '../../hooks/useTranslation';
 import { BarChart3, Lightbulb, Bell, ShieldAlert, Link2, Users, MapPin } from 'lucide-react';
 
@@ -84,6 +86,18 @@ export default function CaregiverDashboard({ session }) {
   useEffect(() => {
     loadRoutines();
   }, [loadRoutines]);
+
+  // The reminder alert (mounted app-wide) marks a reminder complete straight
+  // through ReminderService — this re-fetches so a completion acknowledged
+  // from the popup (which can appear over this dashboard for any connected
+  // elder, not just the one currently selected) shows up here too.
+  useEffect(() => {
+    const onCompleted = (event) => {
+      if (event.detail?.ownerId === activeUserId) loadRoutines();
+    };
+    window.addEventListener(REMINDER_COMPLETED_EVENT, onCompleted);
+    return () => window.removeEventListener(REMINDER_COMPLETED_EVENT, onCompleted);
+  }, [activeUserId, loadRoutines]);
 
   useEffect(() => {
     if (!activeUserId) {
@@ -195,16 +209,19 @@ export default function CaregiverDashboard({ session }) {
             {activeTab === 'analytics' && <CognitiveAnalytics />}
             {activeTab === 'routines' && (
               connectedElder ? (
-                <RoutineManager
-                  session={session}
-                  userName={displayName}
-                  routines={routines}
-                  setRoutines={setRoutines}
-                  isLoading={isLoadingRoutines}
-                  loadError={routinesError}
-                  onRetry={loadRoutines}
-                  readOnly
-                />
+                <>
+                  <NotificationPermissionBanner />
+                  <RoutineManager
+                    session={session}
+                    userName={displayName}
+                    routines={routines}
+                    setRoutines={setRoutines}
+                    isLoading={isLoadingRoutines}
+                    loadError={routinesError}
+                    onRetry={loadRoutines}
+                    readOnly
+                  />
+                </>
               ) : noElderNotice
             )}
             {activeTab === 'location' && (

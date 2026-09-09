@@ -1540,6 +1540,182 @@ a { color: inherit; }
     border-top: 1px solid var(--hairline);
   }
   .admin-status-row:first-of-type { border-top: none; }
+
+  /* ─── REMINDER ALERT ─────────────────────────────────────────── */
+  /* The pulse below has no animation-fill-mode, so the global
+     prefers-reduced-motion rule (which forces every animation's duration
+     and iteration-count down to effectively nothing) makes it play once,
+     near-instantly, and then simply fall back to these base — already
+     high-contrast, non-pulsing — border/shadow values. That's the "static
+     high-contrast alert" the brief asks for, with no extra media query. */
+  .reminder-alert-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: var(--overlay-scrim);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+      max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  }
+
+  .reminder-alert-card {
+    width: 100%;
+    max-width: 25rem;
+    max-height: 100%;
+    overflow-y: auto;
+    background: var(--canvas-raised);
+    border: 2px solid var(--alert);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 2rem 1.5rem 1.75rem;
+    text-align: center;
+    animation: reminder-alert-pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes reminder-alert-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(217, 85, 63, 0.5), var(--shadow-lg); border-color: var(--alert); }
+    50% { box-shadow: 0 0 0 16px rgba(217, 85, 63, 0), var(--shadow-lg); border-color: var(--ember); }
+  }
+
+  .reminder-alert-icon-ring {
+    display: grid;
+    place-items: center;
+    width: 5.25rem;
+    height: 5.25rem;
+    margin: 0 auto 1.1rem;
+    border-radius: var(--radius-full);
+    background: var(--alert-soft);
+    font-size: 2.5rem;
+    line-height: 1;
+    animation: reminder-alert-icon-pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes reminder-alert-icon-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  .reminder-alert-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--alert);
+  }
+
+  .reminder-alert-title {
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: 1.6rem;
+    line-height: 1.2;
+    margin-top: 0.5rem;
+  }
+  @media (min-width: 400px) { .reminder-alert-title { font-size: 1.85rem; } }
+
+  .reminder-alert-notes {
+    font-size: 1rem;
+    color: var(--ink-soft);
+    margin-top: 0.6rem;
+    line-height: 1.4;
+  }
+
+  .reminder-alert-time {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 1.1rem;
+  }
+
+  .reminder-alert-owner {
+    display: inline-block;
+    margin-top: 0.6rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: var(--radius-full);
+    background: var(--hairline);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+
+  .reminder-alert-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+  }
+
+  .reminder-alert-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    border: 1px solid transparent;
+    transition: transform var(--t-fast) var(--ease-spring), box-shadow var(--t-base) var(--ease);
+  }
+  .reminder-alert-btn:active { transform: scale(0.96); }
+
+  .reminder-alert-btn-done {
+    min-height: 64px;
+    font-size: 1.15rem;
+    background: var(--jade);
+    color: #072019;
+    box-shadow: var(--shadow-jade);
+  }
+  .reminder-alert-btn-done:hover { background: #5cc09d; }
+
+  .reminder-alert-btn-snooze {
+    min-height: 56px;
+    font-size: 1rem;
+    background: transparent;
+    border-color: var(--hairline-strong);
+    color: var(--ink);
+  }
+  .reminder-alert-btn-snooze:hover { border-color: var(--ink); background: rgba(255, 255, 255, 0.04); }
+
+  .reminder-alert-snooze-options {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .reminder-alert-snooze-chip {
+    flex: 1;
+    min-height: 48px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--hairline-strong);
+    background: transparent;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 0.88rem;
+    transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+  }
+  .reminder-alert-snooze-chip:hover { border-color: var(--ember); background: var(--ember-soft); }
+
+  .reminder-alert-sound-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    border: 1px dashed var(--hairline-strong);
+    background: transparent;
+    color: var(--ink-faint);
+    font-size: 0.82rem;
+    font-weight: 600;
+    min-height: 44px;
+  }
+  .reminder-alert-sound-hint:hover { color: var(--ink); border-color: var(--ink-soft); }
 }
 
 @media (prefers-reduced-motion: reduce) {
