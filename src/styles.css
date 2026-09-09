@@ -1068,31 +1068,11 @@ a { color: inherit; }
     gap: 0.35rem;
   }
 
-  .gp-seq { display: flex; align-items: center; gap: 0.3rem; overflow: hidden; max-width: 100%; min-width: 0; }
-  .gp-seq-chip {
-    padding: 0.35rem 0.6rem;
-    border-radius: var(--radius-full);
-    border: 1px solid var(--hairline-strong);
-    background: var(--canvas-raised);
-    font-size: 0.6rem;
-    font-weight: 600;
-    color: var(--ink-soft);
-    white-space: nowrap;
-    max-width: 5rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 1;
-    min-width: 0;
-  }
-  .game-preview-lg .gp-seq-chip { max-width: 6rem; }
-  @media (min-width: 480px) { .gp-seq-chip { font-size: 0.64rem; max-width: 7.5rem; padding: 0.4rem 0.7rem; } .game-preview-lg .gp-seq-chip { max-width: 8rem; } }
-  @media (min-width: 640px) { .game-preview-lg .gp-seq-chip { font-size: 0.72rem; max-width: 10rem; padding: 0.55rem 0.9rem; } }
-
   .gp-split { display: flex; align-items: center; gap: 0.7rem; }
   .gp-split-grid { display: grid; grid-template-columns: repeat(2, var(--gp-size)); gap: 0.3rem; }
   .gp-split-divider { font-size: 1.1rem; color: var(--ink-faint); flex-shrink: 0; }
 
-  /* Generic slot/tile used by trail, sequence, market and scene grids */
+  /* Generic slot/tile used by trail, market and scene grids */
   .cog-slot {
     aspect-ratio: 1;
     border-radius: var(--radius-md);
@@ -1117,21 +1097,28 @@ a { color: inherit; }
   .cog-slot-icon { font-size: 1.6rem; line-height: 1; }
   .cog-slot-label { font-size: 0.68rem; font-weight: 600; text-align: center; color: var(--ink-soft); padding: 0 0.35rem; }
 
-  /* Draggable sequence card (Heritage Sequence) */
-  .seq-card {
+  /* Full-screen 3-2-1 countdown shown before every game (re)start. Portal'd
+     to document.body (see Countdown.jsx) so this fixed positioning is
+     always relative to the true viewport, never an animated ancestor. */
+  .game-countdown-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
     display: flex;
     align-items: center;
-    gap: 0.85rem;
-    padding: 0.9rem 1.1rem;
-    border-radius: var(--radius-md);
-    border: 1.5px solid var(--hairline-strong);
-    background: var(--canvas-raised);
-    cursor: grab;
-    transition: border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease);
+    justify-content: center;
+    background: var(--overlay-scrim);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
-  .seq-card:active { cursor: grabbing; }
-  .seq-card.is-dragging { border-color: var(--ember); box-shadow: var(--shadow-md); }
-  .seq-card.is-correct-slot { border-color: var(--jade); background: var(--jade-soft); }
+  .game-countdown-number {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(6rem, 28vw, 11rem);
+    line-height: 1;
+    color: var(--ember);
+    text-shadow: 0 0 60px var(--ember-soft);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

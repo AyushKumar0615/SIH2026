@@ -3,12 +3,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import MemoryTrailGame from '../games/MemoryTrailGame';
 import CulturalGridGame from '../games/CulturalGridGame';
 import MemoryMarketGame from '../games/MemoryMarketGame';
-import HeritageSequenceGame from '../games/HeritageSequenceGame';
 import WhatChangedGame from '../games/WhatChangedGame';
 import GameIntro from '../games/shared/GameIntro';
 import GameResult from '../games/shared/GameResult';
 import CategoryFilter from '../games/shared/CategoryFilter';
 import GameCard, { FeaturedGameCard } from '../games/shared/GameCard';
+import Countdown from '../games/shared/Countdown';
 import { pageTransition } from '../common/pageTransition';
 import { useTranslation } from '../../hooks/useTranslation';
 import confetti from 'canvas-confetti';
@@ -36,13 +36,6 @@ const GAME_DEFS = [
     Component: MemoryMarketGame
   },
   {
-    id: 'sequence', titleKey: 'gameSequenceTitle', category: 'Orientation', icon: '📜',
-    skillKey: 'gameSequenceSkill', estimatedMinutes: 5,
-    descriptionKey: 'gameSequenceDesc',
-    howItWorksKeys: ['gameSequenceHow1', 'gameSequenceHow2', 'gameSequenceHow3'],
-    Component: HeritageSequenceGame
-  },
-  {
     id: 'changed', titleKey: 'gameChangedTitle', category: 'Attention', icon: '👁️',
     skillKey: 'gameChangedSkill', estimatedMinutes: 4,
     descriptionKey: 'gameChangedDesc',
@@ -53,13 +46,12 @@ const GAME_DEFS = [
 
 const CATEGORY_LABEL_KEYS = {
   Memory: 'gameCategoryMemory',
-  Attention: 'gameCategoryAttention',
-  Orientation: 'gameCategoryOrientation'
+  Attention: 'gameCategoryAttention'
 };
 
 export default function GameShell({ onBack }) {
   const { t } = useTranslation();
-  const [view, setView] = useState('library'); // library | intro | playing | result
+  const [view, setView] = useState('library'); // library | intro | countdown | playing | result
   const [activeGameId, setActiveGameId] = useState(null);
   const [result, setResult] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
@@ -81,7 +73,11 @@ export default function GameShell({ onBack }) {
   const activeGame = translatedGames.find((g) => g.id === activeGameId);
 
   const openIntro = (game) => { setActiveGameId(game.id); setView('intro'); };
-  const startGame = () => setView('playing');
+  // Every game (re)start goes through the countdown first — GameIntro's
+  // "Start" button and GameResult's "Play Again" both call this same
+  // function, so there's one choke point rather than duplicated logic.
+  const startGame = () => setView('countdown');
+  const beginPlaying = () => setView('playing');
   const exitToLibrary = () => { setActiveGameId(null); setResult(null); setView('library'); };
 
   const handleFinishGame = (sessionData) => {
@@ -119,6 +115,10 @@ export default function GameShell({ onBack }) {
         onBack={exitToLibrary}
       />
     );
+  } else if (view === 'countdown' && activeGame) {
+    // No game UI is mounted at all while this is showing, so there's
+    // nothing for the player to interact with until it completes.
+    content = <Countdown onComplete={beginPlaying} />;
   } else if (view === 'playing' && activeGame) {
     const GameComponent = activeGame.Component;
     content = <GameComponent onFinishGame={handleFinishGame} onBack={exitToLibrary} />;
@@ -176,7 +176,13 @@ export default function GameShell({ onBack }) {
     );
   }
 
-  const viewKey = view === 'library' ? 'library' : `${view}-${activeGameId}`;
+  // intro/countdown/playing intentionally share one key: they're all the
+  // same "session" for a given game, so hopping between them (starting the
+  // countdown, then the game right after it finishes) is an instant content
+  // swap with no extra page-transition fade layered on top — only entering
+  // the session (library -> intro) and leaving it (playing -> result,
+  // result -> library) get the animated transition.
+  const viewKey = view === 'library' ? 'library' : view === 'result' ? `result-${activeGameId}` : `session-${activeGameId}`;
 
   return (
     <AnimatePresence mode="wait">

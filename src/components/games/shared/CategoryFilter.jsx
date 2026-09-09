@@ -1,20 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LayoutGrid, Brain, Eye, Compass } from 'lucide-react';
+import { LayoutGrid, Brain, Eye } from 'lucide-react';
 import { useTranslation } from '../../../hooks/useTranslation';
 
 const CATEGORY_ICONS = {
   all: LayoutGrid,
   Memory: Brain,
-  Attention: Eye,
-  Orientation: Compass
+  Attention: Eye
 };
 
 const CATEGORY_LABEL_KEYS = {
   all: 'categoryAll',
   Memory: 'gameCategoryMemory',
-  Attention: 'gameCategoryAttention',
-  Orientation: 'gameCategoryOrientation'
+  Attention: 'gameCategoryAttention'
 };
 
 export default function CategoryFilter({ categories, active, onChange }) {

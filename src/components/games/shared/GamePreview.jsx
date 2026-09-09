@@ -1,7 +1,6 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
-import { CULTURAL_ITEMS, MARKET_ITEMS, HERITAGE_SEQUENCES } from '../../../data/culturalContent';
-import { useTranslation } from '../../../hooks/useTranslation';
+import { CULTURAL_ITEMS, MARKET_ITEMS } from '../../../data/culturalContent';
 
 // Purely decorative, static previews of each game's mechanic for the Game
 // Library cards/featured panel/intro screen. These read fixed slices of the
@@ -14,7 +13,6 @@ function findItems(ids) {
 const TRAIL_SAMPLE = findItems(['hampi', 'diwali', 'pattachitra']);
 const GRID_SAMPLE = findItems(['jaapi', 'warli', 'tabla', 'sweets', 'diwali', 'konark', 'kalamkari', 'bihu']);
 const MARKET_SAMPLE = MARKET_ITEMS.slice(0, 4);
-const SEQUENCE_SAMPLE = HERITAGE_SEQUENCES[0].steps.slice(0, 3);
 const CHANGE_BEFORE = findItems(['taj', 'onam', 'pottery', 'veena']);
 
 function TrailPreview() {
@@ -52,20 +50,6 @@ function MarketPreview() {
   );
 }
 
-function SequencePreview() {
-  const { t } = useTranslation();
-  return (
-    <div className="gp-seq">
-      {SEQUENCE_SAMPLE.map((step, idx) => (
-        <React.Fragment key={step.id}>
-          {idx > 0 && <ArrowRight className="gp-arrow shrink-0" />}
-          <span className="gp-seq-chip">{t(step.labelKey)}</span>
-        </React.Fragment>
-      ))}
-    </div>
-  );
-}
-
 function ChangePreview() {
   return (
     <div className="gp-split">
@@ -86,7 +70,6 @@ const PREVIEWS = {
   trail: TrailPreview,
   grid: GridPreview,
   market: MarketPreview,
-  sequence: SequencePreview,
   changed: ChangePreview
 };
 

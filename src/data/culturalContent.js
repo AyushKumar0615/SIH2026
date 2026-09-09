@@ -86,60 +86,6 @@ export const MARKET_ITEMS = [
   { id: 'veena', nameKey: 'miVeena', icon: '🎻' }
 ];
 
-// ─── Heritage Sequence — curated, objectively-ordered rounds ──────────────
-export const HERITAGE_SEQUENCES = [
-  {
-    id: 'festival-year',
-    titleKey: 'seqFestivalYearTitle',
-    promptKey: 'seqFestivalYearPrompt',
-    steps: [
-      { id: 'seq-sankranti', labelKey: 'seqSankrantiLabel', noteKey: 'seqSankrantiNote' },
-      { id: 'seq-holi', labelKey: 'seqHoliLabel', noteKey: 'seqHoliNote' },
-      { id: 'seq-bihu', labelKey: 'seqBihuLabel', noteKey: 'seqBihuNote' },
-      { id: 'seq-onam', labelKey: 'seqOnamLabel', noteKey: 'seqOnamNote' },
-      { id: 'seq-durgapuja', labelKey: 'seqDurgapujaLabel', noteKey: 'seqDurgapujaNote' },
-      { id: 'seq-diwali', labelKey: 'seqDiwaliLabel', noteKey: 'seqDiwaliNote' }
-    ]
-  },
-  {
-    id: 'pattachitra-craft',
-    titleKey: 'seqPattachitraCraftTitle',
-    promptKey: 'seqPattachitraCraftPrompt',
-    steps: [
-      { id: 'seq-canvas', labelKey: 'seqCanvasLabel' },
-      { id: 'seq-chalk', labelKey: 'seqChalkLabel' },
-      { id: 'seq-sketch', labelKey: 'seqSketchLabel' },
-      { id: 'seq-color', labelKey: 'seqColorLabel' },
-      { id: 'seq-lacquer', labelKey: 'seqLacquerLabel' }
-    ]
-  },
-  {
-    id: 'india-journey',
-    titleKey: 'seqIndiaJourneyTitle',
-    promptKey: 'seqIndiaJourneyPrompt',
-    steps: [
-      { id: 'seq-gateway', labelKey: 'seqGatewayLabel', noteKey: 'seqGatewayNote' },
-      { id: 'seq-sanchi', labelKey: 'seqSanchiLabel', noteKey: 'seqSanchiNote' },
-      { id: 'seq-taj', labelKey: 'seqTajLabel', noteKey: 'seqTajNote' },
-      { id: 'seq-khajuraho', labelKey: 'seqKhajurahoLabel', noteKey: 'seqKhajurahoNote' },
-      { id: 'seq-konark', labelKey: 'seqKonarkLabel', noteKey: 'seqKonarkNote' },
-      { id: 'seq-kaziranga', labelKey: 'seqKazirangaLabel', noteKey: 'seqKazirangaNote' }
-    ]
-  },
-  {
-    id: 'weaving-craft',
-    titleKey: 'seqWeavingCraftTitle',
-    promptKey: 'seqWeavingCraftPrompt',
-    steps: [
-      { id: 'seq-fibre', labelKey: 'seqFibreLabel' },
-      { id: 'seq-dye', labelKey: 'seqDyeLabel' },
-      { id: 'seq-warp', labelKey: 'seqWarpLabel' },
-      { id: 'seq-weave', labelKey: 'seqWeaveLabel' },
-      { id: 'seq-finish', labelKey: 'seqFinishLabel' }
-    ]
-  }
-];
-
 // ─── Progressive difficulty ladder shared by every game ───────────────────
 export const DIFFICULTY_LEVELS = [
   { level: 1, labelKey: 'difficultyLevelFamiliar' },
