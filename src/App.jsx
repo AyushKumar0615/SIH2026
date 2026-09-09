@@ -108,26 +108,28 @@ export default function App() {
     <MotionConfig reducedMotion="user">
     <LanguageProvider lang={currentLang}>
     <div className={`app-shell ${fontSize === 'lg' ? 'font-scale-lg' : fontSize === 'xl' ? 'font-scale-xl' : ''}`}>
-      <Header
-        currentMode={currentMode}
-        setCurrentMode={setCurrentMode}
-        onLogoClick={goHome}
-        currentLang={currentLang}
-        setCurrentLang={setCurrentLang}
-        currentState={currentState}
-        setCurrentState={setCurrentState}
-        highContrast={highContrast}
-        setHighContrast={setHighContrast}
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-        session={session}
-        onLogout={handleLogout}
-        onSessionUpdate={setSession}
-      />
+      {currentMode !== 'admin' && (
+        <Header
+          currentMode={currentMode}
+          setCurrentMode={setCurrentMode}
+          onLogoClick={goHome}
+          currentLang={currentLang}
+          setCurrentLang={setCurrentLang}
+          currentState={currentState}
+          setCurrentState={setCurrentState}
+          highContrast={highContrast}
+          setHighContrast={setHighContrast}
+          fontSize={fontSize}
+          setFontSize={setFontSize}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          session={session}
+          onLogout={handleLogout}
+          onSessionUpdate={setSession}
+        />
+      )}
 
-      <main className="flex-1 pb-24">
+      <main className={currentMode === 'admin' ? 'flex-1' : 'flex-1 pb-24'}>
         <AnimatePresence mode="wait">
           {currentMode === 'elderly' && (
             <motion.div key={`elderly-home-${homeResetKey}`} {...pageTransition}>
@@ -146,7 +148,7 @@ export default function App() {
           {currentMode === 'admin' && (
             <motion.div key="admin" {...pageTransition}>
               <RequireRole session={session} mode="admin" onDenied={redirectToRoleHome}>
-                <AdminPortal />
+                <AdminPortal session={session} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} />
               </RequireRole>
             </motion.div>
           )}
