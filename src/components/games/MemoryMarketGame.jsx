@@ -153,7 +153,7 @@ export default function MemoryMarketGame({ onFinishGame, onBack }) {
       {phase === 'view' && (
         <div className="text-center mb-4">
           <span className="eyebrow eyebrow-jade justify-center">{t('marketObserveEyebrow')}</span>
-          <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('marketObserveHintPrefix')} {viewLeft}{t('secondsUnit')}</p>
+          <p className="text-sm mt-2 text-ink-faint">{t('marketObserveHintPrefix')} {viewLeft}{t('secondsUnit')}</p>
         </div>
       )}
       {phase === 'transition' && (
@@ -207,7 +207,7 @@ export default function MemoryMarketGame({ onFinishGame, onBack }) {
 
       <div className="flex justify-center mt-6"><FeedbackState state={feedback} correctText={t('correctExclamationLabel')} incorrectText={`${t('itWasLabel')} ${t(correctItem.nameKey)}`} /></div>
 
-      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
+      <p className="text-center text-xs font-semibold mt-8 text-ink-faint">{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
     </div>
   );
 }

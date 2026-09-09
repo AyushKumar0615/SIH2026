@@ -79,7 +79,7 @@ export default function Header({
           <button type="button" className="mark-btn" onClick={onLogoClick}>
             <span className="mark-glyph"><Feather className="w-4 h-4" /></span>
             <span className="hidden sm:flex items-center h-10 px-4 rounded-full leading-none" style={{ background: 'rgba(19, 17, 16, 0.35)', border: '1px solid var(--hairline-strong)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
-              <span className="font-display font-semibold text-base">Smriti<em className="italic" style={{ color: 'var(--ember)' }}>Setu</em></span>
+              <span className="font-display font-semibold text-base">Smriti<em className="italic text-ember">Setu</em></span>
             </span>
           </button>
         </Magnetic>
@@ -150,7 +150,7 @@ export default function Header({
                         <Icon className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
                         <span className="min-w-0">
                           <span className="font-display font-semibold text-2xl md:text-4xl block leading-tight">{t(mode.labelKey)}</span>
-                          <span className="text-xs md:text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t(mode.descKey)}</span>
+                          <span className="text-xs md:text-sm block mt-0.5 text-ink-faint">{t(mode.descKey)}</span>
                         </span>
                       </span>
                       <ArrowUpRight className="w-5 h-5 shrink-0" />
@@ -210,8 +210,7 @@ export default function Header({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
-                  className="mt-10 md:mt-14 pt-6 hairline-top"
-                  style={{ borderTop: '1px solid var(--hairline)' }}
+                  className="mt-10 md:mt-14 pt-6 hairline-top border-t border-hairline"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <button
@@ -229,7 +228,7 @@ export default function Header({
                       />
                       <span className="min-w-0">
                         <span className="text-sm font-semibold block truncate">{session.fullName}</span>
-                        <span className="text-xs block truncate capitalize" style={{ color: 'var(--ink-faint)' }}>{t((MODES.find((m) => m.id === session.role) || MODES[0]).labelKey)} · {t('changePhoto')}</span>
+                        <span className="text-xs block truncate capitalize text-ink-faint">{t((MODES.find((m) => m.id === session.role) || MODES[0]).labelKey)} · {t('changePhoto')}</span>
                       </span>
                     </button>
                     <button type="button" onClick={onLogout} className="btn btn-quiet shrink-0">

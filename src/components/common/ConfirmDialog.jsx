@@ -29,16 +29,13 @@ export default function ConfirmDialog({ isOpen, title, message, confirmLabel, is
               <h3 className="font-display text-2xl font-medium">{title}</h3>
               <p className="text-sm mt-2 leading-relaxed" style={{ color: 'rgba(23,20,15,0.65)' }}>{message}</p>
               <div className="flex justify-end gap-3 mt-7">
-                <button type="button" onClick={onCancel} className="btn btn-line" style={{ color: 'var(--paper-ink)', borderColor: 'var(--paper-line)' }}>
+                <button type="button" onClick={onCancel} className="btn btn-line btn-line-on-light">
                   {t('cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={onConfirm}
-                  className="btn"
-                  style={isDanger
-                    ? { background: 'var(--alert)', color: '#fff' }
-                    : { background: 'var(--paper-ink)', color: 'var(--paper)' }}
+                  className={`btn ${isDanger ? 'btn-danger' : 'btn-on-light'}`}
                 >
                   {confirmLabel}
                 </button>

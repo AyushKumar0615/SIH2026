@@ -71,7 +71,7 @@ export default function AuthPortal({ onAuthenticated, theme, onToggleTheme }) {
             <br />
             bridge back to
             <br />
-            <em className="italic" style={{ color: 'var(--ember)' }}>memory.</em>
+            <em className="italic text-ember">memory.</em>
           </motion.h1>
 
           <motion.div
@@ -80,7 +80,7 @@ export default function AuthPortal({ onAuthenticated, theme, onToggleTheme }) {
             transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
             className="glass rounded-[var(--radius-lg)] p-7 md:p-8 w-full max-w-md lg:ml-auto"
           >
-            <div className="flex gap-6 mb-6" style={{ borderBottom: '1px solid var(--hairline)' }}>
+            <div className="flex gap-6 mb-6 border-b border-hairline">
               {['login', 'register'].map((tab) => (
                 <button
                   key={tab}
@@ -97,7 +97,7 @@ export default function AuthPortal({ onAuthenticated, theme, onToggleTheme }) {
             </div>
 
             {error ? (
-              <div className="notice-strip is-alert mb-5 text-sm" style={{ color: 'var(--alert)' }} role="alert">{error}</div>
+              <div className="notice-strip is-alert mb-5 text-sm text-alert" role="alert">{error}</div>
             ) : null}
 
             <AnimatePresence mode="wait">
@@ -120,7 +120,7 @@ export default function AuthPortal({ onAuthenticated, theme, onToggleTheme }) {
                     <input type="password" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} className="input" placeholder="••••••••" required />
                   </div>
                   <Magnetic strength={0.15} className="block">
-                    <button type="submit" disabled={isSubmitting} className="btn btn-ember w-full mt-2">
+                    <button type="submit" disabled={isSubmitting} className={`btn btn-ember w-full mt-2 ${isSubmitting ? 'is-loading' : ''}`}>
                       <LockKeyhole className="w-4 h-4" /> {t('enterWorkspace')}
                     </button>
                   </Magnetic>
@@ -179,7 +179,7 @@ export default function AuthPortal({ onAuthenticated, theme, onToggleTheme }) {
                     />
                   </div>
                   <Magnetic strength={0.15} className="block">
-                    <button type="submit" disabled={isSubmitting} className="btn btn-ember w-full mt-2">
+                    <button type="submit" disabled={isSubmitting} className={`btn btn-ember w-full mt-2 ${isSubmitting ? 'is-loading' : ''}`}>
                       <UserPlus className="w-4 h-4" /> {t('createAccount')}
                     </button>
                   </Magnetic>
@@ -190,8 +190,7 @@ export default function AuthPortal({ onAuthenticated, theme, onToggleTheme }) {
             <button
               type="button"
               onClick={() => { setActiveTab(activeTab === 'login' ? 'register' : 'login'); setError(''); }}
-              className="mt-6 text-sm font-medium inline-flex items-center gap-1"
-              style={{ color: 'var(--ink-faint)' }}
+              className="mt-6 text-sm font-medium inline-flex items-center gap-1 text-ink-faint"
             >
               {activeTab === 'login' ? t('needAccountRegister') : t('alreadyRegisteredSignIn')}
               <ArrowRight className="w-3.5 h-3.5" />

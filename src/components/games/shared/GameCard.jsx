@@ -13,9 +13,9 @@ export function FeaturedGameCard({ game, onPlay }) {
         <div>
           <span className="eyebrow eyebrow-jade">{t('featuredExerciseLabel')} · {game.categoryLabel}</span>
           <h3 className="font-display text-3xl sm:text-4xl font-medium mt-3 leading-[1.05]">{game.title}</h3>
-          <p className="text-sm sm:text-[0.95rem] mt-3 leading-relaxed max-w-md" style={{ color: 'var(--ink-faint)' }}>{game.description}</p>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5 text-xs font-semibold" style={{ color: 'var(--ink-soft)' }}>
-            <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" style={{ color: 'var(--ember)' }} /> {game.skill}</span>
+          <p className="text-sm sm:text-[0.95rem] mt-3 leading-relaxed max-w-md text-ink-faint">{game.description}</p>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5 text-xs font-semibold text-ink-soft">
+            <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-ember" /> {game.skill}</span>
             <span className="flex items-center gap-1.5"><Gauge className="w-3.5 h-3.5" /> {game.difficultyText}</span>
             <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {game.estimatedMinutes} {t('minLabel')}</span>
           </div>
@@ -46,16 +46,16 @@ export default function GameCard({ game, onPlay }) {
       </div>
 
       <span className="font-display text-xl font-medium block mt-3 leading-tight">{game.title}</span>
-      <span className="pin flex items-center gap-1.5 mt-1" style={{ color: 'var(--ink-faint)' }}>
-        {game.categoryLabel} <span style={{ color: 'var(--hairline-strong)' }}>·</span> {game.skill}
+      <span className="pin flex items-center gap-1.5 mt-1 text-ink-faint">
+        {game.categoryLabel} <span className="text-hairline-strong">·</span> {game.skill}
       </span>
-      <span className="text-sm block mt-2 leading-relaxed line-clamp-2" style={{ color: 'var(--ink-faint)' }}>{game.description}</span>
+      <span className="text-sm block mt-2 leading-relaxed line-clamp-2 text-ink-faint">{game.description}</span>
 
       <div className="mt-4">
         <GamePreview gameId={game.id} size="sm" />
       </div>
 
-      <div className="flex items-center gap-4 mt-4 text-xs font-semibold" style={{ color: 'var(--ink-soft)' }}>
+      <div className="flex items-center gap-4 mt-4 text-xs font-semibold text-ink-soft">
         <span className="flex items-center gap-1.5"><Gauge className="w-3.5 h-3.5" /> {game.difficultyText}</span>
         <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {game.estimatedMinutes} {t('minLabel')}</span>
       </div>

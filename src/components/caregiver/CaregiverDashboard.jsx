@@ -125,12 +125,16 @@ export default function CaregiverDashboard({ session }) {
 
   return (
     <div ref={containerRef} className="page">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-8 scroll-reveal" style={{ borderBottom: '1px solid var(--hairline)' }}>
-        <div className="flex items-center gap-5 min-w-0">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-8 scroll-reveal border-b border-hairline">
+        {/* w-full on mobile: the parent is `items-start` in its column
+            layout, so without it this box sizes to its content and the
+            h1's `truncate` has nothing to truncate against — a long elder
+            name then runs off the right edge instead of ellipsizing. */}
+        <div className="flex items-center gap-5 min-w-0 w-full md:w-auto">
           <UserAvatar avatar={displayAvatar} fullName={displayName} className="avatar-ring w-16 h-16 rounded-full overflow-hidden object-cover shrink-0" iconClassName="w-1/3 h-1/3" />
           <div className="min-w-0">
             <h1 className="font-display text-3xl md:text-4xl font-medium mt-2 truncate">
-              {t('monitoring')} <em className="italic" style={{ color: 'var(--ember)' }}>{displayName}</em>
+              {t('monitoring')} <em className="italic text-ember">{displayName}</em>
             </h1>
             {acceptedElders.length > 1 && (
               <select
@@ -149,19 +153,19 @@ export default function CaregiverDashboard({ session }) {
 
         {connectedElder && !isLoadingRoutines && routines.length > 0 && (
           <div className="flex items-center gap-8 shrink-0">
-            <div className="figure"><span className="figure-label">{t('todayLabel')}</span><span className="figure-value" style={{ color: 'var(--jade)' }}>{completedToday}/{routines.length}</span></div>
+            <div className="figure"><span className="figure-label">{t('todayLabel')}</span><span className="figure-value text-jade">{completedToday}/{routines.length}</span></div>
           </div>
         )}
       </div>
 
       <div className="notice-strip is-ember flex items-center gap-3 my-8 scroll-reveal" data-reveal-delay="1">
-        <ShieldAlert className="w-4.5 h-4.5 shrink-0" style={{ color: 'var(--ember)' }} />
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
+        <ShieldAlert className="w-4.5 h-4.5 shrink-0 text-ember" />
+        <p className="text-sm leading-relaxed text-ink-soft">
           {t('caregiverDisclaimer')}
         </p>
       </div>
 
-      <div className="relative flex items-center gap-8 mb-10 scroll-reveal overflow-x-auto" data-reveal-delay="2" style={{ borderBottom: '1px solid var(--hairline)' }}>
+      <div className="relative flex items-center gap-8 mb-10 scroll-reveal tab-strip border-b border-hairline" data-reveal-delay="2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

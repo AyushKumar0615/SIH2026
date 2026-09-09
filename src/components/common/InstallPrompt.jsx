@@ -153,7 +153,7 @@ export default function InstallPrompt() {
                   <h2 id="pwa-install-title" className="font-display text-lg font-semibold leading-tight">
                     {t('pwaInstallTitle')}
                   </h2>
-                  <p id="pwa-install-body" className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
+                  <p id="pwa-install-body" className="text-sm mt-1.5 leading-relaxed text-ink-soft">
                     {mode === 'ios-safari' && t('pwaInstallIosBody')}
                     {mode === 'ios-other' && t('pwaInstallOtherBrowserBody')}
                     {mode === 'native' && t('pwaInstallBody')}

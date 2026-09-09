@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AdminService } from '../../services/adminService';
 import { useTranslation } from '../../hooks/useTranslation';
+import { SkeletonList } from '../common/Skeleton';
 
 // refreshSignal: bump this from a parent after a mutation elsewhere on the
 // page (e.g. activating/deactivating a user) so these counters don't go
@@ -45,10 +46,10 @@ export default function ImpactDashboard({ refreshSignal = 0 }) {
       <h2 className="font-display text-3xl md:text-4xl font-medium mt-3 mb-8">{t('regionalImpactTitle')}</h2>
 
       {isLoading ? (
-        <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('adminLoadingLabel')}</p>
+        <SkeletonList rows={2} label={t('adminLoadingLabel')} />
       ) : error ? (
         <div className="notice-strip is-alert flex items-center justify-between gap-4">
-          <p className="text-sm" style={{ color: 'var(--alert)' }}>{error}</p>
+          <p className="text-sm text-alert">{error}</p>
           <button type="button" onClick={load} className="btn btn-line shrink-0">{t('retry')}</button>
         </div>
       ) : (

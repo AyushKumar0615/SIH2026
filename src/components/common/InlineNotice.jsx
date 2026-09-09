@@ -28,7 +28,7 @@ export default function InlineNotice({ tone = 'info', message, onDismiss, autoDi
         >
           <div className={`notice-box ${TONE_CLASS[tone] || TONE_CLASS.info} flex items-center gap-3`}>
             {React.createElement(TONE_ICON[tone] || Info, { className: 'w-4.5 h-4.5 shrink-0', style: { color: TONE_COLOR[tone] || TONE_COLOR.info } })}
-            <p className="text-sm leading-relaxed" style={{ color: 'var(--ink)' }}>{message}</p>
+            <p className="text-sm leading-relaxed text-ink">{message}</p>
           </div>
         </motion.div>
       )}

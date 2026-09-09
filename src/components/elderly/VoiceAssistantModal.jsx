@@ -33,7 +33,7 @@ export default function VoiceAssistantModal({ isOpen, onClose, onOpenGame }) {
           >
             <div className="flex items-start justify-between gap-4 mb-6">
               <div>
-                <span className="eyebrow eyebrow-jade" style={{ color: 'var(--jade-deep)' }}>{t('voiceCompanion')}</span>
+                <span className="eyebrow eyebrow-jade text-jade-deep">{t('voiceCompanion')}</span>
                 <h3 className="font-display text-2xl sm:text-3xl font-medium mt-2">{t('askMeAnything')}</h3>
               </div>
               <button type="button" onClick={onClose} className="w-9 h-9 rounded-full grid place-items-center shrink-0" style={{ background: 'rgba(23,20,15,0.06)' }}>
@@ -45,12 +45,12 @@ export default function VoiceAssistantModal({ isOpen, onClose, onOpenGame }) {
               <span className="field-label" style={{ color: 'rgba(23,20,15,0.55)' }}>{t('spokenVoicePrompt')}</span>
               <div className="relative mt-1">
                 <input value={prompt} onChange={(e) => setPrompt(e.target.value)} className="input-on-light pr-9" placeholder={t('typeOrSpeakPlaceholder')} />
-                <Mic className="w-4.5 h-4.5 absolute right-0 top-1/2 -translate-y-1/2 animate-soft-pulse" style={{ color: 'var(--jade-deep)' }} />
+                <Mic className="w-4.5 h-4.5 absolute right-0 top-1/2 -translate-y-1/2 animate-soft-pulse text-jade-deep" />
               </div>
             </label>
 
             <div className="rounded-[var(--radius-md)] p-5 mb-6" style={{ background: 'rgba(23,20,15,0.04)' }}>
-              <div className="flex items-center gap-2 font-semibold text-xs uppercase tracking-wider mb-2" style={{ color: 'var(--ember-deep)' }}>
+              <div className="flex items-center gap-2 font-semibold text-xs uppercase tracking-wider mb-2 text-ember-deep">
                 <Sparkles className="w-4 h-4" /> {t('assistantResponse')}
               </div>
               <p className="text-base leading-relaxed font-medium">{answer}</p>

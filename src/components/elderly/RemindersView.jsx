@@ -5,6 +5,7 @@ import { ReminderService, formatTime12h, REMINDER_CATEGORY_ICONS } from '../../s
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import Magnetic from '../common/Magnetic';
 import { useTranslation } from '../../hooks/useTranslation';
+import { SkeletonList } from '../common/Skeleton';
 
 const categoryLabelKeys = { Medication: 'categoryMedication', Meals: 'categoryMeals', Activity: 'categoryActivity', Family: 'categoryFamilyCall' };
 const categories = Object.keys(REMINDER_CATEGORY_ICONS);
@@ -192,17 +193,24 @@ export default function RemindersView({ session, onBack }) {
               </div>
             )}
 
-            <label className="sm:col-span-3 flex items-center gap-2.5 pt-1">
-              <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="w-4 h-4" />
+            {/* Whole row is the hit area (44px min) — a 16px checkbox alone is
+                far too small a target for the elders this form is built for. */}
+            <label className="sm:col-span-3 flex items-center gap-3 pt-1 min-h-[44px] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                className="w-5 h-5 shrink-0 cursor-pointer accent-[color:var(--ember)]"
+              />
               <span className="text-sm font-medium">{t('reminderActiveLabel')}</span>
             </label>
           </div>
 
-          {formError && <div className="notice-strip is-alert mt-4 text-sm" style={{ color: 'var(--alert)' }} role="alert">{formError}</div>}
+          {formError && <div className="notice-strip is-alert mt-4 text-sm text-alert" role="alert">{formError}</div>}
 
           <div className="flex justify-end gap-3 pt-5">
             <button type="button" onClick={closeForm} className="btn btn-quiet">{t('cancel')}</button>
-            <button type="submit" disabled={isSaving} className="btn btn-ember">{isSaving ? t('savingReminder') : t('saveReminder')}</button>
+            <button type="submit" disabled={isSaving} className={`btn btn-ember ${isSaving ? 'is-loading' : ''}`}>{isSaving ? t('savingReminder') : t('saveReminder')}</button>
           </div>
         </motion.form>
       )}
@@ -211,11 +219,11 @@ export default function RemindersView({ session, onBack }) {
 
   let body;
   if (isLoading) {
-    body = <div className="py-20 text-center text-sm" style={{ color: 'var(--ink-faint)' }}>{t('remindersLoading')}</div>;
+    body = <SkeletonList rows={3} label={t('remindersLoading')} />;
   } else if (loadError && items.length === 0) {
     body = (
       <div className="notice-strip is-alert flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-        <p className="text-sm" style={{ color: 'var(--alert)' }}>{loadError}</p>
+        <p className="text-sm text-alert">{loadError}</p>
         <button type="button" onClick={loadReminders} className="btn btn-line shrink-0">{t('retry')}</button>
       </div>
     );
@@ -253,16 +261,16 @@ export default function RemindersView({ session, onBack }) {
           <div key={item.id} className="index-row !cursor-default" style={item.isCompleted ? { opacity: 0.5 } : undefined}>
             <span className="index-icon">{item.icon}</span>
             <button type="button" onClick={() => toggleComplete(item)} className="flex-1 min-w-0 text-left">
-              <span className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--ember)' }}>
+              <span className="flex items-center gap-2 text-xs font-semibold text-ember">
                 <Clock className="w-3.5 h-3.5" /> {formatTime12h(item.time)}
               </span>
               <span className={`font-display text-xl font-medium block mt-0.5 ${item.isCompleted ? 'line-through' : ''}`}>{item.title}</span>
-              {item.notes && <span className="text-sm block mt-0.5 truncate" style={{ color: 'var(--ink-faint)' }}>{item.notes}</span>}
+              {item.notes && <span className="text-sm block mt-0.5 truncate text-ink-faint">{item.notes}</span>}
             </button>
-            <button type="button" onClick={() => openEditForm(item)} className="p-2 rounded-full shrink-0" style={{ color: 'var(--ink-faint)' }} title={t('editTooltip')}>
+            <button type="button" onClick={() => openEditForm(item)} className="btn-icon shrink-0" title={t('editTooltip')} aria-label={t('editTooltip')}>
               <Pencil className="w-4 h-4" />
             </button>
-            <button type="button" onClick={() => handleDelete(item.id)} className="p-2 rounded-full shrink-0" style={{ color: 'var(--alert)' }} title={t('deleteTooltip')}>
+            <button type="button" onClick={() => handleDelete(item.id)} className="btn-icon is-danger shrink-0" title={t('deleteTooltip')} aria-label={t('deleteTooltip')}>
               <Trash2 className="w-4 h-4" />
             </button>
             <button type="button" onClick={() => toggleComplete(item)} className="shrink-0">
@@ -283,7 +291,7 @@ export default function RemindersView({ session, onBack }) {
           <span className="eyebrow">{t('dailySchedule')}</span>
           <h2 className="font-display text-3xl md:text-4xl font-medium mt-3">{t('myReminders')}</h2>
         </div>
-        {items.length > 0 && <span className="figure-value shrink-0" style={{ color: 'var(--jade)' }}>{completedCount}/{items.length}</span>}
+        {items.length > 0 && <span className="figure-value shrink-0 text-jade">{completedCount}/{items.length}</span>}
       </div>
 
       {items.length > 0 && (
@@ -292,7 +300,7 @@ export default function RemindersView({ session, onBack }) {
 
       {!isLoading && !(loadError && items.length === 0) && (
         <div className="flex justify-end mb-4">
-          <button type="button" onClick={() => (showForm ? closeForm() : openAddForm())} className="btn btn-quiet shrink-0 !px-0" style={{ color: 'var(--ember)' }}>
+          <button type="button" onClick={() => (showForm ? closeForm() : openAddForm())} className="btn btn-quiet shrink-0 !px-0 text-ember">
             {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />} {showForm ? t('close') : t('addReminder')}
           </button>
         </div>
@@ -301,7 +309,7 @@ export default function RemindersView({ session, onBack }) {
       {renderForm()}
 
       {loadError && items.length > 0 && (
-        <div className="notice-strip is-alert mb-4 text-sm" style={{ color: 'var(--alert)' }} role="alert">{loadError}</div>
+        <div className="notice-strip is-alert mb-4 text-sm text-alert" role="alert">{loadError}</div>
       )}
 
       {body}

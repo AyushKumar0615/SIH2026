@@ -9,6 +9,7 @@ import Waveform from '../common/Waveform';
 import UserAvatar from '../common/UserAvatar';
 import { resizeToDataUrl } from '../common/AvatarPicker';
 import { useTranslation } from '../../hooks/useTranslation';
+import { SkeletonCards } from '../common/Skeleton';
 
 const categories = ['All', 'Family', 'Festivals', 'Places'];
 const categoryLabelKeys = { All: 'categoryAll', Family: 'categoryFamily', Festivals: 'categoryFestivals', Places: 'categoryPlaces' };
@@ -193,11 +194,11 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
             </div>
           </div>
 
-          {formError && <div className="notice-strip is-alert mt-4 text-sm" style={{ color: 'var(--alert)' }} role="alert">{formError}</div>}
+          {formError && <div className="notice-strip is-alert mt-4 text-sm text-alert" role="alert">{formError}</div>}
 
           <div className="flex justify-end gap-3 pt-5">
             <button type="button" onClick={closeForm} className="btn btn-quiet">{t('cancel')}</button>
-            <button type="submit" disabled={isSaving} className="btn btn-ember">{isSaving ? t('savingMemory') : t('saveMemory')}</button>
+            <button type="submit" disabled={isSaving} className={`btn btn-ember ${isSaving ? 'is-loading' : ''}`}>{isSaving ? t('savingMemory') : t('saveMemory')}</button>
           </div>
         </motion.form>
       )}
@@ -207,11 +208,11 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
   let body;
 
   if (isLoading) {
-    body = <div className="py-20 text-center text-sm" style={{ color: 'var(--ink-faint)' }}>{t('memoriesLoading')}</div>;
+    body = <SkeletonCards count={4} height="11rem" label={t('memoriesLoading')} />;
   } else if (loadError) {
     body = (
       <div className="notice-strip is-alert flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-        <p className="text-sm" style={{ color: 'var(--alert)' }}>{loadError}</p>
+        <p className="text-sm text-alert">{loadError}</p>
         <button type="button" onClick={loadMemories} className="btn btn-line shrink-0">{t('retry')}</button>
       </div>
     );
@@ -272,14 +273,14 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
                 </AnimatePresence>
               ) : (
                 <div className="absolute inset-0 grid place-items-center" style={{ background: 'var(--canvas-raised)' }}>
-                  <span className="font-display text-6xl font-medium" style={{ color: 'var(--ink-faint)' }}>{activeMemory.name.charAt(0).toUpperCase()}</span>
+                  <span className="font-display text-6xl font-medium text-ink-faint">{activeMemory.name.charAt(0).toUpperCase()}</span>
                 </div>
               )}
               <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, transparent 45%, rgba(11,10,8,0.94) 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-7">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--on-photo-soft)' }}>{t(categoryLabelKeys[activeMemory.category]) || activeMemory.category}</span>
-                <h3 className="font-display text-3xl sm:text-[2.15rem] font-medium mt-1.5 leading-tight" style={{ color: 'var(--on-photo)' }}>{activeMemory.name}</h3>
-                {activeMemory.relation && <p className="text-sm font-medium mt-1" style={{ color: 'var(--jade)' }}>{activeMemory.relation}</p>}
+                <span className="text-xs font-semibold uppercase tracking-wider text-on-photo-soft">{t(categoryLabelKeys[activeMemory.category]) || activeMemory.category}</span>
+                <h3 className="font-display text-3xl sm:text-[2.15rem] font-medium mt-1.5 leading-tight text-on-photo">{activeMemory.name}</h3>
+                {activeMemory.relation && <p className="text-sm font-medium mt-1 text-jade">{activeMemory.relation}</p>}
               </div>
             </div>
 
@@ -306,14 +307,14 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
               </Magnetic>
 
               {activeMemory.description && (
-                <p className="text-base leading-relaxed max-w-prose" style={{ color: 'var(--ink-soft)' }}>{activeMemory.description}</p>
+                <p className="text-base leading-relaxed max-w-prose text-ink-soft">{activeMemory.description}</p>
               )}
 
               {activeMemory.favoriteMemory && (
                 <div className="notice-strip is-ember flex items-start gap-3">
-                  <Heart className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--ember)' }} />
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
-                    <span className="font-semibold" style={{ color: 'var(--ink)' }}>{t('specialMoment')}</span> {activeMemory.favoriteMemory}
+                  <Heart className="w-4 h-4 shrink-0 mt-0.5 text-ember" />
+                  <p className="text-sm leading-relaxed text-ink-soft">
+                    <span className="font-semibold text-ink">{t('specialMoment')}</span> {activeMemory.favoriteMemory}
                   </p>
                 </div>
               )}
@@ -329,12 +330,12 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
         >
           <div className="flex items-center justify-between mb-2">
             <span className="pin">{filteredMemories.length} {t('memoriesCountSuffix')}</span>
-            <button type="button" onClick={onOpenVoiceAssistant} className="text-xs font-semibold" style={{ color: 'var(--jade)' }}>{t('askWhoIsThis')} →</button>
+            <button type="button" onClick={onOpenVoiceAssistant} className="text-xs font-semibold text-jade">{t('askWhoIsThis')} →</button>
           </div>
 
           {filteredMemories.length === 0 ? (
             <div className="text-center py-10 space-y-4">
-              <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('noMemoriesInCategory')}</p>
+              <p className="text-sm text-ink-faint">{t('noMemoriesInCategory')}</p>
               <Magnetic strength={0.15} className="inline-block">
                 <button
                   type="button"
@@ -358,9 +359,9 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
                   <UserAvatar avatar={mem.photoUrl} fullName={mem.name} className="w-14 h-14 rounded-full object-cover shrink-0 overflow-hidden" style={{ objectPosition: '50% 28%' }} />
                   <span className="flex-1 min-w-0">
                     <span className="font-display text-lg font-medium block truncate">{mem.name}</span>
-                    <span className="text-xs block truncate" style={{ color: 'var(--ink-faint)' }}>{mem.relation}</span>
+                    <span className="text-xs block truncate text-ink-faint">{mem.relation}</span>
                   </span>
-                  <Volume2 className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-faint)' }} />
+                  <Volume2 className="w-4 h-4 shrink-0 text-ink-faint" />
                 </button>
               ))}
             </div>
@@ -380,7 +381,7 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
       </div>
 
       {!isLoading && !loadError && (
-        <div className="flex items-center justify-between gap-4 mb-8 overflow-x-auto scrollbar-none" style={{ borderBottom: '1px solid var(--hairline)' }}>
+        <div className="flex items-center justify-between gap-4 mb-8 tab-strip border-b border-hairline">
           <div className="flex items-center gap-6">
             {categories.map((cat) => (
               <button
@@ -395,7 +396,7 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
             ))}
           </div>
           {memories.length > 0 && (
-            <button type="button" onClick={() => (showAddForm ? closeForm() : setShowAddForm(true))} className="btn btn-quiet shrink-0 !px-0" style={{ color: 'var(--ember)' }}>
+            <button type="button" onClick={() => (showAddForm ? closeForm() : setShowAddForm(true))} className="btn btn-quiet shrink-0 !px-0 text-ember">
               {showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />} {showAddForm ? t('close') : t('addMemory')}
             </button>
           )}

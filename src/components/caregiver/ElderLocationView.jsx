@@ -4,9 +4,10 @@ import { formatDateTime } from '../../services/adminService';
 import { useTranslation } from '../../hooks/useTranslation';
 import LocationMap from '../common/LocationMap';
 import { MapPin, Clock, Navigation } from 'lucide-react';
+import { SkeletonBlock } from '../common/Skeleton';
+import StatusBadge, { LOCATION_STATUS_TONES } from '../common/StatusBadge';
 
 const STATUS_KEYS = { live: 'locationStatusLive', recent: 'locationStatusRecent', offline: 'locationStatusOffline' };
-const STATUS_COLORS = { live: 'var(--jade)', recent: 'var(--ember)', offline: 'var(--ink-faint)' };
 
 // Read-only for the caregiver — RLS only allows this query to return rows
 // for elders with an ACCEPTED connection to the caller, so there's no
@@ -51,13 +52,13 @@ export default function ElderLocationView({ elder }) {
   if (!elder) return null;
 
   if (isLoading) {
-    return <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('adminLoadingLabel')}</p>;
+    return <SkeletonBlock height="14rem" />;
   }
 
   if (loadError) {
     return (
       <div className="notice-strip is-alert flex items-center justify-between gap-4">
-        <p className="text-sm" style={{ color: 'var(--alert)' }}>{loadError}</p>
+        <p className="text-sm text-alert">{loadError}</p>
         <button type="button" onClick={load} className="btn btn-line shrink-0">{t('retry')}</button>
       </div>
     );
@@ -82,11 +83,10 @@ export default function ElderLocationView({ elder }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5 text-sm font-semibold" style={{ color: STATUS_COLORS[status] }}>
-          <span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS[status] }} />
+        <StatusBadge tone={LOCATION_STATUS_TONES[status]} dot pulse={status === 'live'}>
           {t(STATUS_KEYS[status])}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm" style={{ color: 'var(--ink-faint)' }}>
+        </StatusBadge>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-ink-faint">
           <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {t('lastUpdatedLabel')}: {formatDateTime(location.recorded_at)}</span>
           {typeof location.accuracy === 'number' && (
             <span className="flex items-center gap-1.5"><Navigation className="w-3.5 h-3.5" /> {t('accuracyLabel')}: {t('accuracyMetersValue').replace('{meters}', Math.round(location.accuracy))}</span>

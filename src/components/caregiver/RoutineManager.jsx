@@ -4,6 +4,7 @@ import { ReminderService, formatTime12h, REMINDER_CATEGORY_ICONS } from '../../s
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Plus, Clock, Trash2, Pencil, CheckCircle2, X, Bell } from 'lucide-react';
+import { SkeletonList } from '../common/Skeleton';
 
 const categories = Object.keys(REMINDER_CATEGORY_ICONS);
 const categoryLabelKeys = { Medication: 'categoryMedication', Meals: 'categoryMeals', Activity: 'categoryActivity', Family: 'categoryFamilyCall' };
@@ -112,11 +113,11 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
             </div>
           </div>
 
-          {formError && <div className="notice-strip is-alert mt-4 text-sm" style={{ color: 'var(--alert)' }} role="alert">{formError}</div>}
+          {formError && <div className="notice-strip is-alert mt-4 text-sm text-alert" role="alert">{formError}</div>}
 
           <div className="flex justify-end gap-3 pt-5">
             <button type="button" onClick={closeForm} className="btn btn-quiet">{t('cancel')}</button>
-            <button type="submit" disabled={isSaving} className="btn btn-ember">{isSaving ? t('savingReminder') : t('saveReminder')}</button>
+            <button type="submit" disabled={isSaving} className={`btn btn-ember ${isSaving ? 'is-loading' : ''}`}>{isSaving ? t('savingReminder') : t('saveReminder')}</button>
           </div>
         </motion.form>
       )}
@@ -129,11 +130,11 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
 
   let body;
   if (isLoading) {
-    body = <div className="py-16 text-center text-sm" style={{ color: 'var(--ink-faint)' }}>{t('remindersLoading')}</div>;
+    body = <SkeletonList rows={3} label={t('remindersLoading')} />;
   } else if (loadError && routines.length === 0) {
     body = (
       <div className="notice-strip is-alert flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-        <p className="text-sm" style={{ color: 'var(--alert)' }}>{loadError}</p>
+        <p className="text-sm text-alert">{loadError}</p>
         <button type="button" onClick={onRetry} className="btn btn-line shrink-0">{t('retry')}</button>
       </div>
     );
@@ -166,15 +167,15 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
             <div key={r.id} className="index-row !cursor-default" style={r.isCompleted ? { opacity: 0.5 } : undefined}>
               <span className="index-icon">{r.icon}</span>
               <span className="flex-1 min-w-0">
-                <span className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--ember)' }}><Clock className="w-3.5 h-3.5" /> {formatTime12h(r.time)} · {categoryLabel}</span>
+                <span className="flex items-center gap-2 text-xs font-semibold text-ember"><Clock className="w-3.5 h-3.5" /> {formatTime12h(r.time)} · {categoryLabel}</span>
                 <span className={`font-display text-lg font-medium block mt-0.5 truncate ${r.isCompleted ? 'line-through' : ''}`}>{r.title}</span>
               </span>
               {!readOnly && (
                 <>
-                  <button type="button" onClick={() => openEditForm(r)} className="p-2 rounded-full shrink-0" style={{ color: 'var(--ink-faint)' }} title={t('editTooltip')}>
+                  <button type="button" onClick={() => openEditForm(r)} className="btn-icon shrink-0" title={t('editTooltip')} aria-label={t('editTooltip')}>
                     <Pencil className="w-4.5 h-4.5" />
                   </button>
-                  <button type="button" onClick={() => handleDelete(r.id)} className="p-2 rounded-full shrink-0" style={{ color: 'var(--alert)' }} title={t('deleteTooltip')}>
+                  <button type="button" onClick={() => handleDelete(r.id)} className="btn-icon is-danger shrink-0" title={t('deleteTooltip')} aria-label={t('deleteTooltip')}>
                     <Trash2 className="w-4.5 h-4.5" />
                   </button>
                 </>
@@ -210,7 +211,7 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
       {!readOnly && renderForm()}
 
       {loadError && routines.length > 0 && (
-        <div className="notice-strip is-alert text-sm" style={{ color: 'var(--alert)' }} role="alert">{loadError}</div>
+        <div className="notice-strip is-alert text-sm text-alert" role="alert">{loadError}</div>
       )}
 
       {body}
@@ -219,7 +220,7 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
           <h4 className="font-display text-lg font-medium mb-4">{t('completionHistoryTitle')}</h4>
           {completionHistory.length === 0 ? (
-            <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('noCompletionHistoryYet')}</p>
+            <p className="text-sm text-ink-faint">{t('noCompletionHistoryYet')}</p>
           ) : (
             <div className="index-list">
               {completionHistory.map((r) => {
@@ -228,10 +229,10 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
                   <div key={r.id} className="index-row !cursor-default">
                     <span className="index-icon">{r.icon}</span>
                     <span className="flex-1 min-w-0">
-                      <span className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--ember)' }}><Clock className="w-3.5 h-3.5" /> {formatTime12h(r.time)} · {categoryLabel}</span>
+                      <span className="flex items-center gap-2 text-xs font-semibold text-ember"><Clock className="w-3.5 h-3.5" /> {formatTime12h(r.time)} · {categoryLabel}</span>
                       <span className="font-display text-lg font-medium block mt-0.5 truncate">{r.title}</span>
                     </span>
-                    <CheckCircle2 className="w-6 h-6 shrink-0" style={{ color: 'var(--jade)' }} />
+                    <CheckCircle2 className="w-6 h-6 shrink-0 text-jade" />
                   </div>
                 );
               })}

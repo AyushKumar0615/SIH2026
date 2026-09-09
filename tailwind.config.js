@@ -1,4 +1,12 @@
 /** @type {import('tailwindcss').Config} */
+
+// The CSS custom properties in src/styles.css are the single source of truth
+// for the palette — they're what repaints when the user switches to the light
+// theme or turns on high-contrast mode. These tokens point at those variables
+// rather than duplicating their hex values, so `text-ink-faint` stays correct
+// in every theme. (Duplicated hexes here previously froze utilities to the
+// dark theme, which is why components reached for inline
+// `style={{ color: 'var(--ink-faint)' }}` instead of using them.)
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
@@ -10,33 +18,67 @@ export default {
       },
       colors: {
         canvas: {
-          DEFAULT: '#131110',
-          raised: '#1B1815',
-          recessed: '#0B0A08'
+          DEFAULT: 'var(--canvas)',
+          raised: 'var(--canvas-raised)',
+          recessed: 'var(--canvas-recessed)'
         },
         ink: {
-          DEFAULT: '#F4EFE7',
-          soft: '#B7AC9E',
-          faint: '#7C7267'
+          DEFAULT: 'var(--ink)',
+          soft: 'var(--ink-soft)',
+          faint: 'var(--ink-faint)'
         },
         paper: {
-          DEFAULT: '#FBF7F0',
-          ink: '#17140F'
+          DEFAULT: 'var(--paper)',
+          ink: 'var(--paper-ink)',
+          line: 'var(--paper-line)'
         },
         ember: {
-          DEFAULT: '#E2703A',
-          deep: '#B4501F',
-          soft: '#3A2A20'
+          DEFAULT: 'var(--ember)',
+          deep: 'var(--ember-deep)',
+          soft: 'var(--ember-soft)'
         },
         jade: {
-          DEFAULT: '#4FAE8E',
-          deep: '#2F7C63',
-          soft: '#1D2C27'
+          DEFAULT: 'var(--jade)',
+          deep: 'var(--jade-deep)',
+          soft: 'var(--jade-soft)'
         },
         alert: {
-          DEFAULT: '#D9553F',
-          soft: '#3A211C'
+          DEFAULT: 'var(--alert)',
+          soft: 'var(--alert-soft)'
+        },
+        hairline: {
+          DEFAULT: 'var(--hairline)',
+          strong: 'var(--hairline-strong)'
+        },
+        // Fixed tone for captions sitting on the always-dark photo scrims in
+        // Story Mode / Memory Journal — deliberately theme-independent.
+        'on-photo': {
+          DEFAULT: 'var(--on-photo)',
+          soft: 'var(--on-photo-soft)',
+          faint: 'var(--on-photo-faint)'
         }
+      },
+      borderRadius: {
+        xs: 'var(--radius-xs)',
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)'
+      },
+      boxShadow: {
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
+        ember: 'var(--shadow-ember)',
+        jade: 'var(--shadow-jade)'
+      },
+      transitionTimingFunction: {
+        ease: 'var(--ease)',
+        spring: 'var(--ease-spring)'
+      },
+      transitionDuration: {
+        fast: '140ms',
+        base: '260ms',
+        slow: '520ms'
       }
     }
   },

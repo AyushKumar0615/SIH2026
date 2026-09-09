@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { useTranslation } from '../../hooks/useTranslation';
 import { ShieldAlert, Lightbulb, BookOpen, Bell } from 'lucide-react';
+import { SkeletonList } from '../common/Skeleton';
 
 export default function ExplainableInsightsView({ userName = 'Guest', memories = [], isLoadingMemories, routines = [], isLoadingRoutines }) {
   const { t } = useTranslation();
@@ -21,7 +22,7 @@ export default function ExplainableInsightsView({ userName = 'Guest', memories =
 
   let body;
   if (isLoading) {
-    body = <div className="py-16 text-center text-sm" style={{ color: 'var(--ink-faint)' }}>{t('loadingInsights')}</div>;
+    body = <SkeletonList rows={2} label={t('loadingInsights')} />;
   } else if (!hasData) {
     body = (
       <motion.div
@@ -46,7 +47,7 @@ export default function ExplainableInsightsView({ userName = 'Guest', memories =
               <span className="index-icon"><BookOpen className="w-4.5 h-4.5" /></span>
               <span className="flex-1 min-w-0">
                 <span className="font-display text-lg font-medium block mb-1">{t('memoryJournalActivityTitle')}</span>
-                <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>{t('memoryCountSummary').replace('{count}', memories.length)}</p>
+                <p className="text-sm text-ink-soft">{t('memoryCountSummary').replace('{count}', memories.length)}</p>
               </span>
             </div>
           )}
@@ -55,7 +56,7 @@ export default function ExplainableInsightsView({ userName = 'Guest', memories =
               <span className="index-icon"><Bell className="w-4.5 h-4.5" /></span>
               <span className="flex-1 min-w-0">
                 <span className="font-display text-lg font-medium block mb-1">{t('reminderAdherenceTitle')}</span>
-                <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>{t('reminderAdherenceSummary').replace('{completed}', completedToday).replace('{total}', routines.length)}</p>
+                <p className="text-sm text-ink-soft">{t('reminderAdherenceSummary').replace('{completed}', completedToday).replace('{total}', routines.length)}</p>
               </span>
             </div>
           )}
@@ -63,7 +64,7 @@ export default function ExplainableInsightsView({ userName = 'Guest', memories =
 
         {recentActivity.length > 0 && (
           <div>
-            <h3 className="font-display text-lg font-medium flex items-center gap-2.5 mb-5"><ShieldAlert className="w-5 h-5" style={{ color: 'var(--ember)' }} /> {t('recentActivityTitle')}</h3>
+            <h3 className="font-display text-lg font-medium flex items-center gap-2.5 mb-5"><ShieldAlert className="w-5 h-5 text-ember" /> {t('recentActivityTitle')}</h3>
             <div className="index-list">
               {recentActivity.map((item) => {
                 const Icon = item.icon;
@@ -73,7 +74,7 @@ export default function ExplainableInsightsView({ userName = 'Guest', memories =
                     <span className="flex-1 min-w-0">
                       <span className="flex items-center justify-between gap-2">
                         <span className="font-display font-medium truncate">{item.text}</span>
-                        <span className="text-[11px] font-mono shrink-0" style={{ color: 'var(--ink-faint)' }}>{new Date(item.date).toLocaleDateString()}</span>
+                        <span className="text-[11px] font-mono shrink-0 text-ink-faint">{new Date(item.date).toLocaleDateString()}</span>
                       </span>
                     </span>
                   </div>
@@ -95,8 +96,8 @@ export default function ExplainableInsightsView({ userName = 'Guest', memories =
         <div>
           <span className="eyebrow">{t('explainableAiCore')}</span>
           <h3 className="font-display text-xl md:text-2xl font-medium mt-2">{t('empiricalBaselineTitle')}</h3>
-          <p className="text-sm leading-relaxed mt-2 max-w-2xl" style={{ color: 'var(--ink-soft)' }}>
-            {t('insightIntroPrefix').replace('{name}', userName)} <strong style={{ color: 'var(--ink)' }}>{t('insightIntroBold')}</strong> {t('insightIntroSuffix')}
+          <p className="text-sm leading-relaxed mt-2 max-w-2xl text-ink-soft">
+            {t('insightIntroPrefix').replace('{name}', userName)} <strong className="text-ink">{t('insightIntroBold')}</strong> {t('insightIntroSuffix')}
           </p>
         </div>
       </div>

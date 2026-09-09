@@ -54,15 +54,15 @@ export default function StoryModeView({ onBack }) {
       <div className="fixed inset-0" style={{ background: 'linear-gradient(180deg, rgba(11,10,8,0.75) 0%, rgba(11,10,8,0.35) 40%, rgba(11,10,8,0.95) 100%)' }} />
 
       <div className="relative min-h-screen flex flex-col justify-between page !max-w-3xl">
-        <button type="button" onClick={onBack} className="btn btn-quiet !px-0 self-start" style={{ color: 'var(--on-photo)' }}><ArrowLeft className="w-4 h-4" /> {t('back')}</button>
+        <button type="button" onClick={onBack} className="btn btn-quiet !px-0 self-start text-on-photo"><ArrowLeft className="w-4 h-4" /> {t('back')}</button>
 
         <div>
-          <span className="eyebrow" style={{ color: 'var(--on-photo-soft)' }}>{t('storyLabel')} {currentIndex + 1} {t('ofLabel')} {MOCK_FAMILY_MEMORIES.length} · {categoryLabelKeys[activeStory.category] ? t(categoryLabelKeys[activeStory.category]) : activeStory.category}</span>
-          <h3 className="font-display font-medium text-[clamp(2.2rem,6vw,4rem)] leading-[0.98] mt-4" style={{ color: 'var(--on-photo)' }}>{activeStory.name}</h3>
-          <p className="text-lg mt-1" style={{ color: 'var(--ember)' }}>{activeStory.relation}</p>
-          <p className="text-lg leading-relaxed italic font-display mt-6 max-w-xl" style={{ color: 'var(--on-photo)' }}>"{activeStory.description}"</p>
-          <p className="flex items-center gap-2 text-sm font-semibold mt-3" style={{ color: 'var(--on-photo-soft)' }}>
-            <Heart className="w-4 h-4" style={{ color: 'var(--ember)' }} /> {activeStory.favoriteMemory}
+          <span className="eyebrow text-on-photo-soft">{t('storyLabel')} {currentIndex + 1} {t('ofLabel')} {MOCK_FAMILY_MEMORIES.length} · {categoryLabelKeys[activeStory.category] ? t(categoryLabelKeys[activeStory.category]) : activeStory.category}</span>
+          <h3 className="font-display font-medium text-[clamp(2.2rem,6vw,4rem)] leading-[0.98] mt-4 text-on-photo">{activeStory.name}</h3>
+          <p className="text-lg mt-1 text-ember">{activeStory.relation}</p>
+          <p className="text-lg leading-relaxed italic font-display mt-6 max-w-xl text-on-photo">"{activeStory.description}"</p>
+          <p className="flex items-center gap-2 text-sm font-semibold mt-3 text-on-photo-soft">
+            <Heart className="w-4 h-4 text-ember" /> {activeStory.favoriteMemory}
           </p>
 
           <div className="flex items-center gap-6 mt-10">

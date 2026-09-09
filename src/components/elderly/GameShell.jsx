@@ -130,7 +130,7 @@ export default function GameShell({ onBack }) {
             <div>
               <span className="eyebrow">{t('cognitiveExercises')}</span>
               <h2 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98] max-w-xl">{t('gameLibraryHeading')}</h2>
-              <p className="text-sm mt-3 max-w-md" style={{ color: 'var(--ink-faint)' }}>{t('gameLibrarySubtext')}</p>
+              <p className="text-sm mt-3 max-w-md text-ink-faint">{t('gameLibrarySubtext')}</p>
             </div>
             <div className="flex flex-wrap items-center gap-4 sm:justify-end shrink-0">
               <CategoryFilter categories={categories} active={activeCategory} onChange={setActiveCategory} />

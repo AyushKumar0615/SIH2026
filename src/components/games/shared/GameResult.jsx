@@ -38,15 +38,15 @@ export default function GameResult({ gameName, skill, score, accuracy, bestStrea
         >
           <div>
             <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('scoreLabel')}</span>
-            <span className="figure-value" style={{ color: 'var(--paper-ink)' }}>{score}</span>
+            <span className="figure-value text-paper-ink">{score}</span>
           </div>
           <div>
             <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('accuracyLabel')}</span>
-            <span className="figure-value" style={{ color: 'var(--jade-deep)' }}>{accuracy}%</span>
+            <span className="figure-value text-jade-deep">{accuracy}%</span>
           </div>
           <div>
             <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('bestStreakLabel')}</span>
-            <span className="figure-value" style={{ color: 'var(--ember-deep)' }}>{bestStreak}</span>
+            <span className="figure-value text-ember-deep">{bestStreak}</span>
           </div>
           <div>
             <span className="figure-label" style={{ color: 'rgba(23,20,15,0.5)' }}>{t('difficultyReachedLabel')}</span>
@@ -55,7 +55,7 @@ export default function GameResult({ gameName, skill, score, accuracy, bestStrea
         </motion.div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
-          <button type="button" onClick={onPlayAgain} className="btn btn-line" style={{ color: 'var(--paper-ink)', borderColor: 'var(--paper-line)' }}>
+          <button type="button" onClick={onPlayAgain} className="btn btn-line btn-line-on-light">
             <RotateCcw className="w-4 h-4" /> {t('anotherGame')}
           </button>
           <button type="button" onClick={onBackToGames} className="btn btn-on-light">{t('returnHome')}</button>

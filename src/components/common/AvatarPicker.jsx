@@ -161,7 +161,7 @@ export default function AvatarPicker({ value, fullName, onChange }) {
             </div>
           ) : (
             <div className="space-y-3">
-              {cameraError && <p className="text-sm" style={{ color: 'var(--alert)' }}>{cameraError}</p>}
+              {cameraError && <p className="text-sm text-alert">{cameraError}</p>}
               <button type="button" onClick={handleStartCamera} className="btn btn-line whitespace-normal w-full">
                 <Camera className="w-4 h-4" /> {t('startCamera')}
               </button>
