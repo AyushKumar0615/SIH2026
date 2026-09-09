@@ -210,7 +210,7 @@ export default function CaregiverDashboard({ session }) {
             {activeTab === 'routines' && (
               connectedElder ? (
                 <>
-                  <NotificationPermissionBanner />
+                  <NotificationPermissionBanner session={session} />
                   <RoutineManager
                     session={session}
                     userName={displayName}

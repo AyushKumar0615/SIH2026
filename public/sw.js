@@ -129,3 +129,87 @@ self.addEventListener('fetch', (event) => {
   // All other same-origin requests (hashed JS/CSS bundles, etc.) are left
   // untouched so the browser's normal HTTP cache/network rules apply.
 });
+
+// ─── Reminder push notifications ──────────────────────────────────────
+// This is what lets a reminder still reach the user when the PWA is
+// backgrounded or fully closed on Android — the in-app popup
+// (src/hooks/useReminderAlerts.js) only runs while a tab/window is open, so
+// a server-side scheduler (see supabase/functions/send-reminder-push) sends
+// a Web Push message at the reminder's scheduled time, and this event is
+// what turns that into a visible Android notification. Deliberately kept in
+// this same file rather than a second service worker — there is exactly
+// one service worker for this app.
+self.addEventListener('push', (event) => {
+  let payload = { title: 'SmritiSetu Reminder', body: 'You have a reminder.' };
+  try {
+    if (event.data) payload = event.data.json();
+  } catch {
+    // Malformed/empty push payload — fall back to the generic text above
+    // rather than showing nothing at all.
+  }
+
+  const { title, body, icon, badge, tag, data } = payload;
+  event.waitUntil(
+    self.registration.showNotification(title || 'SmritiSetu Reminder', {
+      body: body || '',
+      icon: icon || '/icons/icon-192.png',
+      badge: badge || '/icons/icon-192.png',
+      tag: tag || 'smritisetu-reminder',
+      // A reminder is not a passing FYI — require an explicit dismissal on
+      // platforms that support it (Android/Chrome) instead of it silently
+      // disappearing off the notification shade before it's been seen.
+      requireInteraction: true,
+      data: data || {}
+    })
+  );
+});
+
+// Tapping the notification: focus an already-open SmritiSetu window if one
+// exists, otherwise open a new one. The in-app reminder flow (already-due
+// reminder, still not completed) picks itself back up from there via the
+// existing polling in useReminderAlerts.js — no special "resume" state is
+// needed since the reminder's own is_active/is_completed row is still the
+// single source of truth.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsList) => {
+      for (const client of clientsList) {
+        if ('focus' in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+    })
+  );
+});
+
+// Rare, but browsers can rotate a push subscription's endpoint on their own
+// (e.g. an expiring underlying token). The service worker can resubscribe
+// without needing the user's auth session, but persisting the replacement
+// to Supabase needs an authenticated client, which only an open page has —
+// so this hands the new subscription to any open page(s) via postMessage;
+// see the pushsubscriptionchange listener wired up in App.jsx.
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      const oldEndpoint = event.oldSubscription?.endpoint;
+      const applicationServerKey = event.oldSubscription?.options?.applicationServerKey;
+      if (!applicationServerKey) return;
+      try {
+        const newSubscription = await self.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey
+        });
+        const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        clientsList.forEach((client) => {
+          client.postMessage({ type: 'PUSH_SUBSCRIPTION_CHANGED', oldEndpoint, subscription: newSubscription.toJSON() });
+        });
+      } catch {
+        // Nothing more this worker can do without a live page — the next
+        // time the user opens the app and re-enables notifications (or the
+        // app performs its own periodic re-check), a fresh subscription
+        // will be created and persisted normally.
+      }
+    })()
+  );
+});
