@@ -10,6 +10,9 @@ import { NER_STATES } from './data/regionalContent';
 import { AuthService } from './services/authService';
 import { LanguageProvider } from './hooks/useTranslation';
 import { useElderLocationTracking } from './hooks/useElderLocationTracking';
+import { useReminderAlerts } from './hooks/useReminderAlerts';
+import { ReminderSoundService } from './services/reminderSoundService';
+import ReminderAlertOverlay from './components/common/ReminderAlertOverlay';
 import { getRoleHome } from './access/permissions';
 import RequireRole from './access/RequireRole';
 
@@ -56,6 +59,15 @@ export default function App() {
   // Mounted here (not inside ElderlyHome) so the watcher survives in-app
   // navigation and remounts — it only starts/stops on session changes.
   const locationTracking = useElderLocationTracking(session);
+
+  // Same reasoning: mounted at the app root, not inside a page, so a due
+  // reminder still triggers no matter which page/game the user is on and
+  // survives in-app navigation without resetting.
+  const reminderAlerts = useReminderAlerts(session);
+
+  useEffect(() => {
+    ReminderSoundService.attachGesturePrimer();
+  }, []);
 
   useEffect(() => {
     if (highContrast) {
@@ -159,6 +171,12 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+
+      <ReminderAlertOverlay
+        alert={reminderAlerts.activeAlert}
+        onComplete={reminderAlerts.completeActive}
+        onSnooze={reminderAlerts.snoozeActive}
+      />
     </div>
     </LanguageProvider>
     </MotionConfig>

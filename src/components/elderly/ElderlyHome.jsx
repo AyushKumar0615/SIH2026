@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { pageTransition } from '../common/pageTransition';
 import UserAvatar, { isPhotoAvatar } from '../common/UserAvatar';
@@ -6,6 +6,7 @@ import { LocalizationService } from '../../services/localizationService';
 import { useTranslation } from '../../hooks/useTranslation';
 import { AudioService } from '../../services/audioService';
 import { ReminderService, formatTime12h } from '../../services/reminderService';
+import { REMINDER_COMPLETED_EVENT } from '../../services/reminderAlertEngine';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import GameShell from './GameShell';
 import MemoryJournalView from './MemoryJournalView';
@@ -44,13 +45,12 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
 
   const culturalProfile = LocalizationService.getCulturalProfile(currentState);
 
-  useEffect(() => {
-    let cancelled = false;
-    if (activeSubView !== 'home') return;
+  const loadReminders = useCallback(() => {
     if (!session?.id) {
       setIsLoadingReminders(false);
-      return;
+      return () => {};
     }
+    let cancelled = false;
     setIsLoadingReminders(true);
     ReminderService.listReminders(session.id).then((result) => {
       if (cancelled) return;
@@ -58,7 +58,23 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
       setIsLoadingReminders(false);
     });
     return () => { cancelled = true; };
-  }, [session?.id, activeSubView]);
+  }, [session?.id]);
+
+  useEffect(() => {
+    if (activeSubView !== 'home') return undefined;
+    return loadReminders();
+  }, [activeSubView, loadReminders]);
+
+  // The reminder alert (mounted app-wide) marks a reminder complete straight
+  // through ReminderService — this re-fetches so the home screen's "next
+  // task" reflects a completion acknowledged from the popup.
+  useEffect(() => {
+    const onCompleted = (event) => {
+      if (event.detail?.ownerId === session?.id) loadReminders();
+    };
+    window.addEventListener(REMINDER_COMPLETED_EVENT, onCompleted);
+    return () => window.removeEventListener(REMINDER_COMPLETED_EVENT, onCompleted);
+  }, [session?.id, loadReminders]);
 
   const completedCount = reminders.filter((r) => r.isCompleted).length;
   const todayFraction = reminders.length > 0 ? completedCount / reminders.length : 0;
