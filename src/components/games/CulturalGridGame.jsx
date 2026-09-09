@@ -126,7 +126,7 @@ export default function CulturalGridGame({ onFinishGame, onBack }) {
       </div>
 
       <ProgressBar value={(timeLeft / config.timeSec) * 100} />
-      <p className="text-center text-xs font-semibold mt-2 mb-6" style={{ color: 'var(--ink-faint)' }}>{timeLeft}{t('secondsUnit')} {t('remainingLabel')}</p>
+      <p className="text-center text-xs font-semibold mt-2 mb-6 text-ink-faint">{timeLeft}{t('secondsUnit')} {t('remainingLabel')}</p>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
         {roundData.cells.map((cell) => {
@@ -159,7 +159,7 @@ export default function CulturalGridGame({ onFinishGame, onBack }) {
         <FeedbackState state={feedback} correctText={t('wellSpottedFeedback')} incorrectText={t('notQuiteFeedback')} />
       </div>
 
-      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
+      <p className="text-center text-xs font-semibold mt-8 text-ink-faint">{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
     </div>
   );
 }

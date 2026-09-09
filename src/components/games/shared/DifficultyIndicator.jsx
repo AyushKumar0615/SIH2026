@@ -21,7 +21,7 @@ export default function DifficultyIndicator({ level }) {
           />
         ))}
       </div>
-      <span className="text-xs font-semibold" style={{ color: 'var(--ink-soft)' }}>{label}</span>
+      <span className="text-xs font-semibold text-ink-soft">{label}</span>
     </div>
   );
 }

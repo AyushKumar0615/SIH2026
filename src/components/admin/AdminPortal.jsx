@@ -9,6 +9,8 @@ import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { useTranslation } from '../../hooks/useTranslation';
 import ConfirmDialog from '../common/ConfirmDialog';
 import InlineNotice from '../common/InlineNotice';
+import { SkeletonList } from '../common/Skeleton';
+import StatusBadge, { LOCATION_STATUS_TONES } from '../common/StatusBadge';
 import {
   Shield, Server, Globe, Users, HeartPulse, LayoutDashboard, ChevronDown,
   Search, UserCheck, UserX, Link2, MapPin, Clock, Navigation
@@ -18,7 +20,6 @@ const ROLE_LABEL_KEYS = { elderly: 'modeElderlyLabel', caregiver: 'modeCaregiver
 const ROLE_ICONS = { elderly: HeartPulse, caregiver: LayoutDashboard, admin: Shield };
 const CONNECTION_STATUS_KEYS = { pending: 'pendingApprovalNotice', accepted: 'statusAcceptedLabel', rejected: 'statusRejectedLabel' };
 const LOCATION_STATUS_KEYS = { live: 'locationStatusLive', recent: 'locationStatusRecent', offline: 'locationStatusOffline' };
-const LOCATION_STATUS_COLORS = { live: 'var(--jade)', recent: 'var(--ember)', offline: 'var(--ink-faint)' };
 
 export default function AdminPortal() {
   const { t } = useTranslation();
@@ -65,12 +66,12 @@ export default function AdminPortal() {
 
   return (
     <div ref={containerRef} className="page space-y-16">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 scroll-reveal" style={{ borderBottom: '1px solid var(--hairline)' }}>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 scroll-reveal border-b border-hairline">
         <div>
           <span className="eyebrow">{t('platformGovernance')}</span>
           <h1 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98]">{t('systemHealthTitle')}</h1>
         </div>
-        <div className="flex items-center gap-2 shrink-0 text-sm font-semibold" style={{ color: 'var(--jade)' }}>
+        <div className="flex items-center gap-2 shrink-0 text-sm font-semibold text-jade">
           <Server className="w-4.5 h-4.5 animate-soft-pulse" /> {t('allNodesOperational')}
         </div>
       </div>
@@ -83,7 +84,7 @@ export default function AdminPortal() {
 
       <div className="scroll-reveal" data-reveal-delay="3">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl font-medium flex items-center gap-2.5"><Globe className="w-5 h-5" style={{ color: 'var(--jade)' }} /> {t('neRegionTitle')}</h2>
+          <h2 className="font-display text-2xl font-medium flex items-center gap-2.5"><Globe className="w-5 h-5 text-jade" /> {t('neRegionTitle')}</h2>
         </div>
         <div className="index-list">
           {Object.values(CULTURAL_CATALOG).map((st, idx) => (
@@ -91,8 +92,8 @@ export default function AdminPortal() {
               <span className="index-num">0{idx + 1}</span>
               <span className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 items-center">
                 <span className="font-display text-lg font-medium">{st.name}</span>
-                <span className="text-sm" style={{ color: 'var(--ink-faint)' }}>{st.language} · "{st.greeting}"</span>
-                <span className="text-sm truncate" style={{ color: 'var(--jade)' }}>{st.crafts ? st.crafts.join(', ') : 'Standard'}</span>
+                <span className="text-sm text-ink-faint">{st.language} · "{st.greeting}"</span>
+                <span className="text-sm truncate text-jade">{st.crafts ? st.crafts.join(', ') : 'Standard'}</span>
               </span>
             </div>
           ))}
@@ -100,16 +101,16 @@ export default function AdminPortal() {
       </div>
 
       <div className="scroll-reveal" data-reveal-delay="4">
-        <h2 className="font-display text-2xl font-medium flex items-center gap-2.5 mb-6"><Shield className="w-5 h-5" style={{ color: 'var(--ember)' }} /> {t('auditTrailTitle')}</h2>
+        <h2 className="font-display text-2xl font-medium flex items-center gap-2.5 mb-6"><Shield className="w-5 h-5 text-ember" /> {t('auditTrailTitle')}</h2>
         {isLoadingActivity ? (
-          <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('adminLoadingLabel')}</p>
+          <SkeletonList rows={4} label={t('adminLoadingLabel')} />
         ) : activityError ? (
           <div className="notice-strip is-alert flex items-center justify-between gap-4">
-            <p className="text-sm" style={{ color: 'var(--alert)' }}>{activityError}</p>
+            <p className="text-sm text-alert">{activityError}</p>
             <button type="button" onClick={loadActivity} className="btn btn-line shrink-0">{t('retry')}</button>
           </div>
         ) : activity.length === 0 ? (
-          <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('noActivityYet')}</p>
+          <p className="text-sm text-ink-faint">{t('noActivityYet')}</p>
         ) : (
           <div className="data-table-wrap">
             <div className="overflow-x-auto">
@@ -204,14 +205,14 @@ function UserManagementSection({ t, onMutation }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-2xl font-medium flex items-center gap-2.5"><Users className="w-5 h-5" style={{ color: 'var(--ember)' }} /> {t('userManagementTitle')}</h2>
+        <h2 className="font-display text-2xl font-medium flex items-center gap-2.5"><Users className="w-5 h-5 text-ember" /> {t('userManagementTitle')}</h2>
       </div>
 
       <InlineNotice tone={notice?.tone} message={notice?.message} onDismiss={() => setNotice(null)} />
 
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-0 top-1/2 -translate-y-1/2" style={{ color: 'var(--ink-faint)' }} />
+          <Search className="w-4 h-4 absolute left-0 top-1/2 -translate-y-1/2 text-ink-faint" />
           <input
             type="text"
             value={search}
@@ -234,14 +235,14 @@ function UserManagementSection({ t, onMutation }) {
       </div>
 
       {isLoading ? (
-        <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('adminLoadingLabel')}</p>
+        <SkeletonList rows={5} label={t('adminLoadingLabel')} />
       ) : loadError ? (
         <div className="notice-strip is-alert flex items-center justify-between gap-4">
-          <p className="text-sm" style={{ color: 'var(--alert)' }}>{loadError}</p>
+          <p className="text-sm text-alert">{loadError}</p>
           <button type="button" onClick={loadUsers} className="btn btn-line shrink-0">{t('retry')}</button>
         </div>
       ) : users.length === 0 ? (
-        <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('noUsersFoundLabel')}</p>
+        <p className="text-sm text-ink-faint">{t('noUsersFoundLabel')}</p>
       ) : (
         <>
           <div className="index-list">
@@ -259,11 +260,11 @@ function UserManagementSection({ t, onMutation }) {
                     <span className="index-icon"><RoleIcon className="w-4.5 h-4.5" /></span>
                     <span className="flex-1 min-w-0 text-left">
                       <span className="font-display text-lg font-medium block truncate">{user.full_name || '—'}</span>
-                      <span className="text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>
+                      <span className="text-sm block mt-0.5 text-ink-faint">
                         {t(ROLE_LABEL_KEYS[(user.role || '').trim().toLowerCase()] || 'modeCaregiverLabel')} · {user.state || '—'} ·{' '}
-                        <span style={{ color: user.is_active === false ? 'var(--alert)' : 'var(--jade)' }}>
+                        <StatusBadge tone={user.is_active === false ? 'alert' : 'jade'} dot>
                           {t(user.is_active === false ? 'statusInactiveLabel' : 'statusActiveLabel')}
-                        </span>
+                        </StatusBadge>
                       </span>
                     </span>
                     <ChevronDown className="index-arrow w-5 h-5 shrink-0" style={{ opacity: 1, transform: isExpanded ? 'rotate(180deg)' : 'none' }} />
@@ -294,7 +295,7 @@ function UserManagementSection({ t, onMutation }) {
           </div>
 
           <div className="flex items-center justify-between mt-6">
-            <span className="text-xs" style={{ color: 'var(--ink-faint)' }}>
+            <span className="text-xs text-ink-faint">
               {t('showingRangeLabel').replace('{from}', from).replace('{to}', to).replace('{total}', total)}
             </span>
             <div className="flex items-center gap-2.5">
@@ -350,7 +351,7 @@ function ExpandedUserDetail({ user, t, refreshKey, onToggleActive, onRequestDisc
   return (
     <div className="well p-5 mb-2 space-y-5">
       {isLoading ? (
-        <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('adminLoadingLabel')}</p>
+        <SkeletonList rows={2} label={t('adminLoadingLabel')} />
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-8">
@@ -382,19 +383,19 @@ function ExpandedUserDetail({ user, t, refreshKey, onToggleActive, onRequestDisc
             <div>
               <span className="figure-label flex items-center gap-1.5"><Link2 className="w-3.5 h-3.5" /> {t(relationshipLabelKey)}</span>
               {!relevantConnections || relevantConnections.length === 0 ? (
-                <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('noConnectionsLabel')}</p>
+                <p className="text-sm mt-2 text-ink-faint">{t('noConnectionsLabel')}</p>
               ) : (
                 <div className="space-y-2 mt-2">
                   {relevantConnections.map((conn) => (
-                    <div key={conn.id} className="flex items-center justify-between gap-4 text-sm py-2" style={{ borderTop: '1px solid var(--hairline)' }}>
+                    <div key={conn.id} className="flex items-center justify-between gap-4 text-sm py-2 border-t border-hairline">
                       <span className="min-w-0 truncate">
                         {conn.other?.full_name || '—'}{' '}
-                        <span style={{ color: conn.status === 'accepted' ? 'var(--jade)' : conn.status === 'rejected' ? 'var(--alert)' : 'var(--ember)' }}>
-                          ({t(CONNECTION_STATUS_KEYS[conn.status] || 'pendingApprovalNotice')})
-                        </span>
+                        <StatusBadge tone={conn.status === 'accepted' ? 'jade' : conn.status === 'rejected' ? 'alert' : 'ember'} dot>
+                          {t(CONNECTION_STATUS_KEYS[conn.status] || 'pendingApprovalNotice')}
+                        </StatusBadge>
                       </span>
                       {conn.status === 'accepted' && (
-                        <button type="button" onClick={() => onRequestDisconnect(conn)} className="btn btn-quiet shrink-0" style={{ color: 'var(--alert)' }}>
+                        <button type="button" onClick={() => onRequestDisconnect(conn)} className="btn btn-danger-quiet shrink-0">
                           {t('disconnectLabel')}
                         </button>
                       )}
@@ -409,17 +410,16 @@ function ExpandedUserDetail({ user, t, refreshKey, onToggleActive, onRequestDisc
             <div>
               <span className="figure-label flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {t('elderLocationTitle')}</span>
               {!location ? (
-                <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('noLocationSharedYetDesc')}</p>
+                <p className="text-sm mt-2 text-ink-faint">{t('noLocationSharedYetDesc')}</p>
               ) : (
                 <div className="mt-2 space-y-3">
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-                    <span className="flex items-center gap-2 font-semibold" style={{ color: LOCATION_STATUS_COLORS[locationStatus] }}>
-                      <span className="w-2 h-2 rounded-full" style={{ background: LOCATION_STATUS_COLORS[locationStatus] }} />
+                    <StatusBadge tone={LOCATION_STATUS_TONES[locationStatus]} dot pulse={locationStatus === 'live'}>
                       {t(LOCATION_STATUS_KEYS[locationStatus])}
-                    </span>
-                    <span className="flex items-center gap-1.5" style={{ color: 'var(--ink-faint)' }}><Clock className="w-3.5 h-3.5" /> {t('lastUpdatedLabel')}: {formatDateTime(location.recorded_at)}</span>
+                    </StatusBadge>
+                    <span className="flex items-center gap-1.5 text-ink-faint"><Clock className="w-3.5 h-3.5" /> {t('lastUpdatedLabel')}: {formatDateTime(location.recorded_at)}</span>
                     {typeof location.accuracy === 'number' && (
-                      <span className="flex items-center gap-1.5" style={{ color: 'var(--ink-faint)' }}><Navigation className="w-3.5 h-3.5" /> {t('accuracyLabel')}: {t('accuracyMetersValue').replace('{meters}', Math.round(location.accuracy))}</span>
+                      <span className="flex items-center gap-1.5 text-ink-faint"><Navigation className="w-3.5 h-3.5" /> {t('accuracyLabel')}: {t('accuracyMetersValue').replace('{meters}', Math.round(location.accuracy))}</span>
                     )}
                   </div>
                   <LocationMap

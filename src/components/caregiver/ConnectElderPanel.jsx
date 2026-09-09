@@ -6,6 +6,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import UserAvatar from '../common/UserAvatar';
 import ConfirmDialog from '../common/ConfirmDialog';
 import InlineNotice from '../common/InlineNotice';
+import { SkeletonList } from '../common/Skeleton';
 
 const ERROR_KEY = {
   invalid_code: 'connectionInvalidCodeError',
@@ -62,10 +63,10 @@ export default function ConnectElderPanel({ session, connections, isLoading, loa
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="panel-dark p-7 sm:p-9">
         <div className="flex items-start gap-3 mb-6">
-          <Link2 className="w-5 h-5 mt-1 shrink-0" style={{ color: 'var(--ember)' }} />
+          <Link2 className="w-5 h-5 mt-1 shrink-0 text-ember" />
           <div>
             <h3 className="font-display text-xl font-medium">{t('connectToElderTitle')}</h3>
-            <p className="text-sm mt-1" style={{ color: 'var(--ink-faint)' }}>{t('connectToElderDesc')}</p>
+            <p className="text-sm mt-1 text-ink-faint">{t('connectToElderDesc')}</p>
           </div>
         </div>
 
@@ -93,10 +94,10 @@ export default function ConnectElderPanel({ session, connections, isLoading, loa
       <section>
         <h3 className="font-display text-xl font-medium mb-4">{t('connectedElderTitle')}</h3>
         {isLoading ? (
-          <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('connectionsLoadingLabel')}</p>
+          <SkeletonList rows={2} label={t('connectionsLoadingLabel')} />
         ) : loadError ? (
           <div className="notice-strip is-alert flex items-center justify-between gap-4">
-            <p className="text-sm" style={{ color: 'var(--alert)' }}>{loadError}</p>
+            <p className="text-sm text-alert">{loadError}</p>
             <button type="button" onClick={onRetry} className="btn btn-line shrink-0">{t('retry')}</button>
           </div>
         ) : accepted.length === 0 && pending.length === 0 ? (
@@ -116,7 +117,7 @@ export default function ConnectElderPanel({ session, connections, isLoading, loa
                 <UserAvatar avatar={conn.elder?.avatar} fullName={conn.elder?.fullName} className="w-11 h-11 rounded-full overflow-hidden object-cover shrink-0" iconClassName="w-1/3 h-1/3" />
                 <div className="min-w-0 flex-1">
                   <span className="font-display text-lg font-medium block truncate">{conn.elder?.fullName}</span>
-                  <span className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5 mt-0.5" style={{ color: 'var(--ember)' }}>
+                  <span className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5 mt-0.5 text-ember">
                     <Clock3 className="w-3.5 h-3.5" /> {t('pendingApprovalNotice')}
                   </span>
                 </div>
@@ -128,12 +129,12 @@ export default function ConnectElderPanel({ session, connections, isLoading, loa
                   <UserAvatar avatar={conn.elder?.avatar} fullName={conn.elder?.fullName} className="w-11 h-11 rounded-full overflow-hidden object-cover shrink-0" iconClassName="w-1/3 h-1/3" />
                   <div className="min-w-0">
                     <span className="font-display text-lg font-medium block truncate">{conn.elder?.fullName}</span>
-                    <span className="text-xs flex items-center gap-1.5 mt-0.5" style={{ color: 'var(--jade)' }}>
+                    <span className="text-xs flex items-center gap-1.5 mt-0.5 text-jade">
                       <HeartHandshake className="w-3.5 h-3.5" /> {t('connectedSinceLabel')} {new Date(conn.updatedAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
-                <button type="button" onClick={() => setDisconnectTarget(conn)} className="btn btn-quiet shrink-0" style={{ color: 'var(--alert)' }}>
+                <button type="button" onClick={() => setDisconnectTarget(conn)} className="btn btn-danger-quiet shrink-0">
                   {t('disconnectLabel')}
                 </button>
               </div>

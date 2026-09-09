@@ -22,24 +22,24 @@ export default function GameIntro({ gameId, icon, title, skill, howItWorks, diff
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5" style={{ borderTop: '1px solid var(--hairline)', borderBottom: '1px solid var(--hairline)', padding: '1.25rem 0' }}>
           <div className="flex items-start gap-2.5">
-            <Sparkles className="w-4 h-4 mt-0.5 shrink-0" style={{ color: 'var(--ember)' }} />
+            <Sparkles className="w-4 h-4 mt-0.5 shrink-0 text-ember" />
             <div>
               <span className="figure-label">{t('whatYoullTrainLabel')}</span>
-              <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--ink)' }}>{skill}</p>
+              <p className="text-sm font-medium mt-0.5 text-ink">{skill}</p>
             </div>
           </div>
           <div className="flex items-start gap-2.5">
-            <Gauge className="w-4 h-4 mt-0.5 shrink-0" style={{ color: 'var(--ember)' }} />
+            <Gauge className="w-4 h-4 mt-0.5 shrink-0 text-ember" />
             <div>
               <span className="figure-label">{t('difficultyLabel')}</span>
-              <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--ink)' }}>{difficultyText}</p>
+              <p className="text-sm font-medium mt-0.5 text-ink">{difficultyText}</p>
             </div>
           </div>
           <div className="flex items-start gap-2.5">
-            <Clock className="w-4 h-4 mt-0.5 shrink-0" style={{ color: 'var(--ember)' }} />
+            <Clock className="w-4 h-4 mt-0.5 shrink-0 text-ember" />
             <div>
               <span className="figure-label">{t('estimatedTimeLabel')}</span>
-              <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--ink)' }}>{estimatedMinutes} {t('minLabel')}</p>
+              <p className="text-sm font-medium mt-0.5 text-ink">{estimatedMinutes} {t('minLabel')}</p>
             </div>
           </div>
         </div>
@@ -48,8 +48,8 @@ export default function GameIntro({ gameId, icon, title, skill, howItWorks, diff
           <span className="figure-label">{t('howItWorksLabel')}</span>
           <ul className="mt-2 space-y-1.5">
             {howItWorks.map((step, idx) => (
-              <li key={idx} className="text-sm leading-relaxed flex items-start gap-2.5" style={{ color: 'var(--ink-soft)' }}>
-                <span className="font-mono text-xs mt-0.5 shrink-0" style={{ color: 'var(--ink-faint)' }}>0{idx + 1}</span>
+              <li key={idx} className="text-sm leading-relaxed flex items-start gap-2.5 text-ink-soft">
+                <span className="font-mono text-xs mt-0.5 shrink-0 text-ink-faint">0{idx + 1}</span>
                 {step}
               </li>
             ))}

@@ -130,7 +130,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
               >
                 {getGreetingTime()}
                 <br />
-                <em className="italic" style={{ color: 'var(--ember)' }}>{userName}</em>
+                <em className="italic text-ember">{userName}</em>
               </h1>
               <div className="flex flex-wrap items-center gap-5 mt-6">
                 <button type="button" onClick={handleSpeakGreeting} className="btn btn-quiet !px-0">
@@ -156,7 +156,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
                   </Magnetic>
                 </div>
               </motion.div>
-              <p className="text-center text-xs font-medium mt-3" style={{ color: 'var(--ink-faint)' }}>
+              <p className="text-center text-xs font-medium mt-3 text-ink-faint">
                 {t('tapToAsk')}
               </p>
             </div>
@@ -169,17 +169,17 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
             nextTask ? (
               <div className="notice-strip is-jade flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4 min-w-0">
-                  <span className="text-xs font-semibold" style={{ color: 'var(--jade)', textTransform: 'uppercase' }}>{t('nextLabel')} · {formatTime12h(nextTask.time)}</span>
+                  <span className="text-xs font-semibold uppercase text-jade">{t('nextLabel')} · {formatTime12h(nextTask.time)}</span>
                   <span className="font-display text-lg md:text-xl font-medium truncate">{nextTask.icon} {nextTask.title}</span>
                 </div>
-                <button type="button" onClick={() => setActiveSubView('reminders')} className="btn btn-quiet shrink-0 !px-0" style={{ color: 'var(--jade)' }}>
+                <button type="button" onClick={() => setActiveSubView('reminders')} className="btn btn-quiet shrink-0 !px-0 text-jade">
                   {t('markComplete')} <ArrowUpRight className="w-4 h-4" />
                 </button>
               </div>
             ) : (
               <div className="notice-strip is-jade flex items-center justify-between gap-4">
-                <span className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('noUpcomingReminders')}</span>
-                <button type="button" onClick={() => setActiveSubView('reminders')} className="btn btn-quiet shrink-0 !px-0" style={{ color: 'var(--jade)' }}>
+                <span className="text-sm text-ink-faint">{t('noUpcomingReminders')}</span>
+                <button type="button" onClick={() => setActiveSubView('reminders')} className="btn btn-quiet shrink-0 !px-0 text-jade">
                   {t('addReminder')} <ArrowUpRight className="w-4 h-4" />
                 </button>
               </div>
@@ -195,7 +195,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
         <div className="flex items-end justify-between mb-6 scroll-reveal">
           <h2 className="font-display text-2xl md:text-3xl font-medium">{t('dailyActivities')}</h2>
           {reminders.length > 0 && (
-            <span className="text-xs font-medium hidden sm:block" style={{ color: 'var(--ink-faint)' }}>{completedCount}/{reminders.length} {t('doneTodaySuffix')}</span>
+            <span className="text-xs font-medium hidden sm:block text-ink-faint">{completedCount}/{reminders.length} {t('doneTodaySuffix')}</span>
           )}
         </div>
 
@@ -217,7 +217,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
           />
           <div className="relative h-full flex flex-col justify-between p-7 md:p-10" style={{ minHeight: '18rem' }}>
             <div className="flex items-start justify-between gap-4">
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--ink-faint)' }}>{t('cognitiveExercise')}</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink-faint">{t('cognitiveExercise')}</span>
               <svg width="44" height="44" viewBox="0 0 44 44" className="shrink-0 -rotate-90">
                 <circle cx="22" cy="22" r="20" fill="none" stroke="var(--hairline-strong)" strokeWidth="3" />
                 <circle
@@ -245,7 +245,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
             <span className="index-icon">📝</span>
             <span className="flex-1 min-w-0">
               <span className="font-display text-xl md:text-2xl font-medium block">{LocalizationService.getText('myMemories', currentLang)}</span>
-              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('memoriesDesc')}</span>
+              <span className="index-desc text-sm block mt-0.5 text-ink-faint">{t('memoriesDesc')}</span>
             </span>
             <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
@@ -255,10 +255,10 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
             <span className="index-icon">🔔</span>
             <span className="flex-1 min-w-0">
               <span className="font-display text-xl md:text-2xl font-medium block">{LocalizationService.getText('myReminders', currentLang)}</span>
-              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('remindersDesc')}</span>
+              <span className="index-desc text-sm block mt-0.5 text-ink-faint">{t('remindersDesc')}</span>
             </span>
             {reminders.length > 0 && (
-              <span className="hidden sm:flex items-center gap-2 shrink-0" style={{ color: 'var(--ink-faint)' }}>
+              <span className="hidden sm:flex items-center gap-2 shrink-0 text-ink-faint">
                 <svg width="26" height="26" viewBox="0 0 26 26" className="-rotate-90">
                   <circle cx="13" cy="13" r="11" fill="none" stroke="var(--hairline-strong)" strokeWidth="2.5" />
                   <circle
@@ -277,7 +277,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
             <span className="index-icon">📖</span>
             <span className="flex-1 min-w-0">
               <span className="font-display text-xl md:text-2xl font-medium block">{t('aiStoryMode')}</span>
-              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('storyModeDesc')}</span>
+              <span className="index-desc text-sm block mt-0.5 text-ink-faint">{t('storyModeDesc')}</span>
             </span>
             <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
@@ -287,7 +287,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
             <span className="index-icon">🤝</span>
             <span className="flex-1 min-w-0">
               <span className="font-display text-xl md:text-2xl font-medium block">{t('navMyCaregivers')}</span>
-              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('myCaregiversDesc')}</span>
+              <span className="index-desc text-sm block mt-0.5 text-ink-faint">{t('myCaregiversDesc')}</span>
             </span>
             <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
@@ -303,8 +303,8 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
             <span className="index-num">05</span>
             <span className="index-icon" style={{ background: 'var(--alert-soft)', color: 'var(--alert)' }}><PhoneCall className="w-4.5 h-4.5" /></span>
             <span className="flex-1 min-w-0">
-              <span className="font-display text-xl md:text-2xl font-medium block" style={{ color: 'var(--alert)' }}>{t('callCaregiver')}</span>
-              <span className="index-desc text-sm block mt-0.5" style={{ color: 'var(--ink-faint)' }}>{t('callCaregiverDesc')}</span>
+              <span className="font-display text-xl md:text-2xl font-medium block text-alert">{t('callCaregiver')}</span>
+              <span className="index-desc text-sm block mt-0.5 text-ink-faint">{t('callCaregiverDesc')}</span>
             </span>
             <ArrowUpRight className="index-arrow w-5 h-5" />
           </button>
@@ -312,11 +312,11 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
       </section>
 
       <nav className="rail-pad content-col pb-20 grid grid-cols-2 sm:flex sm:items-center gap-x-8 gap-y-4 scroll-reveal" aria-label={t('elderShortcutsAria')} style={{ borderTop: '1px solid var(--hairline)', paddingTop: '2rem' }}>
-        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink)' }} aria-current="page"><Home className="w-4 h-4" /> {t('navHome')}</button>
-        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('games')}><Brain className="w-4 h-4" /> {t('navGames')}</button>
-        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('memories')}><BookOpen className="w-4 h-4" /> {t('navMemories')}</button>
-        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('reminders')}><Bell className="w-4 h-4" /> {t('navReminders')}</button>
-        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--ink-soft)' }} onClick={() => setActiveSubView('caregivers')}><Users className="w-4 h-4" /> {t('navMyCaregivers')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold text-ink" aria-current="page"><Home className="w-4 h-4" /> {t('navHome')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft" onClick={() => setActiveSubView('games')}><Brain className="w-4 h-4" /> {t('navGames')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft" onClick={() => setActiveSubView('memories')}><BookOpen className="w-4 h-4" /> {t('navMemories')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft" onClick={() => setActiveSubView('reminders')}><Bell className="w-4 h-4" /> {t('navReminders')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft" onClick={() => setActiveSubView('caregivers')}><Users className="w-4 h-4" /> {t('navMyCaregivers')}</button>
       </nav>
 
       <VoiceAssistantModal
@@ -353,10 +353,10 @@ function LocationSharingBanner({ tracking, t }) {
         className="notice-box is-jade flex flex-col sm:flex-row sm:items-center gap-4 justify-between mb-6"
       >
         <div className="flex items-start gap-3 min-w-0">
-          <MapPin className="w-4.5 h-4.5 mt-0.5 shrink-0" style={{ color: 'var(--jade)' }} />
+          <MapPin className="w-4.5 h-4.5 mt-0.5 shrink-0 text-jade" />
           <div className="min-w-0">
             <p className="font-display text-lg font-medium">{t('locationPermissionTitle')}</p>
-            <p className="text-sm mt-1 leading-relaxed" style={{ color: 'var(--ink-soft)' }}>{t('locationPermissionDesc')}</p>
+            <p className="text-sm mt-1 leading-relaxed text-ink-soft">{t('locationPermissionDesc')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
@@ -369,10 +369,10 @@ function LocationSharingBanner({ tracking, t }) {
 
   if (status === 'granted') {
     return (
-      <div className="flex items-center gap-3 text-sm font-medium mb-6" style={{ color: 'var(--jade)' }}>
+      <div className="flex items-center gap-3 text-sm font-medium mb-6 text-jade">
         <span className="w-2 h-2 rounded-full animate-soft-pulse" style={{ background: 'var(--jade)' }} />
         {t('locationSharingActiveLabel')}
-        <button type="button" onClick={disableSharing} className="btn btn-quiet !px-0 !min-h-0 text-xs" style={{ color: 'var(--ink-faint)' }}>
+        <button type="button" onClick={disableSharing} className="btn btn-quiet !px-0 !min-h-0 text-xs text-ink-faint">
           {t('disableLocationSharingLabel')}
         </button>
       </div>
@@ -382,8 +382,8 @@ function LocationSharingBanner({ tracking, t }) {
   if (status === 'denied' || status === 'unavailable') {
     return (
       <div className="notice-strip is-alert flex items-start gap-3 mb-6">
-        <ShieldAlert className="w-4.5 h-4.5 mt-0.5 shrink-0" style={{ color: 'var(--alert)' }} />
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>{t('locationUnavailableMessage')}</p>
+        <ShieldAlert className="w-4.5 h-4.5 mt-0.5 shrink-0 text-alert" />
+        <p className="text-sm leading-relaxed text-ink-soft">{t('locationUnavailableMessage')}</p>
       </div>
     );
   }
@@ -393,7 +393,7 @@ function LocationSharingBanner({ tracking, t }) {
   // but it's still surfaced rather than failing silently.
   if (status === 'error') {
     return (
-      <div className="flex items-center gap-3 text-sm mb-6" style={{ color: 'var(--ink-faint)' }}>
+      <div className="flex items-center gap-3 text-sm mb-6 text-ink-faint">
         <span className="w-2 h-2 rounded-full" style={{ background: 'var(--ember)' }} />
         {t('locationErrorMessage')}
       </div>

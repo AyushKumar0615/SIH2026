@@ -28,8 +28,9 @@ export default function CategoryFilter({ categories, active, onChange }) {
             type="button"
             onClick={() => onChange(cat)}
             aria-pressed={isActive}
-            className="relative flex items-center gap-1.5 !min-h-8 !px-3.5 !py-1 text-xs font-semibold rounded-full"
-            style={{ color: isActive ? '#1a0f08' : 'var(--ink-soft)', border: isActive ? '1px solid var(--ember)' : '1px solid var(--hairline-strong)' }}
+            className={`relative flex items-center gap-1.5 px-4 text-xs font-semibold rounded-full border ${
+              isActive ? 'border-ember text-[#1a0f08]' : 'border-hairline-strong text-ink-soft'
+            }`}
           >
             {isActive && (
               <motion.span

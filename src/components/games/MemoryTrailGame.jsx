@@ -108,7 +108,7 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
         <div className="space-y-6">
           <div className="text-center">
             <span className="eyebrow eyebrow-jade justify-center">{t('trailStudyEyebrow')}</span>
-            <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('trailStudyHintPrefix')} {studyLeft}{t('secondsUnit')}</p>
+            <p className="text-sm mt-2 text-ink-faint">{t('trailStudyHintPrefix')} {studyLeft}{t('secondsUnit')}</p>
           </div>
           <ProgressBar value={(studyLeft / config.studySec) * 100} />
           <div className="flex flex-wrap justify-center gap-3 pt-4">
@@ -133,7 +133,7 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
         <div className="space-y-8">
           <div className="text-center">
             <span className="eyebrow justify-center">{t('trailRecallEyebrow')}</span>
-            <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('trailRecallHint')}</p>
+            <p className="text-sm mt-2 text-ink-faint">{t('trailRecallHint')}</p>
           </div>
 
           <div className="flex flex-wrap justify-center gap-3">
@@ -153,14 +153,14 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
                       <span className="cog-slot-label">{t(item.nameKey)}</span>
                     </>
                   ) : (
-                    <span className="font-mono text-xs" style={{ color: 'var(--ink-faint)' }}>{idx + 1}</span>
+                    <span className="font-mono text-xs text-ink-faint">{idx + 1}</span>
                   )}
                 </div>
               );
             })}
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3 pt-4" style={{ borderTop: '1px solid var(--hairline)' }}>
+          <div className="flex flex-wrap justify-center gap-3 pt-4 border-t border-hairline">
             {pool.map((item) => (
               <button
                 key={item.id}
@@ -185,7 +185,7 @@ export default function MemoryTrailGame({ onFinishGame, onBack }) {
         </div>
       )}
 
-      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
+      <p className="text-center text-xs font-semibold mt-8 text-ink-faint">{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
     </div>
   );
 }

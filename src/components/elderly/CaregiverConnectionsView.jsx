@@ -125,10 +125,10 @@ export default function CaregiverConnectionsView({ session, onBack }) {
       {/* Connection code */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="panel-dark p-7 sm:p-9 mb-10">
         <div className="flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 mt-1 shrink-0" style={{ color: 'var(--ember)' }} />
+          <ShieldCheck className="w-5 h-5 mt-1 shrink-0 text-ember" />
           <div className="min-w-0">
             <h3 className="font-display text-xl font-medium">{t('connectionCodeTitle')}</h3>
-            <p className="text-sm mt-1" style={{ color: 'var(--ink-faint)' }}>{t('connectionCodeDesc')}</p>
+            <p className="text-sm mt-1 text-ink-faint">{t('connectionCodeDesc')}</p>
           </div>
         </div>
 
@@ -141,8 +141,8 @@ export default function CaregiverConnectionsView({ session, onBack }) {
             {isLoadingCode ? '······' : code}
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <button type="button" onClick={handleCopy} disabled={isLoadingCode || !code} className="btn btn-line" style={{ color: 'var(--ink)' }}>
-              {copied ? <Check className="w-4 h-4" style={{ color: 'var(--jade)' }} /> : <Copy className="w-4 h-4" />} {t('copyCodeLabel')}
+            <button type="button" onClick={handleCopy} disabled={isLoadingCode || !code} className="btn btn-line text-ink">
+              {copied ? <Check className="w-4 h-4 text-jade" /> : <Copy className="w-4 h-4" />} {t('copyCodeLabel')}
             </button>
             <button type="button" onClick={handleRegenerate} disabled={isRegenerating || isLoadingCode} className="btn btn-quiet">
               <RefreshCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} /> {isRegenerating ? t('regeneratingCodeLabel') : t('regenerateCodeLabel')}
@@ -155,14 +155,14 @@ export default function CaregiverConnectionsView({ session, onBack }) {
       <section className="mb-10">
         <h3 className="font-display text-xl font-medium mb-4">{t('pendingRequestsTitle')}</h3>
         {isLoadingConnections ? (
-          <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('connectionsLoadingLabel')}</p>
+          <p className="text-sm text-ink-faint">{t('connectionsLoadingLabel')}</p>
         ) : loadError ? (
           <div className="notice-strip is-alert flex items-center justify-between gap-4">
-            <p className="text-sm" style={{ color: 'var(--alert)' }}>{loadError}</p>
+            <p className="text-sm text-alert">{loadError}</p>
             <button type="button" onClick={loadConnections} className="btn btn-line shrink-0">{t('retry')}</button>
           </div>
         ) : pending.length === 0 ? (
-          <p className="text-sm" style={{ color: 'var(--ink-faint)' }}>{t('noPendingRequestsLabel')}</p>
+          <p className="text-sm text-ink-faint">{t('noPendingRequestsLabel')}</p>
         ) : (
           <div className="space-y-4">
             {pending.map((conn) => (
@@ -170,12 +170,12 @@ export default function CaregiverConnectionsView({ session, onBack }) {
                 <div className="flex items-center gap-3.5 min-w-0">
                   <UserAvatar avatar={conn.caregiver?.avatar} fullName={conn.caregiver?.fullName} className="w-11 h-11 rounded-full overflow-hidden object-cover shrink-0" iconClassName="w-1/3 h-1/3" />
                   <div className="min-w-0">
-                    <span className="text-xs font-semibold uppercase tracking-wide block" style={{ color: 'var(--ember)' }}>{t('caregiverRequestLabel')}</span>
+                    <span className="text-xs font-semibold uppercase tracking-wide block text-ember">{t('caregiverRequestLabel')}</span>
                     <span className="font-display text-lg font-medium block truncate">{conn.caregiver?.fullName}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5 shrink-0">
-                  <button type="button" disabled={respondingId === conn.id} onClick={() => handleRespond(conn.id, 'rejected')} className="btn btn-line" style={{ color: 'var(--alert)', borderColor: 'var(--alert-soft)' }}>
+                  <button type="button" disabled={respondingId === conn.id} onClick={() => handleRespond(conn.id, 'rejected')} className="btn btn-line btn-danger-outline">
                     <UserX className="w-4 h-4" /> {t('rejectLabel')}
                   </button>
                   <button type="button" disabled={respondingId === conn.id} onClick={() => handleRespond(conn.id, 'accepted')} className="btn btn-ember">
@@ -209,12 +209,12 @@ export default function CaregiverConnectionsView({ session, onBack }) {
                   <UserAvatar avatar={conn.caregiver?.avatar} fullName={conn.caregiver?.fullName} className="w-11 h-11 rounded-full overflow-hidden object-cover shrink-0" iconClassName="w-1/3 h-1/3" />
                   <div className="min-w-0">
                     <span className="font-display text-lg font-medium block truncate">{conn.caregiver?.fullName}</span>
-                    <span className="text-xs block mt-0.5" style={{ color: 'var(--jade)' }}>
+                    <span className="text-xs block mt-0.5 text-jade">
                       {t('connectedSinceLabel')} {new Date(conn.updatedAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
-                <button type="button" onClick={() => setDisconnectTarget(conn)} className="btn btn-quiet shrink-0" style={{ color: 'var(--alert)' }}>
+                <button type="button" onClick={() => setDisconnectTarget(conn)} className="btn btn-danger-quiet shrink-0">
                   {t('disconnectLabel')}
                 </button>
               </motion.div>

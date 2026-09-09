@@ -143,14 +143,14 @@ export default function WhatChangedGame({ onFinishGame, onBack }) {
       {phase === 'study' && (
         <div className="text-center mb-4">
           <span className="eyebrow eyebrow-jade justify-center">{t('changedStudyEyebrow')}</span>
-          <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('changedStudyHintPrefix')} {viewLeft}{t('secondsUnit')}</p>
+          <p className="text-sm mt-2 text-ink-faint">{t('changedStudyHintPrefix')} {viewLeft}{t('secondsUnit')}</p>
         </div>
       )}
       {phase === 'transition' && <div className="text-center mb-4"><span className="eyebrow justify-center">{t('changingEllipsisLabel')}</span></div>}
       {(phase === 'find' || phase === 'feedback') && (
         <div className="text-center mb-4">
           <span className="eyebrow justify-center">{t('findWhatChangedEyebrow')}</span>
-          <p className="text-sm mt-2" style={{ color: 'var(--ink-faint)' }}>{t('findWhatChangedHint')}</p>
+          <p className="text-sm mt-2 text-ink-faint">{t('findWhatChangedHint')}</p>
         </div>
       )}
 
@@ -198,7 +198,7 @@ export default function WhatChangedGame({ onFinishGame, onBack }) {
 
       <div className="flex justify-center mt-6"><FeedbackState state={feedback} correctText={t('sharpEyesFeedback')} incorrectText={t('changesMissedFeedback')} /></div>
 
-      <p className="text-center text-xs font-semibold mt-8" style={{ color: 'var(--ink-faint)' }}>{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
+      <p className="text-center text-xs font-semibold mt-8 text-ink-faint">{t(difficultyLabelKey(level))} · {t('levelLabel')} {level}</p>
     </div>
   );
 }
