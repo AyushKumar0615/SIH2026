@@ -10,6 +10,7 @@ import UserAvatar from '../common/UserAvatar';
 import { resizeToDataUrl } from '../common/AvatarPicker';
 import { useTranslation } from '../../hooks/useTranslation';
 import { SkeletonCards } from '../common/Skeleton';
+import OfflineDataNotice from '../common/OfflineDataNotice';
 
 const categories = ['All', 'Family', 'Festivals', 'Places'];
 const categoryLabelKeys = { All: 'categoryAll', Family: 'categoryFamily', Festivals: 'categoryFestivals', Places: 'categoryPlaces' };
@@ -22,6 +23,7 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
   const [memories, setMemories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [isOffline, setIsOffline] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeMemory, setActiveMemory] = useState(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -54,6 +56,7 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
     }
     setMemories(result.memories);
     setActiveMemory(result.memories[0] || null);
+    setIsOffline(Boolean(result.fromCache));
     setIsLoading(false);
   }, [session?.id, t]);
 
@@ -379,6 +382,8 @@ export default function MemoryJournalView({ session, onBack, onOpenVoiceAssistan
         <button type="button" onClick={onBack} className="btn btn-quiet !px-0"><ArrowLeft className="w-4 h-4" /> {t('back')}</button>
         <h2 className="font-display text-2xl font-medium">{t('memoryJournal')}</h2>
       </div>
+
+      {!isLoading && isOffline && <OfflineDataNotice />}
 
       {!isLoading && !loadError && (
         <div className="flex items-center justify-between gap-4 mb-8 tab-strip border-b border-hairline">

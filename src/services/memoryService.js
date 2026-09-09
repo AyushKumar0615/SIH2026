@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { OfflineStore } from './offlineStore';
 
 function fromRow(row) {
   return {
@@ -16,14 +17,22 @@ function fromRow(row) {
 
 export const MemoryService = {
   async listMemories(userId) {
+    const cacheKey = `memories:${userId}`;
     const { data, error } = await supabase
       .from('memories')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (error) return { ok: false, error: error.message };
-    return { ok: true, memories: (data || []).map(fromRow) };
+    if (error) {
+      const cached = await OfflineStore.get(cacheKey);
+      if (cached) return { ok: true, memories: cached.data, fromCache: true, cachedAt: cached.cachedAt };
+      return { ok: false, error: error.message };
+    }
+
+    const memories = (data || []).map(fromRow);
+    OfflineStore.set(cacheKey, memories);
+    return { ok: true, memories, fromCache: false };
   },
 
   async addMemory(userId, payload) {

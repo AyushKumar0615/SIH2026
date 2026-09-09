@@ -6,6 +6,7 @@ import LocationMap from '../common/LocationMap';
 import { MapPin, Clock, Navigation } from 'lucide-react';
 import { SkeletonBlock } from '../common/Skeleton';
 import StatusBadge, { LOCATION_STATUS_TONES } from '../common/StatusBadge';
+import OfflineDataNotice from '../common/OfflineDataNotice';
 
 const STATUS_KEYS = { live: 'locationStatusLive', recent: 'locationStatusRecent', offline: 'locationStatusOffline' };
 
@@ -18,6 +19,7 @@ export default function ElderLocationView({ elder }) {
   const [location, setLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [isOffline, setIsOffline] = useState(false);
   const [, forceTick] = useState(0);
 
   const load = useCallback(async () => {
@@ -31,6 +33,7 @@ export default function ElderLocationView({ elder }) {
       return;
     }
     setLocation(result.location);
+    setIsOffline(Boolean(result.fromCache));
     setIsLoading(false);
   }, [elder?.id, t]);
 
@@ -39,7 +42,10 @@ export default function ElderLocationView({ elder }) {
   // Live-update the marker as new samples arrive, without a full refetch.
   useEffect(() => {
     if (!elder?.id) return undefined;
-    return LocationService.subscribeToElderLocation(elder.id, (row) => setLocation(row));
+    return LocationService.subscribeToElderLocation(elder.id, (row) => {
+      setLocation(row);
+      setIsOffline(false); // a live realtime row just arrived — definitely not cached/stale.
+    });
   }, [elder?.id]);
 
   // The LIVE/RECENT/OFFLINE label is purely a function of elapsed time, so
@@ -82,6 +88,7 @@ export default function ElderLocationView({ elder }) {
 
   return (
     <div className="space-y-6">
+      {isOffline && <OfflineDataNotice className="!my-0" />}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <StatusBadge tone={LOCATION_STATUS_TONES[status]} dot pulse={status === 'live'}>
           {t(STATUS_KEYS[status])}

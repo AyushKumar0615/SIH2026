@@ -13,6 +13,7 @@ import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { pageTransition } from '../common/pageTransition';
 import UserAvatar from '../common/UserAvatar';
 import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
+import OfflineDataNotice from '../common/OfflineDataNotice';
 import { useTranslation } from '../../hooks/useTranslation';
 import { BarChart3, Lightbulb, Bell, ShieldAlert, Link2, Users, MapPin } from 'lucide-react';
 
@@ -24,13 +25,16 @@ export default function CaregiverDashboard({ session }) {
   const [connections, setConnections] = useState([]);
   const [isLoadingConnections, setIsLoadingConnections] = useState(true);
   const [connectionsError, setConnectionsError] = useState('');
+  const [isConnectionsOffline, setIsConnectionsOffline] = useState(false);
   const [selectedElderId, setSelectedElderId] = useState(null);
 
   const [routines, setRoutines] = useState([]);
   const [isLoadingRoutines, setIsLoadingRoutines] = useState(true);
   const [routinesError, setRoutinesError] = useState('');
+  const [isRoutinesOffline, setIsRoutinesOffline] = useState(false);
   const [memories, setMemories] = useState([]);
   const [isLoadingMemories, setIsLoadingMemories] = useState(true);
+  const [isMemoriesOffline, setIsMemoriesOffline] = useState(false);
   const containerRef = useScrollReveal();
 
   const loadConnections = useCallback(async () => {
@@ -47,6 +51,7 @@ export default function CaregiverDashboard({ session }) {
       return;
     }
     setConnections(result.connections);
+    setIsConnectionsOffline(Boolean(result.fromCache));
     setIsLoadingConnections(false);
   }, [session?.id, t]);
 
@@ -80,6 +85,7 @@ export default function CaregiverDashboard({ session }) {
       return;
     }
     setRoutines(result.reminders);
+    setIsRoutinesOffline(Boolean(result.fromCache));
     setIsLoadingRoutines(false);
   }, [activeUserId, t]);
 
@@ -108,6 +114,7 @@ export default function CaregiverDashboard({ session }) {
     setIsLoadingMemories(true);
     MemoryService.listMemories(activeUserId).then((result) => {
       setMemories(result.ok ? result.memories : []);
+      setIsMemoriesOffline(Boolean(result.ok && result.fromCache));
       setIsLoadingMemories(false);
     });
   }, [activeUserId]);
@@ -197,13 +204,16 @@ export default function CaregiverDashboard({ session }) {
           <motion.div key={activeTab} {...pageTransition}>
             {activeTab === 'insights' && (
               connectedElder ? (
-                <ExplainableInsightsView
-                  userName={displayName}
-                  memories={memories}
-                  isLoadingMemories={isLoadingMemories}
-                  routines={routines}
-                  isLoadingRoutines={isLoadingRoutines}
-                />
+                <>
+                  {!isLoadingMemories && !isLoadingRoutines && (isMemoriesOffline || isRoutinesOffline) && <OfflineDataNotice />}
+                  <ExplainableInsightsView
+                    userName={displayName}
+                    memories={memories}
+                    isLoadingMemories={isLoadingMemories}
+                    routines={routines}
+                    isLoadingRoutines={isLoadingRoutines}
+                  />
+                </>
               ) : noElderNotice
             )}
             {activeTab === 'analytics' && <CognitiveAnalytics />}
@@ -211,6 +221,7 @@ export default function CaregiverDashboard({ session }) {
               connectedElder ? (
                 <>
                   <NotificationPermissionBanner session={session} />
+                  {!isLoadingRoutines && isRoutinesOffline && <OfflineDataNotice />}
                   <RoutineManager
                     session={session}
                     userName={displayName}
@@ -228,15 +239,18 @@ export default function CaregiverDashboard({ session }) {
               connectedElder ? <ElderLocationView elder={connectedElder} /> : noElderNotice
             )}
             {activeTab === 'connect' && (
-              <ConnectElderPanel
-                session={session}
-                connections={connections}
-                isLoading={isLoadingConnections}
-                loadError={connectionsError}
-                onRetry={loadConnections}
-                onConnected={loadConnections}
-                onDisconnected={() => loadConnections()}
-              />
+              <>
+                {!isLoadingConnections && isConnectionsOffline && <OfflineDataNotice />}
+                <ConnectElderPanel
+                  session={session}
+                  connections={connections}
+                  isLoading={isLoadingConnections}
+                  loadError={connectionsError}
+                  onRetry={loadConnections}
+                  onConnected={loadConnections}
+                  onDisconnected={() => loadConnections()}
+                />
+              </>
             )}
           </motion.div>
         </AnimatePresence>

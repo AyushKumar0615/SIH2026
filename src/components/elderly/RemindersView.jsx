@@ -8,6 +8,7 @@ import Magnetic from '../common/Magnetic';
 import { useTranslation } from '../../hooks/useTranslation';
 import { SkeletonList } from '../common/Skeleton';
 import NotificationPermissionBanner from '../common/NotificationPermissionBanner';
+import OfflineDataNotice from '../common/OfflineDataNotice';
 
 const categoryLabelKeys = { Medication: 'categoryMedication', Meals: 'categoryMeals', Activity: 'categoryActivity', Family: 'categoryFamilyCall' };
 const categories = Object.keys(REMINDER_CATEGORY_ICONS);
@@ -21,6 +22,7 @@ export default function RemindersView({ session, onBack }) {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [isOffline, setIsOffline] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(initialForm);
@@ -42,6 +44,7 @@ export default function RemindersView({ session, onBack }) {
       return;
     }
     setItems(result.reminders);
+    setIsOffline(Boolean(result.fromCache));
     setIsLoading(false);
   }, [session?.id, t]);
 
@@ -312,6 +315,8 @@ export default function RemindersView({ session, onBack }) {
       )}
 
       <NotificationPermissionBanner session={session} />
+
+      {isOffline && <OfflineDataNotice />}
 
       {!isLoading && !(loadError && items.length === 0) && (
         <div className="flex justify-end mb-4">

@@ -7,6 +7,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { AudioService } from '../../services/audioService';
 import { ReminderService, formatTime12h } from '../../services/reminderService';
 import { REMINDER_COMPLETED_EVENT } from '../../services/reminderAlertEngine';
+import OfflineDataNotice from '../common/OfflineDataNotice';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import GameShell from './GameShell';
 import MemoryJournalView from './MemoryJournalView';
@@ -28,6 +29,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [reminders, setReminders] = useState([]);
   const [isLoadingReminders, setIsLoadingReminders] = useState(true);
+  const [isRemindersOffline, setIsRemindersOffline] = useState(false);
   const containerRef = useScrollReveal();
   const spotlightRef = useRef(null);
   const heroRef = useRef(null);
@@ -55,6 +57,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
     ReminderService.listReminders(session.id).then((result) => {
       if (cancelled) return;
       setReminders(result.ok ? result.reminders : []);
+      setIsRemindersOffline(Boolean(result.ok && result.fromCache));
       setIsLoadingReminders(false);
     });
     return () => { cancelled = true; };
@@ -201,6 +204,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
               </div>
             )
           )}
+          {!isLoadingReminders && isRemindersOffline && <OfflineDataNotice className="mt-3" />}
         </motion.div>
       </section>
 

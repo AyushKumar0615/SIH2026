@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { OfflineStore } from './offlineStore';
 
 export const REMINDER_CATEGORY_ICONS = { Medication: '💊', Meals: '🍛', Activity: '🔔', Family: '📞' };
 
@@ -28,6 +29,7 @@ function fromRow(row) {
 
 export const ReminderService = {
   async listReminders(userId) {
+    const cacheKey = `reminders:${userId}`;
     const { data, error } = await supabase
       .from('reminders')
       .select('*')
@@ -35,8 +37,19 @@ export const ReminderService = {
       .eq('is_active', true)
       .order('time', { ascending: true });
 
-    if (error) return { ok: false, error: error.message };
-    return { ok: true, reminders: (data || []).map(fromRow) };
+    if (error) {
+      // Network/Supabase unreachable (e.g. offline) — fall back to the last
+      // successful fetch instead of surfacing an empty error state. If
+      // nothing has ever been cached for this user, behavior is unchanged
+      // from before: the original error is returned as-is.
+      const cached = await OfflineStore.get(cacheKey);
+      if (cached) return { ok: true, reminders: cached.data, fromCache: true, cachedAt: cached.cachedAt };
+      return { ok: false, error: error.message };
+    }
+
+    const reminders = (data || []).map(fromRow);
+    OfflineStore.set(cacheKey, reminders);
+    return { ok: true, reminders, fromCache: false };
   },
 
   async addReminder(userId, payload) {

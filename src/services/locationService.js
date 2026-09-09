@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { OfflineStore } from './offlineStore';
 
 // Don't persist a new sample unless this much time has passed...
 const THROTTLE_MS = 30000;
@@ -54,6 +55,7 @@ export const LocationService = {
   },
 
   async getLatestLocation(elderId) {
+    const cacheKey = `latest-location:${elderId}`;
     const { data, error } = await supabase
       .from('elder_locations')
       .select('*')
@@ -61,8 +63,20 @@ export const LocationService = {
       .order('recorded_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (error) return { ok: false, error: 'unknown' };
-    return { ok: true, location: data };
+
+    if (error) {
+      // NOTE: this does not touch LocationMap or attempt to cache map
+      // tiles — only the last known coordinates, so the existing map
+      // component can render its last-known-fix pin as usual while
+      // offline. getLocationStatus() already labels anything this stale as
+      // 'offline' on its own, independent of this cache.
+      const cached = await OfflineStore.get(cacheKey);
+      if (cached) return { ok: true, location: cached.data, fromCache: true, cachedAt: cached.cachedAt };
+      return { ok: false, error: 'unknown' };
+    }
+
+    if (data) OfflineStore.set(cacheKey, data);
+    return { ok: true, location: data, fromCache: false };
   },
 
   // Fires `onInsert(row)` for every new sample. Returns an unsubscribe

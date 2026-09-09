@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { OfflineStore } from './offlineStore';
 
 const KNOWN_ERROR_CODES = [
   'invalid_code',
@@ -49,23 +50,41 @@ export const CaregiverConnectionService = {
   },
 
   async listCaregiversForElder(elderId) {
+    const cacheKey = `caregivers-for-elder:${elderId}`;
     const { data, error } = await supabase
       .from('caregiver_connections')
       .select('id, status, created_at, updated_at, caregiver:profiles!caregiver_connections_caregiver_id_fkey(id, full_name, avatar)')
       .eq('elder_id', elderId)
       .order('created_at', { ascending: false });
-    if (error) return { ok: false, error: 'unknown' };
-    return { ok: true, connections: (data || []).map((row) => toConnection(row, 'elder')) };
+
+    if (error) {
+      const cached = await OfflineStore.get(cacheKey);
+      if (cached) return { ok: true, connections: cached.data, fromCache: true, cachedAt: cached.cachedAt };
+      return { ok: false, error: 'unknown' };
+    }
+
+    const connections = (data || []).map((row) => toConnection(row, 'elder'));
+    OfflineStore.set(cacheKey, connections);
+    return { ok: true, connections, fromCache: false };
   },
 
   async listEldersForCaregiver(caregiverId) {
+    const cacheKey = `elders-for-caregiver:${caregiverId}`;
     const { data, error } = await supabase
       .from('caregiver_connections')
       .select('id, status, created_at, updated_at, elder:profiles!caregiver_connections_elder_id_fkey(id, full_name, avatar)')
       .eq('caregiver_id', caregiverId)
       .order('created_at', { ascending: false });
-    if (error) return { ok: false, error: 'unknown' };
-    return { ok: true, connections: (data || []).map((row) => toConnection(row, 'caregiver')) };
+
+    if (error) {
+      const cached = await OfflineStore.get(cacheKey);
+      if (cached) return { ok: true, connections: cached.data, fromCache: true, cachedAt: cached.cachedAt };
+      return { ok: false, error: 'unknown' };
+    }
+
+    const connections = (data || []).map((row) => toConnection(row, 'caregiver'));
+    OfflineStore.set(cacheKey, connections);
+    return { ok: true, connections, fromCache: false };
   },
 
   async requestConnection(code) {

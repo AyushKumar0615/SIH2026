@@ -377,6 +377,7 @@ export const DICTIONARY = {
     noCompletionHistoryYet: "No completed routines yet.",
     remindersLoading: "Loading your reminders…",
     remindersLoadError: "Couldn't load your reminders. Please try again.",
+    offlineShowingCachedData: "You're offline — showing the last saved data.",
     noRemindersYetTitle: "No reminders yet",
     noRemindersYetDesc: "Create a reminder to build a helpful daily routine.",
     reminderNotesLabel: "Notes (optional)",

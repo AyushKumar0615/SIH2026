@@ -7,6 +7,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import UserAvatar from '../common/UserAvatar';
 import ConfirmDialog from '../common/ConfirmDialog';
 import InlineNotice from '../common/InlineNotice';
+import OfflineDataNotice from '../common/OfflineDataNotice';
 
 const ERROR_KEY = {
   unknown: 'connectionGenericError',
@@ -25,6 +26,7 @@ export default function CaregiverConnectionsView({ session, onBack }) {
   const [connections, setConnections] = useState([]);
   const [isLoadingConnections, setIsLoadingConnections] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [isOffline, setIsOffline] = useState(false);
   const [respondingId, setRespondingId] = useState(null);
   const [disconnectTarget, setDisconnectTarget] = useState(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -54,6 +56,7 @@ export default function CaregiverConnectionsView({ session, onBack }) {
       return;
     }
     setConnections(result.connections);
+    setIsOffline(Boolean(result.fromCache));
     setIsLoadingConnections(false);
   }, [session?.id, t]);
 
@@ -121,6 +124,8 @@ export default function CaregiverConnectionsView({ session, onBack }) {
       <h2 className="font-display text-3xl md:text-4xl font-medium mt-3 mb-8">{t('navMyCaregivers')}</h2>
 
       <InlineNotice tone={notice?.tone} message={notice?.message} onDismiss={() => setNotice(null)} />
+
+      {!isLoadingConnections && isOffline && <OfflineDataNotice />}
 
       {/* Connection code */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="panel-dark p-7 sm:p-9 mb-10">
