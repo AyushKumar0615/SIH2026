@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { BarChart3 } from 'lucide-react';
 import { AdminService } from '../../services/adminService';
 import { useTranslation } from '../../hooks/useTranslation';
 import { SkeletonList } from '../common/Skeleton';
 
-// refreshSignal: bump this from a parent after a mutation elsewhere on the
-// page (e.g. activating/deactivating a user) so these counters don't go
-// stale without requiring a full page reload.
+// The four headline numbers (Total Elders / Total Caregivers / Active
+// Connections / Games Available) moved to the dashboard's own stat-card row
+// to match the reference layout — this section keeps the *rest* of what
+// AdminService.getPlatformStats() already returns (total/active/inactive
+// users, regions active, total memories) so that data isn't lost, just
+// repositioned into a dedicated Analytics card lower on the page.
 export default function ImpactDashboard({ refreshSignal = 0 }) {
   const { t } = useTranslation();
   const [stats, setStats] = useState(null);
@@ -30,20 +34,24 @@ export default function ImpactDashboard({ refreshSignal = 0 }) {
   }, [load]);
 
   const tiles = stats && [
-    { labelKey: 'statTotalUsers', value: stats.totalUsers.toLocaleString(), color: 'var(--jade)' },
-    { labelKey: 'statActiveUsers', value: stats.activeUsers.toLocaleString(), color: 'var(--ember)' },
-    { labelKey: 'statInactiveUsers', value: stats.inactiveUsers.toLocaleString(), color: 'var(--jade)' },
-    { labelKey: 'statNerStates', value: stats.regionsActive.toLocaleString(), color: 'var(--ember)' },
-    { labelKey: 'statEldersSupported', value: stats.totalElders.toLocaleString(), color: 'var(--jade)' },
-    { labelKey: 'statCaregiversActive', value: stats.totalCaregivers.toLocaleString(), color: 'var(--ember)' },
-    { labelKey: 'statMemoriesRecorded', value: stats.totalMemories.toLocaleString(), color: 'var(--jade)' },
-    { labelKey: 'statActiveConnections', value: stats.activeConnections.toLocaleString(), color: 'var(--ember)' }
+    { labelKey: 'statTotalUsers', value: stats.totalUsers.toLocaleString() },
+    { labelKey: 'statActiveUsers', value: stats.activeUsers.toLocaleString() },
+    { labelKey: 'statInactiveUsers', value: stats.inactiveUsers.toLocaleString() },
+    { labelKey: 'statNerStates', value: stats.regionsActive.toLocaleString() },
+    { labelKey: 'statMemoriesRecorded', value: stats.totalMemories.toLocaleString() }
   ];
 
   return (
-    <div>
-      <span className="eyebrow">{t('sihPitchMetrics')}</span>
-      <h2 className="font-display text-3xl md:text-4xl font-medium mt-3 mb-8">{t('regionalImpactTitle')}</h2>
+    <div className="admin-card">
+      <div className="admin-card-header">
+        <div className="flex items-start gap-3.5">
+          <span className="admin-card-icon"><BarChart3 className="w-5 h-5" /></span>
+          <div>
+            <h2 className="admin-card-title">{t('adminAnalyticsTitle')}</h2>
+            <p className="admin-card-subtitle">{t('adminAnalyticsSubtitle')}</p>
+          </div>
+        </div>
+      </div>
 
       {isLoading ? (
         <SkeletonList rows={2} label={t('adminLoadingLabel')} />
@@ -53,11 +61,11 @@ export default function ImpactDashboard({ refreshSignal = 0 }) {
           <button type="button" onClick={load} className="btn btn-line shrink-0">{t('retry')}</button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6" style={{ borderTop: '1px solid var(--hairline)', paddingTop: '2rem' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
           {tiles.map((s) => (
             <div key={s.labelKey} className="figure">
               <span className="figure-label">{t(s.labelKey)}</span>
-              <span className="figure-value" style={{ color: s.color }}>{s.value}</span>
+              <span className="figure-value text-ember">{s.value}</span>
             </div>
           ))}
         </div>

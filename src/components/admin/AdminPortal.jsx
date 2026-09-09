@@ -1,35 +1,97 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ImpactDashboard from './ImpactDashboard';
-import { CULTURAL_CATALOG } from '../../data/regionalContent';
+import AdminSidebar from './AdminSidebar';
+import StatCard from './StatCard';
 import { AdminService, formatDateTime } from '../../services/adminService';
 import { LocationService } from '../../services/locationService';
+import { GAME_CATALOG } from '../../data/gameCatalog';
 import LocationMap from '../common/LocationMap';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { useTranslation } from '../../hooks/useTranslation';
 import ConfirmDialog from '../common/ConfirmDialog';
 import InlineNotice from '../common/InlineNotice';
 import { SkeletonList } from '../common/Skeleton';
+import ThemeToggle from '../common/ThemeToggle';
 import StatusBadge, { LOCATION_STATUS_TONES } from '../common/StatusBadge';
 import {
-  Shield, Server, Globe, Users, HeartPulse, LayoutDashboard, ChevronDown,
-  Search, UserCheck, UserX, Link2, MapPin, Clock, Navigation
+  Shield, Users, HeartPulse, LayoutDashboard, ChevronDown, UserRound,
+  Search, UserCheck, UserX, Link2, MapPin, Clock, Navigation, Menu,
+  Zap, UserPlus2, BarChart3, ChevronRight, Gamepad2, Database, Fingerprint
 } from 'lucide-react';
 
 const ROLE_LABEL_KEYS = { elderly: 'modeElderlyLabel', caregiver: 'modeCaregiverLabel', admin: 'modeAdminLabel' };
 const ROLE_ICONS = { elderly: HeartPulse, caregiver: LayoutDashboard, admin: Shield };
+const ROLE_BADGE_TONES = { elderly: 'ember', caregiver: 'sky', admin: 'violet' };
 const CONNECTION_STATUS_KEYS = { pending: 'pendingApprovalNotice', accepted: 'statusAcceptedLabel', rejected: 'statusRejectedLabel' };
 const LOCATION_STATUS_KEYS = { live: 'locationStatusLive', recent: 'locationStatusRecent', offline: 'locationStatusOffline' };
 
-export default function AdminPortal() {
+// role -> tab id (also doubles as the roleFilter value AdminService.listUsers
+// already accepts — the sidebar's "Elders"/"Caregivers" links and these tabs
+// drive the exact same piece of state, never two competing filters).
+const ROLE_TABS = [
+  { id: '', labelKey: 'allRolesOption' },
+  { id: 'elderly', labelKey: 'modeElderlyLabel' },
+  { id: 'caregiver', labelKey: 'modeCaregiverLabel' },
+  { id: 'admin', labelKey: 'modeAdminLabel' }
+];
+
+export default function AdminPortal({ session, onLogout, theme, onToggleTheme }) {
   const { t } = useTranslation();
-  const containerRef = useScrollReveal();
 
   // Bumped after a user-management mutation (activate/deactivate,
   // disconnect) so the dashboard counters above refetch without a
   // full page reload.
   const [statsVersion, setStatsVersion] = useState(0);
   const bumpStats = useCallback(() => setStatsVersion((v) => v + 1), []);
+
+  // Lifted out of the tabs/search controls below so the sidebar's
+  // "Elders"/"Caregivers" links and the top header's search field can drive
+  // the exact same live filter — one source of truth, not a second one that
+  // only looks connected.
+  const [roleFilter, setRoleFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const topRef = useRef(null);
+  const userMgmtRef = useRef(null);
+  const auditRef = useRef(null);
+  const analyticsRef = useRef(null);
+
+  const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Only 'dashboard', 'elders', 'caregivers', 'connections' and 'analytics'
+  // map to something real (a filter + scroll, or a scroll, to content that
+  // already exists on this single-page dashboard). 'content' and 'settings'
+  // have no corresponding feature anywhere in the app, so they render in the
+  // sidebar for layout fidelity but intentionally do nothing when clicked —
+  // see AdminSidebar's NAV_ITEMS comment.
+  const handleNavigate = (id) => {
+    if (id === 'dashboard') { scrollTo(topRef); return; }
+    if (id === 'elders') { setRoleFilter('elderly'); scrollTo(userMgmtRef); return; }
+    if (id === 'caregivers') { setRoleFilter('caregiver'); scrollTo(userMgmtRef); return; }
+    if (id === 'connections') { setRoleFilter(''); scrollTo(userMgmtRef); return; }
+    if (id === 'analytics') { scrollTo(analyticsRef); return; }
+  };
+
+  const [platformStats, setPlatformStats] = useState(null);
+  const [isLoadingPlatformStats, setIsLoadingPlatformStats] = useState(true);
+  const [platformStatsError, setPlatformStatsError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingPlatformStats(true);
+    AdminService.getPlatformStats().then((result) => {
+      if (cancelled) return;
+      if (result.ok) {
+        setPlatformStats(result.stats);
+        setPlatformStatsError(false);
+      } else {
+        setPlatformStatsError(true);
+      }
+      setIsLoadingPlatformStats(false);
+    });
+    return () => { cancelled = true; };
+  }, [statsVersion]);
 
   const [activity, setActivity] = useState([]);
   const [isLoadingActivity, setIsLoadingActivity] = useState(true);
@@ -64,85 +126,234 @@ export default function AdminPortal() {
     return key ? t(key) : actor.role;
   };
 
+  // A real, if approximate, health signal for the System Status card: it
+  // reflects whether this session's own admin data fetches are actually
+  // succeeding, rather than a hard-coded "everything's fine". The app has
+  // no per-service (DB/auth/storage/realtime) health-check backend, and
+  // building one solely for this card was explicitly out of scope — so
+  // only the two categories with a genuine signal are shown. See the
+  // redesign report for the full reasoning.
+  const [usersLoadFailed, setUsersLoadFailed] = useState(false);
+  const databaseHealthy = !platformStatsError && !usersLoadFailed && !activityError;
+  const allSystemsHealthy = databaseHealthy; // authentication is always true when this page renders at all
+
+  const firstName = (session?.fullName || '').trim().split(/\s+/)[0] || t('adminRoleLabel');
+
   return (
-    <div ref={containerRef} className="page space-y-16">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 scroll-reveal border-b border-hairline">
-        <div>
-          <span className="eyebrow">{t('platformGovernance')}</span>
-          <h1 className="font-display text-4xl md:text-5xl font-medium mt-3 leading-[0.98]">{t('systemHealthTitle')}</h1>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 text-sm font-semibold text-jade">
-          <Server className="w-4.5 h-4.5 animate-soft-pulse" /> {t('allNodesOperational')}
-        </div>
-      </div>
+    <div className="admin-shell">
+      <AdminSidebar
+        t={t}
+        activeSection="dashboard"
+        onNavigate={handleNavigate}
+        session={session}
+        onLogout={onLogout}
+        mobileOpen={mobileNavOpen}
+        onCloseMobile={() => setMobileNavOpen(false)}
+      />
 
-      <div className="scroll-reveal" data-reveal-delay="1"><ImpactDashboard refreshSignal={statsVersion} /></div>
-
-      <div className="scroll-reveal" data-reveal-delay="2">
-        <UserManagementSection t={t} onMutation={bumpStats} />
-      </div>
-
-      <div className="scroll-reveal" data-reveal-delay="3">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl font-medium flex items-center gap-2.5"><Globe className="w-5 h-5 text-jade" /> {t('neRegionTitle')}</h2>
+      <div className="flex-1 min-w-0">
+        <div className="admin-topbar-mobile">
+          <button type="button" onClick={() => setMobileNavOpen(true)} className="btn-icon" aria-label={t('openAdminMenuAria')}>
+            <Menu className="w-5 h-5" />
+          </button>
+          <span className="font-display font-semibold">Smriti<em className="italic text-ember">Setu</em></span>
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
         </div>
-        <div className="index-list">
-          {Object.values(CULTURAL_CATALOG).map((st, idx) => (
-            <div key={st.id} className="index-row !cursor-default">
-              <span className="index-num">0{idx + 1}</span>
-              <span className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 items-center">
-                <span className="font-display text-lg font-medium">{st.name}</span>
-                <span className="text-sm text-ink-faint">{st.language} · "{st.greeting}"</span>
-                <span className="text-sm truncate text-jade">{st.crafts ? st.crafts.join(', ') : 'Standard'}</span>
+
+        <div ref={topRef} className="admin-main">
+          <div className="admin-header-row">
+            <div>
+              <h1 className="font-display text-3xl md:text-4xl font-medium leading-tight">
+                {t('adminWelcomeBack').replace('{name}', firstName)}
+              </h1>
+              <p className="text-sm mt-1.5 text-ink-faint">{t('adminWelcomeSubtitle')}</p>
+            </div>
+            <div className="admin-header-controls">
+              <div className="admin-search">
+                <Search className="w-4 h-4 text-ink-faint shrink-0" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t('adminSearchPlaceholder')}
+                />
+              </div>
+              <span className="hidden lg:flex items-center gap-2.5">
+                <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+                <button type="button" onClick={() => scrollTo(auditRef)} className="btn-icon" aria-label={t('auditTrailTitle')}>
+                  <Shield className="w-4.5 h-4.5" />
+                </button>
               </span>
             </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="scroll-reveal" data-reveal-delay="4">
-        <h2 className="font-display text-2xl font-medium flex items-center gap-2.5 mb-6"><Shield className="w-5 h-5 text-ember" /> {t('auditTrailTitle')}</h2>
-        {isLoadingActivity ? (
-          <SkeletonList rows={4} label={t('adminLoadingLabel')} />
-        ) : activityError ? (
-          <div className="notice-strip is-alert flex items-center justify-between gap-4">
-            <p className="text-sm text-alert">{activityError}</p>
-            <button type="button" onClick={loadActivity} className="btn btn-line shrink-0">{t('retry')}</button>
           </div>
-        ) : activity.length === 0 ? (
-          <p className="text-sm text-ink-faint">{t('noActivityYet')}</p>
-        ) : (
-          <div className="data-table-wrap">
-            <div className="overflow-x-auto">
-              <table className="data-table text-sm">
-                <thead><tr><th>{t('colTimestamp')}</th><th>{t('colUserRole')}</th><th>{t('colAction')}</th></tr></thead>
-                <tbody>
-                  {activity.map((event) => (
-                    <tr key={event.id}>
-                      <td className="font-mono text-xs whitespace-nowrap" style={{ color: 'rgba(23,20,15,0.5)' }}>{formatDateTime(event.timestamp)}</td>
-                      <td className="font-semibold whitespace-nowrap">{event.actor?.full_name}{event.actor ? ` (${roleLabelFor(event.actor)})` : ''}</td>
-                      <td style={{ color: 'rgba(23,20,15,0.6)' }}>{describeEvent(event)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+          <div className="admin-stat-grid">
+            <StatCard icon={HeartPulse} tone="ember" isLoading={isLoadingPlatformStats}
+              value={platformStats?.totalElders.toLocaleString()} label={t('statTotalElders')} />
+            <StatCard icon={Users} tone="sky" isLoading={isLoadingPlatformStats}
+              value={platformStats?.totalCaregivers.toLocaleString()} label={t('statTotalCaregivers')} />
+            <StatCard icon={Link2} tone="violet" isLoading={isLoadingPlatformStats}
+              value={platformStats?.activeConnections.toLocaleString()} label={t('statActiveConnections')} />
+            <StatCard icon={Gamepad2} tone="jade" isLoading={false}
+              value={GAME_CATALOG.length} label={t('statGamesAvailable')} />
+          </div>
+
+          <div className="admin-two-col">
+            <div ref={userMgmtRef} className="admin-card">
+              <UserManagementSection
+                t={t}
+                onMutation={bumpStats}
+                roleFilter={roleFilter}
+                setRoleFilter={setRoleFilter}
+                search={search}
+                setSearch={setSearch}
+                onLoadFailedChange={setUsersLoadFailed}
+              />
+            </div>
+
+            <div className="space-y-5">
+              <QuickActionsCard
+                t={t}
+                onViewElders={() => handleNavigate('elders')}
+                onViewCaregivers={() => handleNavigate('caregivers')}
+                onViewAnalytics={() => handleNavigate('analytics')}
+                onViewAudit={() => scrollTo(auditRef)}
+              />
+              <SystemStatusCard t={t} databaseHealthy={databaseHealthy} allHealthy={allSystemsHealthy} />
             </div>
           </div>
-        )}
+
+          <div ref={auditRef} className="admin-card mt-5">
+            <div className="admin-card-header">
+              <div className="flex items-start gap-3.5">
+                <span className="admin-card-icon"><Shield className="w-5 h-5" /></span>
+                <div>
+                  <h2 className="admin-card-title">{t('auditTrailTitle')}</h2>
+                  <p className="admin-card-subtitle">{t('auditTrailSubtitle')}</p>
+                </div>
+              </div>
+            </div>
+            {isLoadingActivity ? (
+              <SkeletonList rows={4} label={t('adminLoadingLabel')} />
+            ) : activityError ? (
+              <div className="notice-strip is-alert flex items-center justify-between gap-4">
+                <p className="text-sm text-alert">{activityError}</p>
+                <button type="button" onClick={loadActivity} className="btn btn-line shrink-0">{t('retry')}</button>
+              </div>
+            ) : activity.length === 0 ? (
+              <p className="text-sm text-ink-faint">{t('noActivityYet')}</p>
+            ) : (
+              <div className="overflow-x-auto -mx-1.5">
+                <table className="w-full text-left text-sm" style={{ borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr className="text-ink-faint" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      <th className="font-semibold px-1.5 pb-3">{t('colTimestamp')}</th>
+                      <th className="font-semibold px-1.5 pb-3">{t('colUserRole')}</th>
+                      <th className="font-semibold px-1.5 pb-3">{t('colAction')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activity.map((event) => (
+                      <tr key={event.id} className="border-hairline" style={{ borderTop: '1px solid var(--hairline)' }}>
+                        <td className="font-mono text-xs whitespace-nowrap px-1.5 py-3 text-ink-faint">{formatDateTime(event.timestamp)}</td>
+                        <td className="font-semibold whitespace-nowrap px-1.5 py-3">{event.actor?.full_name}{event.actor ? ` (${roleLabelFor(event.actor)})` : ''}</td>
+                        <td className="px-1.5 py-3 text-ink-soft">{describeEvent(event)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div ref={analyticsRef} className="mt-5">
+            <ImpactDashboard refreshSignal={statsVersion} />
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function UserManagementSection({ t, onMutation }) {
+function QuickActionsCard({ t, onViewElders, onViewCaregivers, onViewAnalytics, onViewAudit }) {
+  const actions = [
+    { icon: UserPlus2, tone: 'ember', titleKey: 'qaViewEldersTitle', descKey: 'qaViewEldersDesc', onClick: onViewElders },
+    { icon: Users, tone: 'sky', titleKey: 'qaViewCaregiversTitle', descKey: 'qaViewCaregiversDesc', onClick: onViewCaregivers },
+    { icon: BarChart3, tone: 'violet', titleKey: 'qaViewAnalyticsTitle', descKey: 'qaViewAnalyticsDesc', onClick: onViewAnalytics },
+    { icon: Shield, tone: 'jade', titleKey: 'qaViewAuditTitle', descKey: 'qaViewAuditDesc', onClick: onViewAudit }
+  ];
+  const TONE_STYLES = {
+    ember: { background: 'var(--ember-soft)', color: 'var(--ember)' },
+    sky: { background: 'var(--sky-soft)', color: 'var(--sky)' },
+    violet: { background: 'var(--violet-soft)', color: 'var(--violet)' },
+    jade: { background: 'var(--jade-soft)', color: 'var(--jade)' }
+  };
+  return (
+    <div className="admin-card">
+      <div className="admin-card-header !mb-3">
+        <div className="flex items-start gap-3.5">
+          <span className="admin-card-icon"><Zap className="w-5 h-5" /></span>
+          <div>
+            <h2 className="admin-card-title">{t('quickActionsTitle')}</h2>
+            <p className="admin-card-subtitle">{t('quickActionsSubtitle')}</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        {actions.map((a) => {
+          const Icon = a.icon;
+          return (
+            <button key={a.titleKey} type="button" onClick={a.onClick} className="admin-quick-action">
+              <span className="admin-quick-action-icon" style={TONE_STYLES[a.tone]}><Icon className="w-4.5 h-4.5" /></span>
+              <span className="flex-1 min-w-0 text-left">
+                <span className="text-sm font-semibold block">{t(a.titleKey)}</span>
+                <span className="text-xs block mt-0.5 text-ink-faint truncate">{t(a.descKey)}</span>
+              </span>
+              <ChevronRight className="w-4 h-4 shrink-0 text-ink-faint" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SystemStatusCard({ t, databaseHealthy, allHealthy }) {
+  return (
+    <div className="admin-card">
+      <div className="admin-card-header !mb-3">
+        <div className="flex items-start gap-3.5">
+          <span className="admin-card-icon"><Database className="w-5 h-5" /></span>
+          <div>
+            <h2 className="admin-card-title">{t('systemStatusTitle')}</h2>
+            <p className="admin-card-subtitle">{allHealthy ? t('systemStatusAllOperational') : t('systemStatusIssues')}</p>
+          </div>
+        </div>
+        <StatusBadge tone={allHealthy ? 'jade' : 'alert'} dot>
+          {t(allHealthy ? 'allSystemsOnlineLabel' : 'systemIssuesLabel')}
+        </StatusBadge>
+      </div>
+      <div>
+        <div className="admin-status-row">
+          <span className="flex items-center gap-2.5"><Database className="w-4 h-4 text-ink-faint" /> {t('systemStatusDatabase')}</span>
+          <StatusBadge tone={databaseHealthy ? 'jade' : 'alert'} dot>{t(databaseHealthy ? 'operationalLabel' : 'systemIssuesLabel')}</StatusBadge>
+        </div>
+        <div className="admin-status-row">
+          <span className="flex items-center gap-2.5"><Fingerprint className="w-4 h-4 text-ink-faint" /> {t('systemStatusAuth')}</span>
+          <StatusBadge tone="jade" dot>{t('operationalLabel')}</StatusBadge>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UserManagementSection({ t, onMutation, roleFilter, setRoleFilter, search, setSearch, onLoadFailedChange }) {
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [expandedId, setExpandedId] = useState(null);
   const [notice, setNotice] = useState(null);
@@ -155,13 +366,15 @@ function UserManagementSection({ t, onMutation }) {
     if (!result.ok) {
       setLoadError(t('adminLoadError'));
       setIsLoading(false);
+      onLoadFailedChange?.(true);
       return;
     }
     setUsers(result.users);
     setTotal(result.total);
     setPageSize(result.pageSize);
     setIsLoading(false);
-  }, [search, roleFilter, statusFilter, page, t]);
+    onLoadFailedChange?.(false);
+  }, [search, roleFilter, statusFilter, page, t, onLoadFailedChange]);
 
   useEffect(() => {
     loadUsers();
@@ -201,16 +414,39 @@ function UserManagementSection({ t, onMutation }) {
 
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min(total, page * pageSize + pageSize);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = page + 1;
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-2xl font-medium flex items-center gap-2.5"><Users className="w-5 h-5 text-ember" /> {t('userManagementTitle')}</h2>
+      <div className="admin-card-header">
+        <div className="flex items-start gap-3.5">
+          <span className="admin-card-icon"><UserRound className="w-5 h-5" /></span>
+          <div>
+            <h2 className="admin-card-title">{t('userManagementTitle')}</h2>
+            <p className="admin-card-subtitle">{t('userManagementSubtitle')}</p>
+          </div>
+        </div>
       </div>
 
       <InlineNotice tone={notice?.tone} message={notice?.message} onDismiss={() => setNotice(null)} />
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="admin-tabs" role="tablist">
+        {ROLE_TABS.map((tab) => (
+          <button
+            key={tab.id || 'all'}
+            type="button"
+            role="tab"
+            aria-selected={roleFilter === tab.id}
+            onClick={() => setRoleFilter(tab.id)}
+            className={`tab-link ${roleFilter === tab.id ? 'is-active' : ''}`}
+          >
+            {t(tab.labelKey)}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-0 top-1/2 -translate-y-1/2 text-ink-faint" />
           <input
@@ -221,13 +457,7 @@ function UserManagementSection({ t, onMutation }) {
             className="input !pl-6"
           />
         </div>
-        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="select sm:!w-48">
-          <option value="">{t('allRolesOption')}</option>
-          <option value="elderly">{t('modeElderlyLabel')}</option>
-          <option value="caregiver">{t('modeCaregiverLabel')}</option>
-          <option value="admin">{t('modeAdminLabel')}</option>
-        </select>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="select sm:!w-48">
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="select sm:!w-44" aria-label={t('filterByStatusAria')}>
           <option value="">{t('allStatusesOption')}</option>
           <option value="active">{t('statusActiveLabel')}</option>
           <option value="inactive">{t('statusInactiveLabel')}</option>
@@ -242,32 +472,46 @@ function UserManagementSection({ t, onMutation }) {
           <button type="button" onClick={loadUsers} className="btn btn-line shrink-0">{t('retry')}</button>
         </div>
       ) : users.length === 0 ? (
-        <p className="text-sm text-ink-faint">{t('noUsersFoundLabel')}</p>
+        <p className="text-sm text-ink-faint py-6">{t('noUsersFoundLabel')}</p>
       ) : (
         <>
-          <div className="index-list">
+          <div className="admin-user-table-head">
+            <span>{t('colName')}</span>
+            <span>{t('colRole')}</span>
+            <span>{t('colRegion')}</span>
+            <span>{t('colStatus')}</span>
+            <span className="text-right">{t('colActions')}</span>
+          </div>
+
+          <div>
             {users.map((user) => {
-              const RoleIcon = ROLE_ICONS[(user.role || '').trim().toLowerCase()] || Users;
+              const role = (user.role || '').trim().toLowerCase();
+              const RoleIcon = ROLE_ICONS[role] || Users;
               const isExpanded = expandedId === user.id;
               return (
                 <div key={user.id}>
                   <button
                     type="button"
                     onClick={() => setExpandedId(isExpanded ? null : user.id)}
-                    className="index-row"
+                    className="admin-user-row"
                     aria-expanded={isExpanded}
                   >
-                    <span className="index-icon"><RoleIcon className="w-4.5 h-4.5" /></span>
-                    <span className="flex-1 min-w-0 text-left">
-                      <span className="font-display text-lg font-medium block truncate">{user.full_name || '—'}</span>
-                      <span className="text-sm block mt-0.5 text-ink-faint">
-                        {t(ROLE_LABEL_KEYS[(user.role || '').trim().toLowerCase()] || 'modeCaregiverLabel')} · {user.state || '—'} ·{' '}
-                        <StatusBadge tone={user.is_active === false ? 'alert' : 'jade'} dot>
-                          {t(user.is_active === false ? 'statusInactiveLabel' : 'statusActiveLabel')}
-                        </StatusBadge>
-                      </span>
+                    <span className="flex items-center gap-3 min-w-0">
+                      <span className="index-icon shrink-0" style={{ width: '2.5rem', height: '2.5rem' }}><RoleIcon className="w-4 h-4" /></span>
+                      <span className="font-display text-base font-medium truncate">{user.full_name || '—'}</span>
                     </span>
-                    <ChevronDown className="index-arrow w-5 h-5 shrink-0" style={{ opacity: 1, transform: isExpanded ? 'rotate(180deg)' : 'none' }} />
+                    <span>
+                      <StatusBadge tone={ROLE_BADGE_TONES[role] || 'muted'}>{t(ROLE_LABEL_KEYS[role] || 'modeCaregiverLabel')}</StatusBadge>
+                    </span>
+                    <span className="text-sm text-ink-faint truncate">{user.state || '—'}</span>
+                    <span>
+                      <StatusBadge tone={user.is_active === false ? 'alert' : 'jade'} dot>
+                        {t(user.is_active === false ? 'statusInactiveLabel' : 'statusActiveLabel')}
+                      </StatusBadge>
+                    </span>
+                    <span className="flex justify-end">
+                      <ChevronDown className="index-arrow w-5 h-5 shrink-0" style={{ opacity: 1, transform: isExpanded ? 'rotate(180deg)' : 'none' }} />
+                    </span>
                   </button>
 
                   <AnimatePresence>
@@ -294,13 +538,33 @@ function UserManagementSection({ t, onMutation }) {
             })}
           </div>
 
-          <div className="flex items-center justify-between mt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-5 pt-5" style={{ borderTop: '1px solid var(--hairline)' }}>
             <span className="text-xs text-ink-faint">
               {t('showingRangeLabel').replace('{from}', from).replace('{to}', to).replace('{total}', total)}
             </span>
-            <div className="flex items-center gap-2.5">
-              <button type="button" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="btn btn-quiet">{t('prevPageLabel')}</button>
-              <button type="button" disabled={to >= total} onClick={() => setPage((p) => p + 1)} className="btn btn-quiet">{t('nextPageLabel')}</button>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button type="button" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="btn-icon" aria-label={t('prevPageLabel')}>
+                <ChevronDown className="w-4 h-4 rotate-90" />
+              </button>
+              {buildPageList(currentPage, totalPages).map((p, idx) => (
+                typeof p === 'number' ? (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPage(p - 1)}
+                    className="btn-icon"
+                    style={p === currentPage ? { borderColor: 'var(--ember)', color: 'var(--ember)' } : {}}
+                    aria-current={p === currentPage ? 'page' : undefined}
+                  >
+                    {p}
+                  </button>
+                ) : (
+                  <span key={`ellipsis-${idx}`} className="text-ink-faint px-1">…</span>
+                )
+              ))}
+              <button type="button" disabled={to >= total} onClick={() => setPage((p) => p + 1)} className="btn-icon" aria-label={t('nextPageLabel')}>
+                <ChevronDown className="w-4 h-4 -rotate-90" />
+              </button>
             </div>
           </div>
         </>
@@ -316,6 +580,21 @@ function UserManagementSection({ t, onMutation }) {
       />
     </div>
   );
+}
+
+// Small, dependency-free page-number list: current +/-1, plus first/last,
+// with an ellipsis for any gap — matches the reference's "1 2 3 … 9" shape
+// without pulling in a pagination library for one component.
+function buildPageList(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = new Set([1, total, current, current - 1, current + 1]);
+  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+  const withEllipsis = [];
+  sorted.forEach((p, i) => {
+    if (i > 0 && p - sorted[i - 1] > 1) withEllipsis.push('…');
+    withEllipsis.push(p);
+  });
+  return withEllipsis;
 }
 
 function ExpandedUserDetail({ user, t, refreshKey, onToggleActive, onRequestDisconnect }) {

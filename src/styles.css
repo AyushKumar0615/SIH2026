@@ -57,6 +57,16 @@
   --alert: #d9553f;
   --alert-soft: rgba(217, 85, 63, 0.16);
 
+  /* Secondary accents — used only for the admin dashboard's per-category
+     stat-card treatments (caregiver/connections), never as a third
+     primary colour competing with ember. */
+  --sky: #5b9bd5;
+  --sky-deep: #3f7ab8;
+  --sky-soft: rgba(91, 155, 213, 0.14);
+  --violet: #9b7fd4;
+  --violet-deep: #7c5fc0;
+  --violet-soft: rgba(155, 127, 212, 0.14);
+
   /* Radii */
   --radius-xs: 6px;
   --radius-sm: 10px;
@@ -110,6 +120,10 @@ body.high-contrast-mode {
   --ember-deep: #ff8a4c;
   --jade: #5fe0b8;
   --alert: #ff6a52;
+  --sky: #7ec2ff;
+  --sky-deep: #7ec2ff;
+  --violet: #c9a8ff;
+  --violet-deep: #c9a8ff;
   --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.6);
   --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.7);
   --shadow-lg: 0 0 0 1.5px rgba(255, 255, 255, 0.8);
@@ -1284,6 +1298,248 @@ a { color: inherit; }
     color: var(--ember);
     text-shadow: 0 0 60px var(--ember-soft);
   }
+
+  /* ═══════════════════════════════════════════════════════════════
+     ADMIN DASHBOARD — sidebar + stat cards + quick actions
+     Scoped entirely to the admin page; nothing here is reused by the
+     elder/caregiver surfaces, which keep the app's normal floating chrome.
+     ═══════════════════════════════════════════════════════════════ */
+
+  .admin-shell { min-height: 100vh; display: flex; }
+
+  .admin-sidebar {
+    width: 17rem;
+    flex-shrink: 0;
+    display: none;
+    flex-direction: column;
+    background: var(--canvas-recessed);
+    border-right: 1px solid var(--hairline);
+    padding: 1.75rem 1.25rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .admin-sidebar { display: flex; } }
+
+  .admin-sidebar-brand { padding: 0.25rem 0.6rem 1.5rem; }
+  .admin-sidebar-tagline { font-size: 0.72rem; line-height: 1.4; color: var(--ink-faint); margin-top: 0.3rem; }
+
+  .admin-nav { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; }
+  .admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-align: left;
+    width: 100%;
+    min-height: var(--touch-min);
+    border-left: 2px solid transparent;
+    transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+  }
+  .admin-nav-link:hover, .admin-nav-link:focus-visible { color: var(--ink); background: var(--hairline); }
+  .admin-nav-link.is-active {
+    color: var(--ember);
+    background: var(--ember-soft);
+    border-left-color: var(--ember);
+  }
+  .admin-nav-link.is-inert { cursor: default; }
+
+  .admin-sidebar-footer {
+    border-top: 1px solid var(--hairline);
+    padding-top: 1rem;
+    margin-top: 1rem;
+  }
+
+  /* Compact top bar shown in place of the sidebar below 1024px. */
+  .admin-topbar-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--hairline);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--canvas);
+  }
+  @media (min-width: 1024px) { .admin-topbar-mobile { display: none; } }
+
+  .admin-main { flex: 1; min-width: 0; padding: 1.75rem 1.5rem 3rem; }
+  @media (min-width: 768px) { .admin-main { padding: 2.25rem 2.5rem 4rem; } }
+
+  .admin-header-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+  }
+  @media (min-width: 1024px) { .admin-header-row { flex-direction: row; align-items: center; justify-content: space-between; } }
+
+  .admin-header-controls { display: flex; align-items: center; gap: 0.65rem; }
+
+  .admin-search {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--canvas-raised);
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-full);
+    padding: 0 1rem;
+    height: 2.75rem;
+    width: 100%;
+  }
+  @media (min-width: 1024px) { .admin-search { width: 18rem; } }
+  .admin-search input {
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 0.85rem;
+    color: var(--ink);
+    width: 100%;
+  }
+  .admin-search input::placeholder { color: var(--ink-faint); }
+
+  /* ─── Stat cards ────────────────────────────────────────────── */
+  .admin-stat-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-bottom: 1.75rem; }
+  @media (min-width: 640px) { .admin-stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1280px) { .admin-stat-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .admin-stat-card {
+    background: var(--canvas-raised);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    padding: 1.35rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .admin-stat-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-md);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .admin-stat-value {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .admin-stat-label { font-size: 0.8rem; color: var(--ink-faint); margin-top: 0.15rem; }
+
+  /* ─── Generic card shell shared by User Management / Quick Actions /
+         System Status / Analytics / Audit Trail ─────────────────── */
+  .admin-card {
+    background: var(--canvas-raised);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+  @media (min-width: 768px) { .admin-card { padding: 1.75rem; } }
+  .admin-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .admin-card-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-md);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    background: var(--ember-soft);
+    color: var(--ember);
+  }
+  .admin-card-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; }
+  .admin-card-subtitle { font-size: 0.82rem; color: var(--ink-faint); margin-top: 0.15rem; }
+
+  .admin-two-col { display: grid; grid-template-columns: 1fr; gap: 1.25rem; align-items: start; }
+  @media (min-width: 1280px) { .admin-two-col { grid-template-columns: minmax(0, 1fr) 22rem; } }
+
+  /* ─── Role tabs (All Users / Elders / Caregivers / Admins) ─────── */
+  .admin-tabs {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+
+  /* ─── User table ────────────────────────────────────────────── */
+  .admin-user-table-head {
+    display: none;
+    grid-template-columns: 2.2fr 1fr 1fr 1fr 2.75rem;
+    gap: 1rem;
+    padding: 0 0.85rem 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  @media (min-width: 900px) { .admin-user-table-head { display: grid; } }
+
+  .admin-user-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.85rem;
+    border-radius: var(--radius-md);
+    border-top: 1px solid var(--hairline);
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  @media (min-width: 900px) { .admin-user-row { grid-template-columns: 2.2fr 1fr 1fr 1fr 2.75rem; align-items: center; gap: 1rem; } }
+  .admin-user-row:hover, .admin-user-row:focus-visible { background: var(--hairline); }
+
+  /* ─── Quick Actions list ────────────────────────────────────── */
+  .admin-quick-action {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.85rem;
+    border-radius: var(--radius-md);
+    transition: background-color var(--t-fast) var(--ease);
+  }
+  .admin-quick-action:hover, .admin-quick-action:focus-visible { background: var(--hairline); }
+  .admin-quick-action:active { transform: scale(0.98); }
+  .admin-quick-action-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-md);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  /* ─── System status rows ────────────────────────────────────── */
+  .admin-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0;
+    font-size: 0.85rem;
+    border-top: 1px solid var(--hairline);
+  }
+  .admin-status-row:first-of-type { border-top: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

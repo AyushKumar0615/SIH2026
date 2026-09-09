@@ -46,6 +46,19 @@ export default {
           DEFAULT: 'var(--alert)',
           soft: 'var(--alert-soft)'
         },
+        // Admin-dashboard-only secondary accents (caregiver / connections
+        // stat cards). Named to match Tailwind's own palette, but these
+        // resolve to our theme tokens — never reach for e.g. `sky-500`.
+        sky: {
+          DEFAULT: 'var(--sky)',
+          deep: 'var(--sky-deep)',
+          soft: 'var(--sky-soft)'
+        },
+        violet: {
+          DEFAULT: 'var(--violet)',
+          deep: 'var(--violet-deep)',
+          soft: 'var(--violet-soft)'
+        },
         hairline: {
           DEFAULT: 'var(--hairline)',
           strong: 'var(--hairline-strong)'
