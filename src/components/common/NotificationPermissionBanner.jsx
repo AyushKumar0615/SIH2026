@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BellRing, X } from 'lucide-react';
 import { NotificationPermissionService } from '../../services/notificationPermissionService';
+import { PushSubscriptionService } from '../../services/pushSubscriptionService';
 import { useTranslation } from '../../hooks/useTranslation';
 
 const DISMISSED_UNTIL_KEY = 'smritisetu-notification-prompt-dismissed-until';
@@ -30,7 +31,7 @@ function persistDismissal() {
 // make: unsupported browsers, already-granted, and already-denied
 // permission all render nothing (a denied permission can only be changed in
 // the browser's own site settings — re-prompting would just be spam).
-export default function NotificationPermissionBanner() {
+export default function NotificationPermissionBanner({ session }) {
   const { t } = useTranslation();
   const [permission, setPermission] = useState(() => NotificationPermissionService.getPermission());
   const [dismissed, setDismissed] = useState(() => Date.now() < readDismissedUntil());
@@ -45,6 +46,14 @@ export default function NotificationPermissionBanner() {
     const result = await NotificationPermissionService.request();
     setPermission(result);
     if (result !== 'default') persistDismissal();
+    // Push registration only makes sense once permission is actually
+    // granted — a denied/dismissed result leaves nothing to subscribe.
+    // Best-effort: if this fails (unsupported browser, no VAPID key
+    // configured), the in-app popup still works exactly as before: this
+    // only ever adds background delivery on top of it.
+    if (result === 'granted' && session?.id) {
+      PushSubscriptionService.subscribe(session.id);
+    }
   };
 
   const handleDismiss = () => {

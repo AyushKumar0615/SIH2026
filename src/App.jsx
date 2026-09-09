@@ -12,6 +12,7 @@ import { LanguageProvider } from './hooks/useTranslation';
 import { useElderLocationTracking } from './hooks/useElderLocationTracking';
 import { useReminderAlerts } from './hooks/useReminderAlerts';
 import { ReminderSoundService } from './services/reminderSoundService';
+import { PushSubscriptionService } from './services/pushSubscriptionService';
 import ReminderAlertOverlay from './components/common/ReminderAlertOverlay';
 import { getRoleHome } from './access/permissions';
 import RequireRole from './access/RequireRole';
@@ -68,6 +69,23 @@ export default function App() {
   useEffect(() => {
     ReminderSoundService.attachGesturePrimer();
   }, []);
+
+  // The service worker resubscribes on its own if the browser ever rotates
+  // a push subscription's endpoint (see the pushsubscriptionchange listener
+  // in public/sw.js), but persisting that replacement needs an
+  // authenticated Supabase client, which only this open page has — so it
+  // hands the new subscription back here via postMessage.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return undefined;
+    const onMessage = (event) => {
+      if (event.data?.type !== 'PUSH_SUBSCRIPTION_CHANGED' || !session?.id) return;
+      PushSubscriptionService.replace(session.id, event.data.oldEndpoint, {
+        toJSON: () => event.data.subscription
+      });
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [session?.id]);
 
   useEffect(() => {
     if (highContrast) {

@@ -311,7 +311,7 @@ export default function RemindersView({ session, onBack }) {
         <div className="progress-track my-6"><div className="progress-fill" style={{ width: `${(completedCount / items.length) * 100}%` }} /></div>
       )}
 
-      <NotificationPermissionBanner />
+      <NotificationPermissionBanner session={session} />
 
       {!isLoading && !(loadError && items.length === 0) && (
         <div className="flex justify-end mb-4">

@@ -394,7 +394,7 @@ export const DICTIONARY = {
     reminderAlertForLabel: "For {name}",
     reminderAlertEnableSound: "Tap to enable sound",
     notificationPermissionTitle: "Get notified even when you're away",
-    notificationPermissionDesc: "Turn on notifications so a reminder can still reach you if SmritiSetu isn't the open tab.",
+    notificationPermissionDesc: "Turn on notifications so a reminder can reach you even when SmritiSetu isn't open.",
     notificationPermissionEnable: "Enable Notifications",
     loadingInsights: "Loading insights…",
     insightsNotEnoughDataTitle: "Not enough data yet",
