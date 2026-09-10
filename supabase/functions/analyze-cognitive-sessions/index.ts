@@ -58,7 +58,8 @@ Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
   const authorization = req.headers.get('Authorization');
-  if (!authorization) return json({ error: 'unauthorized' }, 401);
+  const accessToken = authorization?.match(/^Bearer\\s+(.+)$/i)?.[1]?.trim();
+  if (!accessToken) return json({ error: 'unauthorized' }, 401);
 
   let body: { sessionId?: string };
   try { body = await req.json(); } catch { return json({ error: 'invalid_request' }, 400); }
@@ -71,8 +72,11 @@ Deno.serve(async (req: Request) => {
 
   // Resolve the caller from the submitted JWT; never trust an ID supplied by
   // the browser as evidence of caregiver authorization.
-  const authClient = createClient(url, anonKey, { global: { headers: { Authorization: authorization } } });
-  const { data: authData, error: authError } = await authClient.auth.getUser();
+  const authClient = createClient(url, anonKey);
+  // Pass the extracted bearer token directly. In an Edge runtime there is no
+  // persisted Auth session; relying on a client-global header can cause
+  // getUser() to resolve a different/no session.
+  const { data: authData, error: authError } = await authClient.auth.getUser(accessToken);
   if (authError || !authData.user) return json({ error: 'unauthorized' }, 401);
 
   const admin = createClient(url, serviceRoleKey);
@@ -83,7 +87,8 @@ Deno.serve(async (req: Request) => {
     .single();
   const callerRole = String(profile?.role || '').trim().toLowerCase();
   if (profileError || profile?.is_active === false || !['elderly', 'caregiver'].includes(callerRole)) {
-    return json({ error: 'forbidden' }, 403);
+    console.warn('cognitive analysis authorization rejected: caller profile');
+    return json({ error: 'caller_profile_forbidden' }, 403);
   }
 
   const { data: targetSession, error: sessionLookupError } = await admin
@@ -93,7 +98,10 @@ Deno.serve(async (req: Request) => {
     .single();
   if (sessionLookupError || !targetSession) return json({ error: 'session_not_found' }, 404);
 
-  if (callerRole === 'elderly' && targetSession.user_id !== authData.user.id) return json({ error: 'forbidden' }, 403);
+  if (callerRole === 'elderly' && targetSession.user_id !== authData.user.id) {
+    console.warn('cognitive analysis authorization rejected: session owner mismatch');
+    return json({ error: 'session_owner_mismatch' }, 403);
+  }
   if (callerRole === 'caregiver') {
     const { data: connection, error: connectionError } = await admin
       .from('caregiver_connections')
@@ -103,7 +111,10 @@ Deno.serve(async (req: Request) => {
       .eq('status', 'accepted')
       .maybeSingle();
     if (connectionError) return json({ error: 'connection_lookup_failed' }, 500);
-    if (!connection) return json({ error: 'forbidden' }, 403);
+    if (!connection) {
+      console.warn('cognitive analysis authorization rejected: caregiver connection');
+      return json({ error: 'caregiver_not_connected' }, 403);
+    }
   }
 
   // A completed analysis is immutable for this session. A conditional update

@@ -88,7 +88,7 @@ export default function GameShell({ session, onBack }) {
     setResult(sessionData);
     setView('result');
     try { confetti({ particleCount: 90, spread: 75, origin: { y: 0.5 }, colors: ['#E2703A', '#4FAE8E', '#F4EFE7'] }); } catch (e) {}
-    const saved = await CognitiveAnalyticsService.recordSession(session?.id, {
+    const saved = await CognitiveAnalyticsService.recordSession({
       ...sessionData,
       gameId: activeGameId,
       completionTimeSeconds: gameStartedAt ? (Date.now() - gameStartedAt) / 1000 : 0

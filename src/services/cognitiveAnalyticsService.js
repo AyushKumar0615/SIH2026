@@ -15,8 +15,13 @@ function toSession(row) {
 }
 
 export const CognitiveAnalyticsService = {
-  async recordSession(userId, payload) {
-    if (!userId) return { ok: false, error: 'Missing signed-in user.' };
+  async recordSession(payload) {
+    // The database RLS policy and the analysis function both authorize with
+    // the Supabase Auth JWT. Resolve that same source of truth here rather
+    // than accepting a separately cached React profile ID.
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const userId = authData?.user?.id;
+    if (authError || !userId) return { ok: false, error: 'Missing signed-in user.' };
     const row = {
       user_id: userId,
       game_id: String(payload.gameId || ''),
@@ -34,7 +39,16 @@ export const CognitiveAnalyticsService = {
 
   async requestAnalysis(sessionId) {
     if (!sessionId) return { ok: false, error: 'No completed game session.' };
-    const { data, error } = await supabase.functions.invoke('analyze-cognitive-sessions', { body: { sessionId } });
+    // Pass the current user JWT explicitly. This avoids relying on a cached
+    // SDK auth header and guarantees that the function authorizes the same
+    // user who owns (or is connected to) the selected session.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) return { ok: false, error: 'unauthorized' };
+    const { data, error } = await supabase.functions.invoke('analyze-cognitive-sessions', {
+      body: { sessionId },
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
     if (error) {
       let code = 'analysis_request_failed';
       try { code = (await error.context.json())?.error || code; } catch {}
