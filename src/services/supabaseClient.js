@@ -8,3 +8,32 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Most application requests can use the shared client above, which restores
+// its browser session automatically. For data that is strictly RLS-protected,
+// however, callers can ask for a short-lived client bound to a verified token.
+// This prevents a restored UI session from ever issuing a protected query as
+// the anonymous role while its auth header is being refreshed.
+export async function getVerifiedSupabaseClient() {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const accessToken = sessionData?.session?.access_token;
+  if (sessionError || !accessToken) {
+    return { ok: false, error: 'Please sign in again to continue.' };
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+  if (userError || !userData?.user) {
+    return { ok: false, error: 'Please sign in again to continue.' };
+  }
+
+  return {
+    ok: true,
+    user: userData.user,
+    client: createClient(supabaseUrl, supabaseAnonKey, {
+      // `accessToken` is supplied directly to supabase-js's request layer;
+      // it is never stored, logged, or exposed to application UI code.
+      accessToken: async () => accessToken,
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    })
+  };
+}

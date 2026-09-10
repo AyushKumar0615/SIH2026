@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { getVerifiedSupabaseClient } from './supabaseClient';
 
 export const REMINDER_CATEGORY_ICONS = { Medication: '💊', Meals: '🍛', Activity: '🔔', Family: '📞' };
 
@@ -28,7 +28,10 @@ function fromRow(row) {
 
 export const ReminderService = {
   async listReminders(userId) {
-    const { data, error } = await supabase
+    const auth = await getVerifiedSupabaseClient();
+    if (!auth.ok) return auth;
+
+    const { data, error } = await auth.client
       .from('reminders')
       .select('*')
       .eq('user_id', userId)
@@ -40,6 +43,9 @@ export const ReminderService = {
   },
 
   async addReminder(userId, payload) {
+    const auth = await getVerifiedSupabaseClient();
+    if (!auth.ok) return auth;
+
     const row = {
       user_id: userId,
       title: payload.title.trim(),
@@ -52,12 +58,15 @@ export const ReminderService = {
       is_active: payload.isActive !== false
     };
 
-    const { data, error } = await supabase.from('reminders').insert(row).select().single();
+    const { data, error } = await auth.client.from('reminders').insert(row).select().single();
     if (error) return { ok: false, error: error.message };
     return { ok: true, reminder: fromRow(data) };
   },
 
   async updateReminder(reminderId, updates) {
+    const auth = await getVerifiedSupabaseClient();
+    if (!auth.ok) return auth;
+
     const row = {};
     if (updates.title !== undefined) row.title = updates.title.trim();
     if (updates.notes !== undefined) row.notes = updates.notes?.trim() || null;
@@ -73,13 +82,16 @@ export const ReminderService = {
     if (updates.isActive !== undefined) row.is_active = updates.isActive;
     if (updates.isCompleted !== undefined) row.is_completed = updates.isCompleted;
 
-    const { data, error } = await supabase.from('reminders').update(row).eq('id', reminderId).select().single();
+    const { data, error } = await auth.client.from('reminders').update(row).eq('id', reminderId).select().single();
     if (error) return { ok: false, error: error.message };
     return { ok: true, reminder: fromRow(data) };
   },
 
   async deleteReminder(reminderId) {
-    const { error } = await supabase.from('reminders').delete().eq('id', reminderId);
+    const auth = await getVerifiedSupabaseClient();
+    if (!auth.ok) return auth;
+
+    const { error } = await auth.client.from('reminders').delete().eq('id', reminderId);
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   }
