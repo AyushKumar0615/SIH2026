@@ -11,6 +11,8 @@ import GameCard, { FeaturedGameCard } from '../games/shared/GameCard';
 import Countdown from '../games/shared/Countdown';
 import { pageTransition } from '../common/pageTransition';
 import { useTranslation } from '../../hooks/useTranslation';
+import { CognitiveAnalyticsService } from '../../services/cognitiveAnalyticsService';
+import InlineNotice from '../common/InlineNotice';
 import confetti from 'canvas-confetti';
 
 const GAME_DEFS = [
@@ -49,12 +51,14 @@ const CATEGORY_LABEL_KEYS = {
   Attention: 'gameCategoryAttention'
 };
 
-export default function GameShell({ onBack }) {
+export default function GameShell({ session, onBack }) {
   const { t } = useTranslation();
   const [view, setView] = useState('library'); // library | intro | countdown | playing | result
   const [activeGameId, setActiveGameId] = useState(null);
+  const [gameStartedAt, setGameStartedAt] = useState(null);
   const [result, setResult] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [saveError, setSaveError] = useState('');
 
   const translatedGames = GAME_DEFS.map((g) => ({
     ...g,
@@ -77,19 +81,31 @@ export default function GameShell({ onBack }) {
   // "Start" button and GameResult's "Play Again" both call this same
   // function, so there's one choke point rather than duplicated logic.
   const startGame = () => setView('countdown');
-  const beginPlaying = () => setView('playing');
-  const exitToLibrary = () => { setActiveGameId(null); setResult(null); setView('library'); };
+  const beginPlaying = () => { setGameStartedAt(Date.now()); setView('playing'); };
+  const exitToLibrary = () => { setActiveGameId(null); setResult(null); setGameStartedAt(null); setSaveError(''); setView('library'); };
 
-  const handleFinishGame = (sessionData) => {
+  const handleFinishGame = async (sessionData) => {
     setResult(sessionData);
     setView('result');
     try { confetti({ particleCount: 90, spread: 75, origin: { y: 0.5 }, colors: ['#E2703A', '#4FAE8E', '#F4EFE7'] }); } catch (e) {}
+    const saved = await CognitiveAnalyticsService.recordSession(session?.id, {
+      ...sessionData,
+      gameId: activeGameId,
+      completionTimeSeconds: gameStartedAt ? (Date.now() - gameStartedAt) / 1000 : 0
+    });
+    if (!saved.ok) {
+      setSaveError('Your result could not be saved for caregiver analytics. Please check your connection and try another game.');
+      return;
+    }
+    const analysis = await CognitiveAnalyticsService.requestAnalysis(saved.session.id);
+    if (!analysis.ok) setSaveError('Your game result was saved, but its cognitive analysis is currently unavailable. A caregiver can retry it later.');
   };
 
   let content;
 
   if (view === 'result' && result) {
-    content = (
+    content = (<div className="page space-y-4">
+      <InlineNotice tone="error" message={saveError} onDismiss={() => setSaveError('')} autoDismissMs={0} />
       <GameResult
         gameName={t(result.gameNameKey)}
         skill={t(result.skillKey)}
@@ -100,7 +116,7 @@ export default function GameShell({ onBack }) {
         onPlayAgain={() => setView('intro')}
         onBackToGames={exitToLibrary}
       />
-    );
+    </div>);
   } else if (view === 'intro' && activeGame) {
     content = (
       <GameIntro

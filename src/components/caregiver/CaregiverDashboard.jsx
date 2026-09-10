@@ -206,7 +206,7 @@ export default function CaregiverDashboard({ session }) {
                 />
               ) : noElderNotice
             )}
-            {activeTab === 'analytics' && <CognitiveAnalytics />}
+            {activeTab === 'analytics' && (connectedElder ? <CognitiveAnalytics elderId={connectedElder.id} userName={displayName} /> : noElderNotice)}
             {activeTab === 'routines' && (
               connectedElder ? (
                 <>

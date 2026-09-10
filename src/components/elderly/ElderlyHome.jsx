@@ -120,7 +120,7 @@ export default function ElderlyHome({ currentLang, currentState, session, locati
   let content;
 
   if (activeSubView === 'games') {
-    content = <GameShell onBack={() => setActiveSubView('home')} />;
+    content = <GameShell session={session} onBack={() => setActiveSubView('home')} />;
   } else if (activeSubView === 'memories') {
     content = <MemoryJournalView session={session} onBack={() => setActiveSubView('home')} onOpenVoiceAssistant={() => setIsAssistantOpen(true)} />;
   } else if (activeSubView === 'reminders') {
