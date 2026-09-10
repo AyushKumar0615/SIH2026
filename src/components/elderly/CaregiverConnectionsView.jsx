@@ -89,7 +89,7 @@ export default function CaregiverConnectionsView({ session, onBack }) {
   const handleRespond = async (connectionId, status) => {
     if (respondingId) return;
     setRespondingId(connectionId);
-    const result = await CaregiverConnectionService.respondToRequest(connectionId, status);
+    const result = await CaregiverConnectionService.respondToRequest(connectionId, status, `caregivers-for-elder:${session.id}`);
     setRespondingId(null);
     if (!result.ok) {
       setNotice({ tone: 'error', message: t('connectionGenericError') });
@@ -102,7 +102,7 @@ export default function CaregiverConnectionsView({ session, onBack }) {
   const confirmDisconnect = async () => {
     if (!disconnectTarget) return;
     setIsDisconnecting(true);
-    const result = await CaregiverConnectionService.disconnect(disconnectTarget.id);
+    const result = await CaregiverConnectionService.disconnect(disconnectTarget.id, `caregivers-for-elder:${session.id}`);
     setIsDisconnecting(false);
     setDisconnectTarget(null);
     if (!result.ok) {

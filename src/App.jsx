@@ -13,6 +13,7 @@ import { useElderLocationTracking } from './hooks/useElderLocationTracking';
 import { useReminderAlerts } from './hooks/useReminderAlerts';
 import { ReminderSoundService } from './services/reminderSoundService';
 import { PushSubscriptionService } from './services/pushSubscriptionService';
+import { initWriteQueue } from './services/writeQueueService';
 import ReminderAlertOverlay from './components/common/ReminderAlertOverlay';
 import { getRoleHome } from './access/permissions';
 import RequireRole from './access/RequireRole';
@@ -68,6 +69,13 @@ export default function App() {
 
   useEffect(() => {
     ReminderSoundService.attachGesturePrimer();
+  }, []);
+
+  // Independent of session — a queued write is tied to whichever user was
+  // signed in when it was made, not to who's signed in now, so this can
+  // (and should) start draining the queue before/regardless of login.
+  useEffect(() => {
+    initWriteQueue();
   }, []);
 
   // The service worker resubscribes on its own if the browser ever rotates

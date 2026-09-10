@@ -124,7 +124,7 @@ export default function RemindersView({ session, onBack }) {
     const payload = { ...form, icon: REMINDER_CATEGORY_ICONS[form.category] };
 
     if (editingId) {
-      const result = await ReminderService.updateReminder(editingId, payload);
+      const result = await ReminderService.updateReminder(editingId, payload, session.id);
       setIsSaving(false);
       if (!result.ok) {
         setFormError(result.error || t('reminderSaveError'));
@@ -146,7 +146,7 @@ export default function RemindersView({ session, onBack }) {
   const handleDelete = async (id) => {
     const prevItems = items;
     setItems((prev) => prev.filter((r) => r.id !== id));
-    const result = await ReminderService.deleteReminder(id);
+    const result = await ReminderService.deleteReminder(id, session.id);
     if (!result.ok) {
       setItems(prevItems);
       setLoadError(result.error || t('reminderSaveError'));

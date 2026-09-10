@@ -52,7 +52,7 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
     const payload = { title: form.title, time: form.time, category: form.category, icon: REMINDER_CATEGORY_ICONS[form.category] };
 
     if (editingId) {
-      const result = await ReminderService.updateReminder(editingId, payload);
+      const result = await ReminderService.updateReminder(editingId, payload, session.id);
       setIsSaving(false);
       if (!result.ok) {
         setFormError(result.error || t('reminderSaveError'));
@@ -74,7 +74,7 @@ export default function RoutineManager({ session, userName = 'Guest', routines, 
   const handleDelete = async (id) => {
     const prevRoutines = routines;
     setRoutines((prev) => prev.filter((r) => r.id !== id));
-    const result = await ReminderService.deleteReminder(id);
+    const result = await ReminderService.deleteReminder(id, session.id);
     if (!result.ok) setRoutines(prevRoutines);
   };
 

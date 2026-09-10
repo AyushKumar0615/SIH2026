@@ -43,7 +43,7 @@ export default function ConnectElderPanel({ session, connections, isLoading, loa
   const confirmDisconnect = async () => {
     if (!disconnectTarget) return;
     setIsDisconnecting(true);
-    const result = await CaregiverConnectionService.disconnect(disconnectTarget.id);
+    const result = await CaregiverConnectionService.disconnect(disconnectTarget.id, `elders-for-caregiver:${session.id}`);
     setIsDisconnecting(false);
     setDisconnectTarget(null);
     if (!result.ok) {

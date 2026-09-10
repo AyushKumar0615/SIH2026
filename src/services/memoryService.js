@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
-import { OfflineStore } from './offlineStore';
+import { OfflineStore, isNetworkError, withTimeout } from './offlineStore';
+import { WriteQueueService, registerSyncHandler } from './writeQueueService';
 
 function fromRow(row) {
   return {
@@ -35,8 +36,13 @@ export const MemoryService = {
     return { ok: true, memories, fromCache: false };
   },
 
+  // Client-generated id for the same reason as ReminderService.addReminder:
+  // it's what makes a queued retry safe (a duplicate-key response means
+  // "already inserted," not a failure) without any schema change — `id`
+  // was already a plain `uuid primary key default gen_random_uuid()`.
   async addMemory(userId, payload) {
     const row = {
+      id: crypto.randomUUID(),
       user_id: userId,
       name: payload.name.trim(),
       relation: payload.relation?.trim() || null,
@@ -47,8 +53,23 @@ export const MemoryService = {
       photo_url: payload.photoUrl || null
     };
 
-    const { data, error } = await supabase.from('memories').insert(row).select().single();
-    if (error) return { ok: false, error: error.message };
+    const { data, error } = await withTimeout(supabase.from('memories').insert(row).select().single());
+    if (error) {
+      if (isNetworkError(error)) {
+        await WriteQueueService.enqueue({ type: 'addMemory', row });
+        return { ok: true, memory: fromRow(row), queued: true };
+      }
+      return { ok: false, error: error.message };
+    }
     return { ok: true, memory: fromRow(data) };
+  },
+
+  // ─── Offline-queue retry handler — called only by writeQueueService.js ───
+  async _syncCreateMemory(row) {
+    const { error } = await supabase.from('memories').insert(row);
+    if (!error || error.code === '23505') return { ok: true };
+    return { ok: false, retry: isNetworkError(error), message: error.message };
   }
 };
+
+registerSyncHandler('addMemory', (entry) => MemoryService._syncCreateMemory(entry.row));

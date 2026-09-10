@@ -1010,6 +1010,32 @@ a { color: inherit; }
 
   @keyframes pwa-update-spin { to { transform: rotate(360deg); } }
 
+  /* ─── OFFLINE WRITE QUEUE STATUS ──────────────────────────────── */
+  .sync-status-pill {
+    position: fixed;
+    left: 1rem;
+    bottom: 1.25rem;
+    bottom: max(1.25rem, env(safe-area-inset-bottom));
+    z-index: 115;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0.65rem 1.1rem;
+    border-radius: var(--radius-full);
+    background: var(--glass-panel);
+    border: 1px solid var(--hairline-strong);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .sync-status-pill svg { color: var(--ember); }
+  .sync-status-pill.is-error { border-color: rgba(220, 80, 60, 0.4); }
+  .sync-status-pill.is-error svg { color: var(--alert); }
+
   /* ─── NOTICE STRIPS (no boxes — inline accent rule) ──────────── */
   .notice-strip {
     border-left: 2px solid var(--hairline-strong);

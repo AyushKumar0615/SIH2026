@@ -250,7 +250,7 @@ export default function Header({
                             value={session.avatar}
                             fullName={session.fullName}
                             onChange={async (avatar) => {
-                              const nextSession = await AuthService.updateAvatar(session.id, avatar);
+                              const nextSession = await AuthService.updateAvatar(session.id, avatar, session);
                               onSessionUpdate?.(nextSession);
                               setAvatarEditorOpen(false);
                             }}
